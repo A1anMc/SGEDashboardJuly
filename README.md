@@ -1,34 +1,85 @@
 # Shadow Goose Entertainment Dashboard
 
-## Overview
-
-The Shadow Goose Entertainment Dashboard is a centralized platform designed to streamline operations for media projects. It provides robust tools for tracking project progress, mapping program logic against the Impact Compass framework, discovering and managing Australian grant opportunities, and visualizing key impact metrics. This dashboard aims to enhance efficiency and provide clear insights into project performance and funding avenues.
+A comprehensive grant management and project tracking system for the entertainment industry.
 
 ## Features
 
-* **Compass-aligned Project Tracker & Program Logic Mapping:**
-    * Track the lifecycle of media projects from inception to completion.
-    * Visually map project activities and outcomes directly to the principles of the Impact Compass, ensuring alignment with organizational goals.
+- **Grant Management**: Track and manage grant opportunities with automated scraping from multiple sources
+- **Tag System**: Hierarchical tag management with synonyms for better organization
+- **Project Tracking**: Monitor project progress and resource allocation
+- **Task Management**: Organize and track tasks with priority and status tracking
 
-* **Automated Grant Discovery:**
-    * Systematically discover relevant Australian government and philanthropic grants.
-    * Automates the process of finding new funding opportunities, saving time and increasing potential for successful applications.
+## Tech Stack
 
-* **Airtable + CSV Integration for Social & Project Metrics:**
-    * Seamlessly import and synchronize project-related data and social metrics from Airtable bases and CSV files.
-    * Ensures all relevant data points are centralized for analysis and reporting.
+- **Backend**: Python/FastAPI
+- **Frontend**: Next.js/React with TypeScript
+- **Database**: PostgreSQL
+- **Authentication**: JWT-based auth system
 
-* **Impact Dashboards with Charts & Visual Summaries:**
-    * Transform raw data into insightful visual summaries and charts.
-    * Provides at-a-glance understanding of project impact and key performance indicators.
+## Getting Started
 
-* **Intern & Team Contribution Logging:**
-    * A dedicated system for logging and tracking contributions from interns and team members.
-    * Facilitates internal reporting and recognition.
+### Prerequisites
 
-* **Role-based Access & Authentication with Supabase:**
-    * Secure access control ensures that sensitive data and functionalities are only accessible to authorized personnel.
-    * Robust authentication managed via Supabase for a secure user experience.
+- Python 3.8+
+- Node.js 16+
+- PostgreSQL
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/A1anMc/SGEDashboardJuly.git
+cd SGEDashboardJuly
+```
+
+2. Install backend dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+3. Install frontend dependencies:
+```bash
+cd frontend
+npm install
+```
+
+4. Set up environment variables:
+```bash
+cp .env.example .env
+# Edit .env with your configuration
+```
+
+5. Run migrations:
+```bash
+alembic upgrade head
+```
+
+6. Start the development servers:
+
+Backend:
+```bash
+uvicorn main:app --reload
+```
+
+Frontend:
+```bash
+cd frontend
+npm run dev
+```
+
+## Development
+
+- Frontend runs on `http://localhost:3000`
+- Backend API runs on `http://localhost:8000`
+- API documentation available at `http://localhost:8000/docs`
+
+## License
+
+This project is private and confidential.
+
+## Overview
+
+The Shadow Goose Entertainment Dashboard is a centralized platform designed to streamline operations for media projects. It provides robust tools for tracking project progress, mapping program logic against the Impact Compass framework, discovering and managing Australian grant opportunities, and visualizing key impact metrics. This dashboard aims to enhance efficiency and provide clear insights into project performance and funding avenues.
 
 ## Project Structure
 
@@ -38,33 +89,6 @@ The project is organized into the following main directories:
 * `/frontend` - Next.js frontend application
 * `/tests` - Backend test suite
 * `/docs` - Project documentation
-
-## Tech Stack
-
-The dashboard is built using a modern and efficient tech stack to ensure performance, scalability, and ease of development:
-
-* **Frontend:**
-    * Framework: Next.js 14 with App Router
-    * Language: TypeScript
-    * Styling: Tailwind CSS
-    * Components: Headless UI
-    * State: React Query
-    * Build: Turbopack
-
-* **Backend:**
-    * Framework: FastAPI
-    * Language: Python 3.11+
-    * Database: PostgreSQL (via Supabase)
-    * ORM: SQLAlchemy
-    * Migrations: Alembic
-    * Scraping: BeautifulSoup4, httpx
-
-* **Infrastructure:**
-    * Database: Supabase (PostgreSQL)
-    * Backend Hosting: Render
-    * Frontend Hosting: Vercel
-    * File Storage: Supabase Storage
-    * Cron Jobs: Render Cron Service
 
 ## Setup Instructions
 
