@@ -13,7 +13,8 @@ class TagBase(BaseModel):
 
 class TagCreate(TagBase):
     """Schema for creating a new tag."""
-    pass
+    parent_ids: Optional[List[int]] = None
+    synonym_ids: Optional[List[int]] = None
 
 class TagUpdate(BaseModel):
     """Schema for updating an existing tag."""
@@ -51,4 +52,13 @@ class Tag(TagBase):
 class TagWithRelations(Tag):
     """Schema for tag with related entities."""
     grant_count: int
-    project_count: int 
+    project_count: int
+
+class TagResponse(TagBase):
+    id: int
+    parents: Optional[List['TagResponse']] = None
+    children: Optional[List['TagResponse']] = None
+    synonyms: Optional[List['TagResponse']] = None
+
+    class Config:
+        from_attributes = True 

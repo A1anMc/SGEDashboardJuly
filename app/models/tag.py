@@ -3,9 +3,9 @@ from typing import List
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 from app.db.base_class import Base
-import enum
+from enum import Enum
 
-class TagCategory(str, enum.Enum):
+class TagCategory(str, Enum):
     """Categories for controlled vocabularies."""
     INDUSTRY = "industry"
     LOCATION = "location"
@@ -29,6 +29,20 @@ project_tags = Table(
     Column('tag_id', Integer, ForeignKey('tags.id', ondelete="CASCADE"))
 )
 
+tag_synonyms = Table(
+    'tag_synonyms',
+    Base.metadata,
+    Column('tag_id', Integer, ForeignKey('tags.id'), primary_key=True),
+    Column('synonym_id', Integer, ForeignKey('tags.id'), primary_key=True)
+)
+
+tag_hierarchy = Table(
+    'tag_hierarchy',
+    Base.metadata,
+    Column('parent_id', Integer, ForeignKey('tags.id'), primary_key=True),
+    Column('child_id', Integer, ForeignKey('tags.id'), primary_key=True)
+)
+
 class Tag(Base):
     """Tag model for controlled vocabularies."""
     
@@ -39,15 +53,23 @@ class Tag(Base):
     category = Column(SQLEnum(TagCategory), nullable=False, index=True)
     description = Column(String(500))
     
-    # Optional parent-child relationship for hierarchical tags
-    parent_id = Column(Integer, ForeignKey('tags.id', ondelete="SET NULL"), nullable=True)
-    children = relationship("Tag", 
-                          backref="parent",
-                          remote_side=[id],
-                          cascade="all, delete-orphan")
+    # Hierarchical relationships
+    parents = relationship(
+        "Tag",
+        secondary=tag_hierarchy,
+        primaryjoin=id==tag_hierarchy.c.child_id,
+        secondaryjoin=id==tag_hierarchy.c.parent_id,
+        backref="children"
+    )
     
-    # Synonyms for flexible matching
-    synonyms = Column(String(1000))  # Comma-separated list
+    # Synonym relationships
+    synonyms = relationship(
+        "Tag",
+        secondary=tag_synonyms,
+        primaryjoin=id==tag_synonyms.c.tag_id,
+        secondaryjoin=id==tag_synonyms.c.synonym_id,
+        backref="synonym_of"
+    )
     
     # Metadata
     created_at = Column(DateTime, default=datetime.utcnow)

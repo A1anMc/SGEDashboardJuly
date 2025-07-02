@@ -8,7 +8,7 @@ from app.models.user import User
 from app.core.deps import get_current_user
 from app.schemas.tag import TagCreate, TagUpdate, Tag as TagSchema, TagWithRelations
 
-router = APIRouter()
+router = APIRouter(prefix="/api/tags", tags=["tags"])
 
 @router.get("/", response_model=List[TagWithRelations])
 async def get_tags(
