@@ -179,6 +179,37 @@ Recommended extensions:
 - Frontend: Use Prettier and ESLint configurations provided
 - Git commits: Follow conventional commits format
 
+### Code Quality Tools
+
+- **Cleanup and Validation**
+  ```bash
+  # Install quality tools
+  pip install vulture pytest pytest-cov pylint mypy
+
+  # Run cleanup and validation
+  python cleanup_and_validate.py
+
+  # Additional validation
+  pylint app/     # Syntax and style checking
+  mypy app/      # Type checking
+  ```
+  This script:
+  - Detects and removes unused code
+  - Runs test coverage analysis
+  - Enforces 90% minimum coverage
+  - Validates syntax and imports
+  - Checks API route usage
+  - Analyzes dependencies
+  - Generates comprehensive reports
+
+- **Access Control**
+  The system implements role-based access control with:
+  - Owner: Full administrative rights
+  - Assignee: Task execution rights
+  - Follower: Update notifications
+  - Observer: Read-only access
+  See `docs/task_management.md` for detailed permissions.
+
 ## Deployment
 
 ### Backend Deployment (Render)
