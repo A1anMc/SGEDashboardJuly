@@ -1,0 +1,31 @@
+# FastAPI and Server
+fastapi>=0.100.0
+uvicorn[standard]>=0.22.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# Database
+sqlalchemy>=2.0.0
+alembic>=1.11.0
+psycopg2-binary>=2.9.6
+
+# Authentication
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.6
+
+# External Services
+requests>=2.31.0
+httpx>=0.24.1
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+
+# Utilities
+python-dotenv>=1.0.0
+python-dateutil>=2.8.2
+black>=23.3.0
+isort>=5.12.0
+flake8>=6.0.0 
