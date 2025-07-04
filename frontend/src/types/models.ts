@@ -24,21 +24,24 @@ export interface Grant {
 export interface Tag {
   id: string;
   name: string;
-  color: string;
   category: TagCategory;
+  description?: string;
+  parent_id?: number;
+  synonyms?: string[];
+  created_by_id?: number;
   createdAt: Date;
   updatedAt: Date;
+  grant_count?: number;
+  project_count?: number;
 }
 
 export enum TagCategory {
-  SECTOR = 'sector',
-  FUNDING_TYPE = 'funding_type',
-  ELIGIBILITY = 'eligibility',
-  PRIORITY = 'priority',
-  STATUS = 'status',
-  GEOGRAPHIC = 'geographic',
-  ORGANIZATION_TYPE = 'organization_type',
-  PROJECT_TYPE = 'project_type'
+  INDUSTRY = 'industry',
+  LOCATION = 'location',
+  ORG_TYPE = 'org_type',
+  FUNDING_PURPOSE = 'funding_purpose',
+  AUDIENCE = 'audience',
+  OTHER = 'other'
 }
 
 export interface Task {
@@ -135,8 +138,10 @@ export interface UpdateGrantRequest extends Partial<CreateGrantRequest> {
 
 export interface CreateTagRequest {
   name: string;
-  color: string;
   category: TagCategory;
+  description?: string;
+  parent_id?: number;
+  synonyms?: string[];
 }
 
 export interface UpdateTagRequest extends Partial<CreateTagRequest> {
