@@ -12,7 +12,7 @@ const taskSchema = z.object({
   dueDate: z.string().optional(),
   assignedTo: z.string().optional(),
   tags: z.array(z.string()).default([]),
-  status: z.enum(['todo', 'in_progress', 'completed']).default('todo'),
+  status: z.enum(['todo', 'in_progress', 'in_review', 'done', 'archived']).default('todo'),
 });
 
 type TaskFormData = z.infer<typeof taskSchema>;
@@ -156,7 +156,9 @@ export default function TaskForm({ task, users, projects, onSubmit, onCancel }: 
           >
             <option value="todo">To Do</option>
             <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
+            <option value="in_review">In Review</option>
+            <option value="done">Done</option>
+            <option value="archived">Archived</option>
           </select>
         </div>
       )}

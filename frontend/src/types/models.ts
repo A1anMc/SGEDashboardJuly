@@ -45,7 +45,7 @@ export interface Task {
   id: string;
   title: string;
   description: string;
-  status: 'todo' | 'in_progress' | 'completed';
+  status: 'todo' | 'in_progress' | 'in_review' | 'done' | 'archived';
   assignedTo?: string;
   dueDate?: Date;
   tags?: Tag[];
@@ -154,7 +154,7 @@ export interface CreateTaskRequest {
 
 export interface UpdateTaskRequest extends Partial<CreateTaskRequest> {
   id: string;
-  status?: 'todo' | 'in_progress' | 'completed';
+  status?: 'todo' | 'in_progress' | 'in_review' | 'done' | 'archived';
 }
 
 export interface GrantFilters {

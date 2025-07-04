@@ -13,7 +13,9 @@ interface TaskListProps {
 const statusColors = {
   todo: 'bg-gray-100 text-gray-800',
   in_progress: 'bg-blue-100 text-blue-800',
-  completed: 'bg-green-100 text-green-800',
+  in_review: 'bg-yellow-100 text-yellow-800',
+  done: 'bg-green-100 text-green-800',
+  archived: 'bg-gray-200 text-gray-600',
 };
 
 export default function TaskList({ tasks, users, onEdit, onDelete, onStatusChange }: TaskListProps) {
@@ -72,7 +74,9 @@ export default function TaskList({ tasks, users, onEdit, onDelete, onStatusChang
           <option value="">All Statuses</option>
           <option value="todo">To Do</option>
           <option value="in_progress">In Progress</option>
-          <option value="completed">Completed</option>
+          <option value="in_review">In Review</option>
+          <option value="done">Done</option>
+          <option value="archived">Archived</option>
         </select>
         <select
           value={filter.assignee}
@@ -138,7 +142,9 @@ export default function TaskList({ tasks, users, onEdit, onDelete, onStatusChang
                   >
                     <option value="todo">To Do</option>
                     <option value="in_progress">In Progress</option>
-                    <option value="completed">Completed</option>
+                    <option value="in_review">In Review</option>
+                    <option value="done">Done</option>
+                    <option value="archived">Archived</option>
                   </select>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
