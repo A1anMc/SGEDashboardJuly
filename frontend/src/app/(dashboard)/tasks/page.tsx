@@ -54,7 +54,7 @@ export default function TasksPage() {
 
   // Update task mutation
   const updateTask = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Partial<Task> }) => {
+    mutationFn: async ({ id, data }: { id: string; data: Partial<Task> }) => {
       const response = await api.put(`/api/tasks/${id}`, data);
       return response.data;
     },
@@ -67,7 +67,7 @@ export default function TasksPage() {
 
   // Delete task mutation
   const deleteTask = useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string) => {
       await api.delete(`/api/tasks/${id}`);
     },
     onSuccess: () => {
@@ -88,13 +88,13 @@ export default function TasksPage() {
     setIsFormOpen(true);
   };
 
-  const handleDelete = async (taskId: number) => {
+  const handleDelete = async (taskId: string) => {
     if (window.confirm('Are you sure you want to delete this task?')) {
       await deleteTask.mutateAsync(taskId);
     }
   };
 
-  const handleStatusChange = async (taskId: number, status: string) => {
+  const handleStatusChange = async (taskId: string, status: Task['status']) => {
     await updateTask.mutateAsync({ id: taskId, data: { status } });
   };
 

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,12 +9,10 @@ import { Task, User, Project } from '@/types/models';
 const taskSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
-  due_date: z.string().optional(),
-  priority: z.enum(['low', 'medium', 'high']),
-  assignee_id: z.number().optional(),
-  project_id: z.number().optional(),
+  dueDate: z.string().optional(),
+  assignedTo: z.string().optional(),
   tags: z.array(z.string()).default([]),
-  status: z.enum(['todo', 'in_progress', 'done', 'cancelled']).default('todo'),
+  status: z.enum(['todo', 'in_progress', 'completed']).default('todo'),
 });
 
 type TaskFormData = z.infer<typeof taskSchema>;
@@ -21,7 +21,7 @@ interface TaskFormProps {
   task?: Task;
   users: User[];
   projects: Project[];
-  onSubmit: (data: TaskFormData) => void;
+  onSubmit: (data: Partial<Task>) => void;
   onCancel: () => void;
 }
 
@@ -35,7 +35,6 @@ export default function TaskForm({ task, users, projects, onSubmit, onCancel }: 
   } = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
     defaultValues: task || {
-      priority: 'medium',
       status: 'todo',
       tags: [],
     },
@@ -90,48 +89,21 @@ export default function TaskForm({ task, users, projects, onSubmit, onCancel }: 
         <label className="block text-sm font-medium text-gray-700">Due Date</label>
         <input
           type="datetime-local"
-          {...register('due_date')}
+          {...register('dueDate')}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Priority</label>
-        <select
-          {...register('priority')}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-        >
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-        </select>
-      </div>
-
-      <div>
         <label className="block text-sm font-medium text-gray-700">Assignee</label>
         <select
-          {...register('assignee_id')}
+          {...register('assignedTo')}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
         >
           <option value="">Select Assignee</option>
           {users.map(user => (
             <option key={user.id} value={user.id}>
-              {user.full_name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Project</label>
-        <select
-          {...register('project_id')}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-        >
-          <option value="">Select Project</option>
-          {projects.map(project => (
-            <option key={project.id} value={project.id}>
-              {project.title}
+              {user.name}
             </option>
           ))}
         </select>
@@ -184,8 +156,7 @@ export default function TaskForm({ task, users, projects, onSubmit, onCancel }: 
           >
             <option value="todo">To Do</option>
             <option value="in_progress">In Progress</option>
-            <option value="done">Done</option>
-            <option value="cancelled">Cancelled</option>
+            <option value="completed">Completed</option>
           </select>
         </div>
       )}

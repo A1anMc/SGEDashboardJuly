@@ -6,25 +6,18 @@ interface TaskListProps {
   tasks: Task[];
   users: User[];
   onEdit: (task: Task) => void;
-  onDelete: (taskId: number) => void;
-  onStatusChange: (taskId: number, status: string) => void;
+  onDelete: (taskId: string) => void;
+  onStatusChange: (taskId: string, status: Task['status']) => void;
 }
-
-const priorityColors = {
-  low: 'bg-green-100 text-green-800',
-  medium: 'bg-yellow-100 text-yellow-800',
-  high: 'bg-red-100 text-red-800',
-};
 
 const statusColors = {
   todo: 'bg-gray-100 text-gray-800',
   in_progress: 'bg-blue-100 text-blue-800',
-  done: 'bg-green-100 text-green-800',
-  cancelled: 'bg-red-100 text-red-800',
+  completed: 'bg-green-100 text-green-800',
 };
 
 export default function TaskList({ tasks, users, onEdit, onDelete, onStatusChange }: TaskListProps) {
-  const [sortField, setSortField] = useState<keyof Task>('due_date');
+  const [sortField, setSortField] = useState<keyof Task>('dueDate');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [filter, setFilter] = useState({
     status: '',
@@ -44,7 +37,7 @@ export default function TaskList({ tasks, users, onEdit, onDelete, onStatusChang
   const filteredAndSortedTasks = tasks
     .filter(task => {
       const matchesStatus = !filter.status || task.status === filter.status;
-      const matchesAssignee = !filter.assignee || task.assignee_id === parseInt(filter.assignee);
+      const matchesAssignee = !filter.assignee || task.assignedTo === filter.assignee;
       const matchesSearch = !filter.search || 
         task.title.toLowerCase().includes(filter.search.toLowerCase()) ||
         task.description?.toLowerCase().includes(filter.search.toLowerCase());
@@ -79,8 +72,7 @@ export default function TaskList({ tasks, users, onEdit, onDelete, onStatusChang
           <option value="">All Statuses</option>
           <option value="todo">To Do</option>
           <option value="in_progress">In Progress</option>
-          <option value="done">Done</option>
-          <option value="cancelled">Cancelled</option>
+          <option value="completed">Completed</option>
         </select>
         <select
           value={filter.assignee}
@@ -89,7 +81,7 @@ export default function TaskList({ tasks, users, onEdit, onDelete, onStatusChang
         >
           <option value="">All Assignees</option>
           {users.map(user => (
-            <option key={user.id} value={user.id}>{user.full_name}</option>
+            <option key={user.id} value={user.id}>{user.name}</option>
           ))}
         </select>
       </div>
@@ -109,12 +101,9 @@ export default function TaskList({ tasks, users, onEdit, onDelete, onStatusChang
               <th
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSort('due_date')}
+                onClick={() => handleSort('dueDate')}
               >
                 Due Date
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Priority
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
@@ -138,29 +127,23 @@ export default function TaskList({ tasks, users, onEdit, onDelete, onStatusChang
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">
-                    {task.due_date ? format(new Date(task.due_date), 'MMM d, yyyy') : '-'}
+                    {task.dueDate ? format(new Date(task.dueDate), 'MMM d, yyyy') : '-'}
                   </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${priorityColors[task.priority]}`}>
-                    {task.priority}
-                  </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <select
                     value={task.status}
-                    onChange={(e) => onStatusChange(task.id, e.target.value)}
-                    className={`text-xs rounded-full ${statusColors[task.status as keyof typeof statusColors]} border-transparent focus:border-gray-500 focus:ring-0`}
+                    onChange={(e) => onStatusChange(task.id, e.target.value as Task['status'])}
+                    className={`text-xs rounded-full ${statusColors[task.status]} border-transparent focus:border-gray-500 focus:ring-0`}
                   >
                     <option value="todo">To Do</option>
                     <option value="in_progress">In Progress</option>
-                    <option value="done">Done</option>
-                    <option value="cancelled">Cancelled</option>
+                    <option value="completed">Completed</option>
                   </select>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">
-                    {users.find(u => u.id === task.assignee_id)?.full_name || '-'}
+                    {users.find(u => u.id === task.assignedTo)?.name || '-'}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

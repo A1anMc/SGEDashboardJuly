@@ -15,7 +15,7 @@ export interface Grant {
   description: string;
   amount: number;
   deadline: Date;
-  status: 'open' | 'closed' | 'pending';
+  status: 'open' | 'closed' | 'draft';
   tags: Tag[];
   createdAt: Date;
   updatedAt: Date;
@@ -46,10 +46,9 @@ export interface Task {
   title: string;
   description: string;
   status: 'todo' | 'in_progress' | 'completed';
-  priority: 'low' | 'medium' | 'high';
   assignedTo?: string;
   dueDate?: Date;
-  tags: Tag[];
+  tags?: Tag[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -156,4 +155,16 @@ export interface CreateTaskRequest {
 export interface UpdateTaskRequest extends Partial<CreateTaskRequest> {
   id: string;
   status?: 'todo' | 'in_progress' | 'completed';
+}
+
+export interface GrantFilters {
+  status?: 'open' | 'closed' | 'draft';
+  tags?: string[];
+  search?: string;
+  minAmount?: number;
+  maxAmount?: number;
+  deadlineAfter?: Date;
+  deadlineBefore?: Date;
+  page?: number;
+  size?: number;
 }

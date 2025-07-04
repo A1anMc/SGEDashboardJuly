@@ -39,10 +39,10 @@ export const GrantCard: FC<GrantCardProps> = ({ grant, onClick }) => {
         <div className="flex flex-wrap gap-2 mb-4">
           {grant.tags.map((tag) => (
             <span
-              key={tag}
+              key={tag.id}
               className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
             >
-              {tag}
+              {tag.name}
             </span>
           ))}
         </div>
