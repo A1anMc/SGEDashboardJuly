@@ -4,8 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import TaskList from '@/components/tasks/TaskList';
 import TaskForm from '@/components/tasks/TaskForm';
-import { Task, User, Project } from '@/types/models';
-import { api } from '@/services/api';
+import { Task, User, Project, CreateTaskRequest, UpdateTaskRequest } from '@/types/models';
+import { tasksApi, usersApi, projectsApi } from '@/services/api';
 import { Dialog } from '@headlessui/react';
 
 export default function TasksPage() {
@@ -16,36 +16,24 @@ export default function TasksPage() {
   // Fetch tasks
   const { data: tasks = [], isLoading: isLoadingTasks } = useQuery({
     queryKey: ['tasks'],
-    queryFn: async () => {
-      const response = await api.get('/api/tasks');
-      return response.data;
-    },
+    queryFn: tasksApi.getTasks,
   });
 
   // Fetch users
   const { data: users = [], isLoading: isLoadingUsers } = useQuery({
     queryKey: ['users'],
-    queryFn: async () => {
-      const response = await api.get('/api/users');
-      return response.data;
-    },
+    queryFn: usersApi.getUsers,
   });
 
   // Fetch projects
   const { data: projects = [], isLoading: isLoadingProjects } = useQuery({
     queryKey: ['projects'],
-    queryFn: async () => {
-      const response = await api.get('/api/projects');
-      return response.data;
-    },
+    queryFn: projectsApi.getProjects,
   });
 
   // Create task mutation
   const createTask = useMutation({
-    mutationFn: async (data: Partial<Task>) => {
-      const response = await api.post('/api/tasks', data);
-      return response.data;
-    },
+    mutationFn: (data: CreateTaskRequest) => tasksApi.createTask(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       setIsFormOpen(false);
@@ -54,10 +42,8 @@ export default function TasksPage() {
 
   // Update task mutation
   const updateTask = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Partial<Task> }) => {
-      const response = await api.put(`/api/tasks/${id}`, data);
-      return response.data;
-    },
+    mutationFn: ({ id, data }: { id: string; data: UpdateTaskRequest }) => 
+      tasksApi.updateTask(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       setIsFormOpen(false);
@@ -67,19 +53,17 @@ export default function TasksPage() {
 
   // Delete task mutation
   const deleteTask = useMutation({
-    mutationFn: async (id: number) => {
-      await api.delete(`/api/tasks/${id}`);
-    },
+    mutationFn: (id: string) => tasksApi.deleteTask(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
   });
 
-  const handleSubmit = async (data: Partial<Task>) => {
+  const handleSubmit = async (data: CreateTaskRequest | UpdateTaskRequest) => {
     if (selectedTask) {
-      await updateTask.mutateAsync({ id: selectedTask.id, data });
+      await updateTask.mutateAsync({ id: selectedTask.id, data: data as UpdateTaskRequest });
     } else {
-      await createTask.mutateAsync(data);
+      await createTask.mutateAsync(data as CreateTaskRequest);
     }
   };
 
@@ -88,18 +72,25 @@ export default function TasksPage() {
     setIsFormOpen(true);
   };
 
-  const handleDelete = async (taskId: number) => {
+  const handleDelete = async (taskId: string) => {
     if (window.confirm('Are you sure you want to delete this task?')) {
       await deleteTask.mutateAsync(taskId);
     }
   };
 
-  const handleStatusChange = async (taskId: number, status: string) => {
-    await updateTask.mutateAsync({ id: taskId, data: { status } });
+  const handleStatusChange = async (taskId: string, status: string) => {
+    await updateTask.mutateAsync({ 
+      id: taskId, 
+      data: { id: taskId, status: status as UpdateTaskRequest['status'] } 
+    });
   };
 
   if (isLoadingTasks || isLoadingUsers || isLoadingProjects) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-lg text-gray-600">Loading...</div>
+      </div>
+    );
   }
 
   return (
@@ -111,7 +102,7 @@ export default function TasksPage() {
             setSelectedTask(undefined);
             setIsFormOpen(true);
           }}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         >
           Create Task
         </button>
@@ -136,7 +127,7 @@ export default function TasksPage() {
         <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
 
         <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="mx-auto max-w-xl bg-white rounded-xl p-6">
+          <Dialog.Panel className="mx-auto max-w-2xl w-full bg-white rounded-xl p-6 shadow-xl">
             <Dialog.Title className="text-lg font-medium leading-6 text-gray-900 mb-4">
               {selectedTask ? 'Edit Task' : 'Create Task'}
             </Dialog.Title>

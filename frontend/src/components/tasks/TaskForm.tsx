@@ -8,11 +8,12 @@ const taskSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   due_date: z.string().optional(),
-  priority: z.enum(['low', 'medium', 'high']),
-  assignee_id: z.number().optional(),
-  project_id: z.number().optional(),
+  priority: z.enum(['low', 'medium', 'high', 'urgent']),
+  assignee_id: z.string().optional(),
+  project_id: z.string().optional(),
+  estimated_hours: z.number().optional(),
   tags: z.array(z.string()).default([]),
-  status: z.enum(['todo', 'in_progress', 'done', 'cancelled']).default('todo'),
+  status: z.enum(['todo', 'in_progress', 'in_review', 'done', 'archived']).default('todo'),
 });
 
 type TaskFormData = z.infer<typeof taskSchema>;
@@ -95,16 +96,28 @@ export default function TaskForm({ task, users, projects, onSubmit, onCancel }: 
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Priority</label>
-        <select
-          {...register('priority')}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-        >
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-        </select>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Priority</label>
+          <select
+            {...register('priority')}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          >
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Estimated Hours</label>
+          <input
+            type="number"
+            {...register('estimated_hours')}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          />
+        </div>
       </div>
 
       <div>
@@ -184,25 +197,26 @@ export default function TaskForm({ task, users, projects, onSubmit, onCancel }: 
           >
             <option value="todo">To Do</option>
             <option value="in_progress">In Progress</option>
+            <option value="in_review">In Review</option>
             <option value="done">Done</option>
-            <option value="cancelled">Cancelled</option>
+            <option value="archived">Archived</option>
           </select>
         </div>
       )}
 
-      <div className="flex justify-end space-x-3">
+      <div className="flex justify-end space-x-4">
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
         >
-          {task ? 'Update Task' : 'Create Task'}
+          {task ? 'Update' : 'Create'} Task
         </button>
       </div>
     </form>

@@ -3,14 +3,18 @@ import { Grant } from '@/types/models';
 
 interface GrantCardProps {
   grant: Grant;
-  onClick: () => void;
+  onClick?: () => void;
 }
 
 export const GrantCard: FC<GrantCardProps> = ({ grant, onClick }) => {
   const statusColors = {
     open: 'bg-green-100 text-green-800',
     closed: 'bg-red-100 text-red-800',
-    draft: 'bg-gray-100 text-gray-800',
+    pending: 'bg-yellow-100 text-yellow-800',
+  };
+
+  const getStatusColor = (status: string) => {
+    return statusColors[status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800';
   };
 
   return (
@@ -24,9 +28,7 @@ export const GrantCard: FC<GrantCardProps> = ({ grant, onClick }) => {
             {grant.title}
           </h3>
           <span
-            className={`px-2 py-1 text-xs font-medium rounded-full ${
-              statusColors[grant.status]
-            }`}
+            className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(grant.status)}`}
           >
             {grant.status}
           </span>
@@ -39,10 +41,10 @@ export const GrantCard: FC<GrantCardProps> = ({ grant, onClick }) => {
         <div className="flex flex-wrap gap-2 mb-4">
           {grant.tags.map((tag) => (
             <span
-              key={tag}
+              key={tag.id}
               className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
             >
-              {tag}
+              {tag.name}
             </span>
           ))}
         </div>
