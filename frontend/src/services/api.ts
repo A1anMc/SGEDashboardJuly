@@ -80,116 +80,116 @@ export interface ApiError {
 // Type-safe API methods
 export const tasksApi = {
   getTasks: async (): Promise<Task[]> => {
-    const response = await api.get<Task[]>('/api/tasks');
+    const response = await api.get<Task[]>('/api/v1/tasks');
     return response.data;
   },
 
   getTask: async (id: string): Promise<Task> => {
-    const response = await api.get<Task>(`/api/tasks/${id}`);
+    const response = await api.get<Task>(`/api/v1/tasks/${id}`);
     return response.data;
   },
 
   createTask: async (task: CreateTaskRequest): Promise<Task> => {
-    const response = await api.post<Task>('/api/tasks', task);
+    const response = await api.post<Task>('/api/v1/tasks', task);
     return response.data;
   },
 
   updateTask: async (id: string, task: UpdateTaskRequest): Promise<Task> => {
-    const response = await api.put<Task>(`/api/tasks/${id}`, task);
+    const response = await api.put<Task>(`/api/v1/tasks/${id}`, task);
     return response.data;
   },
 
   deleteTask: async (id: string): Promise<void> => {
-    await api.delete(`/api/tasks/${id}`);
+    await api.delete(`/api/v1/tasks/${id}`);
   },
 };
 
 export const usersApi = {
   getUsers: async (): Promise<User[]> => {
-    const response = await api.get<User[]>('/api/users');
+    const response = await api.get<User[]>('/api/v1/users');
     return response.data;
   },
 
   getUser: async (id: string): Promise<User> => {
-    const response = await api.get<User>(`/api/users/${id}`);
+    const response = await api.get<User>(`/api/v1/users/${id}`);
     return response.data;
   },
 };
 
 export const projectsApi = {
   getProjects: async (): Promise<Project[]> => {
-    const response = await api.get<Project[]>('/api/projects');
+    const response = await api.get<Project[]>('/api/v1/projects');
     return response.data;
   },
 
   getProject: async (id: string): Promise<Project> => {
-    const response = await api.get<Project>(`/api/projects/${id}`);
+    const response = await api.get<Project>(`/api/v1/projects/${id}`);
     return response.data;
   },
 
   createProject: async (project: Partial<Project>): Promise<Project> => {
-    const response = await api.post<Project>('/api/projects', project);
+    const response = await api.post<Project>('/api/v1/projects', project);
     return response.data;
   },
 
   updateProject: async (id: string, project: Partial<Project>): Promise<Project> => {
-    const response = await api.put<Project>(`/api/projects/${id}`, project);
+    const response = await api.put<Project>(`/api/v1/projects/${id}`, project);
     return response.data;
   },
 
   deleteProject: async (id: string): Promise<void> => {
-    await api.delete(`/api/projects/${id}`);
+    await api.delete(`/api/v1/projects/${id}`);
   },
 };
 
 export const grantsApi = {
   getGrants: async (): Promise<Grant[]> => {
-    const response = await api.get<Grant[]>('/api/grants');
+    const response = await api.get<Grant[]>('/api/v1/grants');
     return response.data;
   },
 
   getGrant: async (id: string): Promise<Grant> => {
-    const response = await api.get<Grant>(`/api/grants/${id}`);
+    const response = await api.get<Grant>(`/api/v1/grants/${id}`);
     return response.data;
   },
 
   createGrant: async (grant: CreateGrantRequest): Promise<Grant> => {
-    const response = await api.post<Grant>('/api/grants', grant);
+    const response = await api.post<Grant>('/api/v1/grants', grant);
     return response.data;
   },
 
   updateGrant: async (id: string, grant: UpdateGrantRequest): Promise<Grant> => {
-    const response = await api.put<Grant>(`/api/grants/${id}`, grant);
+    const response = await api.put<Grant>(`/api/v1/grants/${id}`, grant);
     return response.data;
   },
 
   deleteGrant: async (id: string): Promise<void> => {
-    await api.delete(`/api/grants/${id}`);
+    await api.delete(`/api/v1/grants/${id}`);
   },
 };
 
 export const tagsApi = {
   getTags: async (): Promise<Tag[]> => {
-    const response = await api.get<Tag[]>('/api/tags');
+    const response = await api.get<Tag[]>('/api/v1/tags');
     return response.data;
   },
 
   getTag: async (id: string): Promise<Tag> => {
-    const response = await api.get<Tag>(`/api/tags/${id}`);
+    const response = await api.get<Tag>(`/api/v1/tags/${id}`);
     return response.data;
   },
 
   createTag: async (tag: CreateTagRequest): Promise<Tag> => {
-    const response = await api.post<Tag>('/api/tags', tag);
+    const response = await api.post<Tag>('/api/v1/tags', tag);
     return response.data;
   },
 
   updateTag: async (id: string, tag: UpdateTagRequest): Promise<Tag> => {
-    const response = await api.put<Tag>(`/api/tags/${id}`, tag);
+    const response = await api.put<Tag>(`/api/v1/tags/${id}`, tag);
     return response.data;
   },
 
   deleteTag: async (id: string): Promise<void> => {
-    await api.delete(`/api/tags/${id}`);
+    await api.delete(`/api/v1/tags/${id}`);
   },
 }; 
