@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, func, and_, or_
 from datetime import datetime, timedelta
-from app.db.deps import get_db
+from app.core.deps import get_db
 from app.core.deps import get_current_user
 from app.models.grant import Grant
 from app.models.user import User

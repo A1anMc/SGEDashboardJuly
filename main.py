@@ -8,7 +8,6 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from fastapi_utils.tasks import repeat_every
 from dotenv import load_dotenv
 
 # Import Base and all models to ensure they're registered
