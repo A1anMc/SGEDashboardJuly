@@ -1,4 +1,5 @@
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, AxiosResponse } from 'axios';
+import { Task, User, Project, Grant, Tag, CreateTaskRequest, UpdateTaskRequest, CreateGrantRequest, UpdateGrantRequest, CreateTagRequest, UpdateTagRequest } from '@/types/models';
 
 const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -74,4 +75,121 @@ export interface ApiError {
   message: string;
   status: number;
   errors?: Record<string, string[]>;
-} 
+}
+
+// Type-safe API methods
+export const tasksApi = {
+  getTasks: async (): Promise<Task[]> => {
+    const response = await api.get<Task[]>('/api/tasks');
+    return response.data;
+  },
+
+  getTask: async (id: string): Promise<Task> => {
+    const response = await api.get<Task>(`/api/tasks/${id}`);
+    return response.data;
+  },
+
+  createTask: async (task: CreateTaskRequest): Promise<Task> => {
+    const response = await api.post<Task>('/api/tasks', task);
+    return response.data;
+  },
+
+  updateTask: async (id: string, task: UpdateTaskRequest): Promise<Task> => {
+    const response = await api.put<Task>(`/api/tasks/${id}`, task);
+    return response.data;
+  },
+
+  deleteTask: async (id: string): Promise<void> => {
+    await api.delete(`/api/tasks/${id}`);
+  },
+};
+
+export const usersApi = {
+  getUsers: async (): Promise<User[]> => {
+    const response = await api.get<User[]>('/api/users');
+    return response.data;
+  },
+
+  getUser: async (id: string): Promise<User> => {
+    const response = await api.get<User>(`/api/users/${id}`);
+    return response.data;
+  },
+};
+
+export const projectsApi = {
+  getProjects: async (): Promise<Project[]> => {
+    const response = await api.get<Project[]>('/api/projects');
+    return response.data;
+  },
+
+  getProject: async (id: string): Promise<Project> => {
+    const response = await api.get<Project>(`/api/projects/${id}`);
+    return response.data;
+  },
+
+  createProject: async (project: Partial<Project>): Promise<Project> => {
+    const response = await api.post<Project>('/api/projects', project);
+    return response.data;
+  },
+
+  updateProject: async (id: string, project: Partial<Project>): Promise<Project> => {
+    const response = await api.put<Project>(`/api/projects/${id}`, project);
+    return response.data;
+  },
+
+  deleteProject: async (id: string): Promise<void> => {
+    await api.delete(`/api/projects/${id}`);
+  },
+};
+
+export const grantsApi = {
+  getGrants: async (): Promise<Grant[]> => {
+    const response = await api.get<Grant[]>('/api/grants');
+    return response.data;
+  },
+
+  getGrant: async (id: string): Promise<Grant> => {
+    const response = await api.get<Grant>(`/api/grants/${id}`);
+    return response.data;
+  },
+
+  createGrant: async (grant: CreateGrantRequest): Promise<Grant> => {
+    const response = await api.post<Grant>('/api/grants', grant);
+    return response.data;
+  },
+
+  updateGrant: async (id: string, grant: UpdateGrantRequest): Promise<Grant> => {
+    const response = await api.put<Grant>(`/api/grants/${id}`, grant);
+    return response.data;
+  },
+
+  deleteGrant: async (id: string): Promise<void> => {
+    await api.delete(`/api/grants/${id}`);
+  },
+};
+
+export const tagsApi = {
+  getTags: async (): Promise<Tag[]> => {
+    const response = await api.get<Tag[]>('/api/tags');
+    return response.data;
+  },
+
+  getTag: async (id: string): Promise<Tag> => {
+    const response = await api.get<Tag>(`/api/tags/${id}`);
+    return response.data;
+  },
+
+  createTag: async (tag: CreateTagRequest): Promise<Tag> => {
+    const response = await api.post<Tag>('/api/tags', tag);
+    return response.data;
+  },
+
+  updateTag: async (id: string, tag: UpdateTagRequest): Promise<Tag> => {
+    const response = await api.put<Tag>(`/api/tags/${id}`, tag);
+    return response.data;
+  },
+
+  deleteTag: async (id: string): Promise<void> => {
+    await api.delete(`/api/tags/${id}`);
+  },
+}; 

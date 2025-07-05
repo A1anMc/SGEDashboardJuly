@@ -2,41 +2,55 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Task, User, Project } from '@/types/models';
+import { Task, User, Project, CreateTaskRequest, UpdateTaskRequest } from '@/types/models';
 
-const taskSchema = z.object({
+const baseTaskSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   due_date: z.string().optional(),
-  priority: z.enum(['low', 'medium', 'high']),
-  assignee_id: z.number().optional(),
-  project_id: z.number().optional(),
+  priority: z.enum(['low', 'medium', 'high', 'urgent']),
+  assignee_id: z.string().optional(),
+  project_id: z.string().optional(),
+  estimated_hours: z.number().optional(),
   tags: z.array(z.string()).default([]),
-  status: z.enum(['todo', 'in_progress', 'done', 'cancelled']).default('todo'),
 });
 
-type TaskFormData = z.infer<typeof taskSchema>;
+const createTaskSchema = baseTaskSchema;
+
+const updateTaskSchema = baseTaskSchema.extend({
+  id: z.string(),
+  status: z.enum(['todo', 'in_progress', 'in_review', 'done', 'archived']),
+});
+
+type CreateTaskFormData = z.infer<typeof createTaskSchema>;
+type UpdateTaskFormData = z.infer<typeof updateTaskSchema>;
 
 interface TaskFormProps {
   task?: Task;
   users: User[];
   projects: Project[];
-  onSubmit: (data: TaskFormData) => void;
+  onSubmit: (data: CreateTaskRequest | UpdateTaskRequest) => void;
   onCancel: () => void;
 }
 
 export default function TaskForm({ task, users, projects, onSubmit, onCancel }: TaskFormProps) {
+  const isUpdate = !!task;
+  const schema = isUpdate ? updateTaskSchema : createTaskSchema;
+  type FormData = typeof isUpdate extends true ? UpdateTaskFormData : CreateTaskFormData;
+
   const {
     register,
     handleSubmit,
     formState: { errors },
     setValue,
     watch,
-  } = useForm<TaskFormData>({
-    resolver: zodResolver(taskSchema),
-    defaultValues: task || {
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: task ? {
+      ...task,
+      tags: task.tags.map(tag => tag.id),
+    } : {
       priority: 'medium',
-      status: 'todo',
       tags: [],
     },
   });
@@ -47,24 +61,44 @@ export default function TaskForm({ task, users, projects, onSubmit, onCancel }: 
   useEffect(() => {
     if (task) {
       Object.entries(task).forEach(([key, value]) => {
-        setValue(key as keyof TaskFormData, value);
+        if (key === 'tags') {
+          setValue('tags' as any, task.tags.map(tag => tag.id));
+        } else {
+          setValue(key as any, value);
+        }
       });
     }
   }, [task, setValue]);
 
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-      setValue('tags', [...tags, tagInput.trim()]);
+      setValue('tags', [...tags, tagInput.trim()] as any);
       setTagInput('');
     }
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setValue('tags', tags.filter(tag => tag !== tagToRemove));
+    setValue('tags', tags.filter(tag => tag !== tagToRemove) as any);
+  };
+
+  const onSubmitForm = (data: FormData) => {
+    if (isUpdate) {
+      const updateData: UpdateTaskRequest = {
+        id: task.id,
+        ...data,
+      };
+      onSubmit(updateData);
+    } else {
+      const createData: CreateTaskRequest = {
+        ...data,
+        status: 'todo',
+      };
+      onSubmit(createData);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-6">
       <div>
         <label className="block text-sm font-medium text-gray-700">Title</label>
         <input
@@ -95,16 +129,28 @@ export default function TaskForm({ task, users, projects, onSubmit, onCancel }: 
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Priority</label>
-        <select
-          {...register('priority')}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-        >
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-        </select>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Priority</label>
+          <select
+            {...register('priority')}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          >
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Estimated Hours</label>
+          <input
+            type="number"
+            {...register('estimated_hours')}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          />
+        </div>
       </div>
 
       <div>
@@ -175,7 +221,7 @@ export default function TaskForm({ task, users, projects, onSubmit, onCancel }: 
         </div>
       </div>
 
-      {task && (
+      {isUpdate && (
         <div>
           <label className="block text-sm font-medium text-gray-700">Status</label>
           <select
@@ -184,25 +230,26 @@ export default function TaskForm({ task, users, projects, onSubmit, onCancel }: 
           >
             <option value="todo">To Do</option>
             <option value="in_progress">In Progress</option>
+            <option value="in_review">In Review</option>
             <option value="done">Done</option>
-            <option value="cancelled">Cancelled</option>
+            <option value="archived">Archived</option>
           </select>
         </div>
       )}
 
-      <div className="flex justify-end space-x-3">
+      <div className="flex justify-end space-x-4">
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
         >
-          {task ? 'Update Task' : 'Create Task'}
+          {isUpdate ? 'Update' : 'Create'} Task
         </button>
       </div>
     </form>

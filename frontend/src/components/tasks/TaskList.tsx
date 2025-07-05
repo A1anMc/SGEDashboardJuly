@@ -6,21 +6,23 @@ interface TaskListProps {
   tasks: Task[];
   users: User[];
   onEdit: (task: Task) => void;
-  onDelete: (taskId: number) => void;
-  onStatusChange: (taskId: number, status: string) => void;
+  onDelete: (taskId: string) => void;
+  onStatusChange: (taskId: string, status: Task['status']) => void;
 }
 
 const priorityColors = {
   low: 'bg-green-100 text-green-800',
   medium: 'bg-yellow-100 text-yellow-800',
   high: 'bg-red-100 text-red-800',
+  urgent: 'bg-red-200 text-red-900',
 };
 
 const statusColors = {
   todo: 'bg-gray-100 text-gray-800',
   in_progress: 'bg-blue-100 text-blue-800',
+  in_review: 'bg-purple-100 text-purple-800',
   done: 'bg-green-100 text-green-800',
-  cancelled: 'bg-red-100 text-red-800',
+  archived: 'bg-gray-200 text-gray-600',
 };
 
 export default function TaskList({ tasks, users, onEdit, onDelete, onStatusChange }: TaskListProps) {
@@ -44,7 +46,7 @@ export default function TaskList({ tasks, users, onEdit, onDelete, onStatusChang
   const filteredAndSortedTasks = tasks
     .filter(task => {
       const matchesStatus = !filter.status || task.status === filter.status;
-      const matchesAssignee = !filter.assignee || task.assignee_id === parseInt(filter.assignee);
+      const matchesAssignee = !filter.assignee || task.assignee_id === filter.assignee;
       const matchesSearch = !filter.search || 
         task.title.toLowerCase().includes(filter.search.toLowerCase()) ||
         task.description?.toLowerCase().includes(filter.search.toLowerCase());
@@ -57,6 +59,27 @@ export default function TaskList({ tasks, users, onEdit, onDelete, onStatusChang
       const comparison = aValue > bValue ? 1 : -1;
       return sortDirection === 'asc' ? comparison : -comparison;
     });
+
+  const getStatusLabel = (status: string) => {
+    const labels = {
+      todo: 'To Do',
+      in_progress: 'In Progress',
+      in_review: 'In Review',
+      done: 'Done',
+      archived: 'Archived',
+    };
+    return labels[status as keyof typeof labels] || status;
+  };
+
+  const getPriorityLabel = (priority: string) => {
+    const labels = {
+      low: 'Low',
+      medium: 'Medium',
+      high: 'High',
+      urgent: 'Urgent',
+    };
+    return labels[priority as keyof typeof labels] || priority;
+  };
 
   return (
     <div className="space-y-4">
@@ -79,8 +102,9 @@ export default function TaskList({ tasks, users, onEdit, onDelete, onStatusChang
           <option value="">All Statuses</option>
           <option value="todo">To Do</option>
           <option value="in_progress">In Progress</option>
+          <option value="in_review">In Review</option>
           <option value="done">Done</option>
-          <option value="cancelled">Cancelled</option>
+          <option value="archived">Archived</option>
         </select>
         <select
           value={filter.assignee}
@@ -143,19 +167,20 @@ export default function TaskList({ tasks, users, onEdit, onDelete, onStatusChang
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${priorityColors[task.priority]}`}>
-                    {task.priority}
+                    {getPriorityLabel(task.priority)}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <select
                     value={task.status}
-                    onChange={(e) => onStatusChange(task.id, e.target.value)}
-                    className={`text-xs rounded-full ${statusColors[task.status as keyof typeof statusColors]} border-transparent focus:border-gray-500 focus:ring-0`}
+                    onChange={(e) => onStatusChange(task.id, e.target.value as Task['status'])}
+                    className={`text-xs rounded-full px-2 py-1 ${statusColors[task.status as keyof typeof statusColors]} border-transparent focus:border-gray-500 focus:ring-0`}
                   >
                     <option value="todo">To Do</option>
                     <option value="in_progress">In Progress</option>
+                    <option value="in_review">In Review</option>
                     <option value="done">Done</option>
-                    <option value="cancelled">Cancelled</option>
+                    <option value="archived">Archived</option>
                   </select>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
