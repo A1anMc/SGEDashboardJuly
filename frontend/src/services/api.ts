@@ -142,31 +142,7 @@ export const projectsApi = {
   },
 };
 
-export const grantsApi = {
-  getGrants: async (): Promise<Grant[]> => {
-    const response = await api.get<Grant[]>('/api/grants');
-    return response.data;
-  },
-
-  getGrant: async (id: string): Promise<Grant> => {
-    const response = await api.get<Grant>(`/api/grants/${id}`);
-    return response.data;
-  },
-
-  createGrant: async (grant: CreateGrantRequest): Promise<Grant> => {
-    const response = await api.post<Grant>('/api/grants', grant);
-    return response.data;
-  },
-
-  updateGrant: async (id: string, grant: UpdateGrantRequest): Promise<Grant> => {
-    const response = await api.put<Grant>(`/api/grants/${id}`, grant);
-    return response.data;
-  },
-
-  deleteGrant: async (id: string): Promise<void> => {
-    await api.delete(`/api/grants/${id}`);
-  },
-};
+// Grant APIs moved to grants.ts service file
 
 export const tagsApi = {
   getTags: async (): Promise<Tag[]> => {

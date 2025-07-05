@@ -5,18 +5,27 @@ import {
   PieChart, Pie, Cell
 } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
-import { fetchGrantDashboard } from '@/services/grants';
+import { grantsApi } from '@/services/grants';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 const GrantDashboard: React.FC = () => {
-  const { data: dashboard, isLoading } = useQuery({
-    queryKey: ['grantDashboard'],
-    queryFn: fetchGrantDashboard
+  const { data: dashboard, isLoading, error } = useQuery({
+    queryKey: ['grants', 'dashboard'],
+    queryFn: grantsApi.getDashboard,
+    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
   });
 
   if (isLoading) {
     return <LinearProgress />;
+  }
+
+  if (error) {
+    return (
+      <Typography color="error">
+        Error loading dashboard: {error instanceof Error ? error.message : 'Unknown error'}
+      </Typography>
+    );
   }
 
   if (!dashboard) {
@@ -34,12 +43,22 @@ const GrantDashboard: React.FC = () => {
 
   // Transform data for charts
   const industryData = Object.entries(dashboard.categories.by_industry).map(([name, value]) => ({
-    name,
+    name: name.replace(/_/g, ' ').toUpperCase(),
     value
   }));
 
   const locationData = Object.entries(dashboard.categories.by_location).map(([name, value]) => ({
     name,
+    value
+  }));
+
+  const fundingRangeData = Object.entries(dashboard.categories.by_funding_range).map(([name, value]) => ({
+    name,
+    value
+  }));
+
+  const orgTypeData = Object.entries(dashboard.categories.by_org_type).map(([name, value]) => ({
+    name: name.replace(/_/g, ' ').toUpperCase(),
     value
   }));
 
@@ -116,19 +135,64 @@ const GrantDashboard: React.FC = () => {
         </Grid>
       </Grid>
 
+      {/* Additional Charts Row */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} md={6}>
+          <Card sx={{ p: 2, height: '400px' }}>
+            <Typography variant="h6" gutterBottom>Grants by Funding Range</Typography>
+            <ResponsiveContainer width="100%" height="90%">
+              <BarChart data={fundingRangeData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="value" fill="#00C49F" />
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Card sx={{ p: 2, height: '400px' }}>
+            <Typography variant="h6" gutterBottom>Grants by Organization Type</Typography>
+            <ResponsiveContainer width="100%" height="90%">
+              <PieChart>
+                <Pie
+                  data={orgTypeData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  label
+                >
+                  {orgTypeData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </Card>
+        </Grid>
+      </Grid>
+
       {/* Timeline */}
       <Card sx={{ p: 2, mb: 4 }}>
         <Typography variant="h6" gutterBottom>Grant Timeline</Typography>
         <Grid container spacing={2}>
           {Object.entries(dashboard.timeline).map(([period, data]) => (
             <Grid item xs={12} sm={6} md={2.4} key={period}>
-              <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
-                <Typography variant="subtitle1" sx={{ textTransform: 'capitalize' }}>
-                  {period.replace('_', ' ')}
+              <Card variant="outlined" sx={{ p: 2, textAlign: 'center' }}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  {period.replace(/_/g, ' ').toUpperCase()}
                 </Typography>
-                <Typography variant="h6">{formatCurrency(data.total_amount)}</Typography>
-                <Typography color="text.secondary">{data.count} grants</Typography>
-              </Box>
+                <Typography variant="h4" color="primary">
+                  {data.count}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {formatCurrency(data.total_amount)}
+                </Typography>
+              </Card>
             </Grid>
           ))}
         </Grid>
@@ -137,53 +201,49 @@ const GrantDashboard: React.FC = () => {
       {/* Insights */}
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
-          <Card sx={{ p: 2, height: '100%' }}>
+          <Card sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom>Best Matches</Typography>
             {dashboard.matching_insights.best_matches.map((match, index) => (
-              <Box key={match.grant_id} sx={{ mb: 2 }}>
-                <Typography variant="subtitle1">{match.title}</Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <LinearProgress
-                    variant="determinate"
-                    value={match.score}
-                    sx={{ flexGrow: 1 }}
-                  />
-                  <Typography variant="body2">{match.score}%</Typography>
-                </Box>
+              <Box key={match.grant_id} sx={{ mb: 1, display: 'flex', justifyContent: 'space-between' }}>
+                <Typography variant="body2">{match.title}</Typography>
+                <Chip 
+                  label={`${match.score}%`} 
+                  color={match.score >= 90 ? 'success' : match.score >= 75 ? 'warning' : 'default'}
+                  size="small"
+                />
               </Box>
             ))}
           </Card>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Card sx={{ p: 2, height: '100%' }}>
-            <Typography variant="h6" gutterBottom>Insights & Recommendations</Typography>
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2" color="error" gutterBottom>
-                Common Mismatches
+          <Card sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>Suggested Improvements</Typography>
+            {dashboard.matching_insights.suggested_improvements.map((suggestion, index) => (
+              <Typography key={index} variant="body2" sx={{ mb: 1 }}>
+                • {suggestion}
               </Typography>
-              {dashboard.matching_insights.common_mismatches.map((mismatch, index) => (
-                <Chip
-                  key={index}
-                  label={mismatch}
-                  color="error"
-                  variant="outlined"
-                  sx={{ m: 0.5 }}
-                />
-              ))}
-            </Box>
-            <Box>
-              <Typography variant="subtitle2" color="primary" gutterBottom>
-                Suggestions
-              </Typography>
-              {dashboard.matching_insights.suggested_improvements.map((suggestion, index) => (
-                <Typography key={index} variant="body2" sx={{ mb: 1 }}>
-                  • {suggestion}
-                </Typography>
-              ))}
-            </Box>
+            ))}
+            
+            {dashboard.matching_insights.common_mismatches.length > 0 && (
+              <>
+                <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>Common Issues</Typography>
+                {dashboard.matching_insights.common_mismatches.map((mismatch, index) => (
+                  <Typography key={index} variant="body2" color="error" sx={{ mb: 1 }}>
+                    • {mismatch}
+                  </Typography>
+                ))}
+              </>
+            )}
           </Card>
         </Grid>
       </Grid>
+
+      {/* Last Updated */}
+      <Box sx={{ mt: 2, textAlign: 'center' }}>
+        <Typography variant="caption" color="text.secondary">
+          Last updated: {new Date(dashboard.last_updated).toLocaleString()}
+        </Typography>
+      </Box>
     </Box>
   );
 };

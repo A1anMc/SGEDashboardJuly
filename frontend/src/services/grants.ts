@@ -1,92 +1,118 @@
 import { api } from './api';
-import { Grant, GrantFilters } from '@/types/models';
+import { Grant, GrantFilters, GrantDashboard, GrantMatchResult, ProjectProfile, CreateGrantRequest, UpdateGrantRequest } from '@/types/models';
 
 export interface GrantsResponse {
   items: Grant[];
   total: number;
   page: number;
   size: number;
+  has_next: boolean;
+  has_prev: boolean;
 }
 
-export interface GrantDashboard {
-  metrics: {
-    total_active: number;
-    total_amount_available: number;
-    upcoming_deadlines: number;
-    avg_match_score: number;
-  };
-  categories: {
-    by_industry: Record<string, number>;
-    by_location: Record<string, number>;
-    by_org_type: Record<string, number>;
-    by_funding_range: Record<string, number>;
-  };
-  timeline: {
-    this_week: DeadlineGroup;
-    next_week: DeadlineGroup;
-    this_month: DeadlineGroup;
-    next_month: DeadlineGroup;
-    later: DeadlineGroup;
-  };
-  matching_insights: {
-    best_matches: Array<{
-      grant_id: number;
-      title: string;
-      score: number;
-    }>;
-    common_mismatches: string[];
-    suggested_improvements: string[];
-  };
-  last_updated: string;
+export interface ScraperRunRequest {
+  sources?: string[];
+  force_refresh?: boolean;
 }
 
-interface DeadlineGroup {
-  grants: Array<{
-    id: number;
-    title: string;
-    deadline: string;
-    amount: number;
-  }>;
-  total_amount: number;
-  count: number;
+export interface ScraperRunResponse {
+  started_at: string;
+  sources: string[];
+  status: string;
+  message: string;
 }
 
 export const grantsApi = {
-  getGrants: async (filters?: GrantFilters) => {
-    const response = await api.get<{ items: Grant[]; total: number }>('/grants', { params: filters });
+  // Get paginated grants with filtering
+  getGrants: async (filters?: GrantFilters): Promise<GrantsResponse> => {
+    const params = new URLSearchParams();
+    
+    if (filters) {
+      if (filters.industry_focus) params.append('industry_focus', filters.industry_focus);
+      if (filters.location_eligibility) params.append('location_eligibility', filters.location_eligibility);
+      if (filters.status) params.append('status', filters.status);
+      if (filters.min_amount) params.append('min_amount', filters.min_amount.toString());
+      if (filters.max_amount) params.append('max_amount', filters.max_amount.toString());
+      if (filters.deadline_before) params.append('deadline_before', filters.deadline_before.toISOString());
+      if (filters.deadline_after) params.append('deadline_after', filters.deadline_after.toISOString());
+      if (filters.search) params.append('search', filters.search);
+      if (filters.page) params.append('page', filters.page.toString());
+      if (filters.size) params.append('size', filters.size.toString());
+    }
+    
+    const response = await api.get<GrantsResponse>(`/grants?${params.toString()}`);
     return response.data;
   },
 
-  getGrant: async (id: number) => {
+  // Get single grant
+  getGrant: async (id: number): Promise<Grant> => {
     const response = await api.get<Grant>(`/grants/${id}`);
     return response.data;
   },
 
-  createGrant: async (data: Partial<Grant>) => {
-    const response = await api.post<Grant>('/grants', data);
+  // Create grant
+  createGrant: async (grant: CreateGrantRequest): Promise<Grant> => {
+    const response = await api.post<Grant>('/grants', grant);
     return response.data;
   },
 
-  updateGrant: async (id: number, data: Partial<Grant>) => {
-    const response = await api.put<Grant>(`/grants/${id}`, data);
+  // Update grant
+  updateGrant: async (id: number, grant: UpdateGrantRequest): Promise<Grant> => {
+    const response = await api.put<Grant>(`/grants/${id}`, grant);
     return response.data;
   },
 
-  deleteGrant: async (id: number) => {
+  // Delete grant
+  deleteGrant: async (id: number): Promise<void> => {
     await api.delete(`/grants/${id}`);
   },
 
-  getTags: async (): Promise<string[]> => {
-    const { data } = await api.get('/grants/tags');
-    return data;
+  // Match grants against project profile
+  matchGrants: async (
+    projectProfile: ProjectProfile,
+    minScore: number = 60,
+    limit: number = 10
+  ): Promise<GrantMatchResult[]> => {
+    const response = await api.post<GrantMatchResult[]>('/grants/match', projectProfile, {
+      params: {
+        min_score: minScore,
+        limit
+      }
+    });
+    return response.data;
   },
 
-  runScraper: async () => {
-    await api.post('/scraper/run');
+  // Get match details for specific grant
+  getGrantMatchDetails: async (
+    grantId: number,
+    projectProfile: ProjectProfile
+  ): Promise<GrantMatchResult> => {
+    const response = await api.get<GrantMatchResult>(`/grants/${grantId}/match-details`, {
+      params: projectProfile
+    });
+    return response.data;
   },
+
+  // Get dashboard data
+  getDashboard: async (): Promise<GrantDashboard> => {
+    const response = await api.get<GrantDashboard>('/grants/dashboard/data');
+    return response.data;
+  },
+
+  // Run scrapers
+  runScrapers: async (request?: ScraperRunRequest): Promise<ScraperRunResponse> => {
+    const response = await api.post<ScraperRunResponse>('/grants/scrape', request || {});
+    return response.data;
+  },
+
+  // Get scraper status
+  getScraperStatus: async () => {
+    const response = await api.get('/grants/scrape/status');
+    return response.data;
+  }
 };
 
+// Legacy function for backwards compatibility
 export const fetchGrantDashboard = async (): Promise<GrantDashboard> => {
-  const response = await api.get<GrantDashboard>('/grants/dashboard');
-  return response.data;
+  return grantsApi.getDashboard();
 }; 
