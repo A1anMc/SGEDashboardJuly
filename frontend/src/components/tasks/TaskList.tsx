@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useReducer } from 'react';
 import { Task, User } from '@/types/models';
 import { format } from 'date-fns';
 
@@ -25,39 +25,81 @@ const statusColors = {
   archived: 'bg-gray-200 text-gray-600',
 };
 
+interface State {
+  filter: {
+    status: string;
+    assignee: string;
+    search: string;
+  };
+  sortField: keyof Task;
+  sortDirection: 'asc' | 'desc';
+}
+
+type Action =
+  | { type: 'SET_FILTER'; field: keyof State['filter']; value: string }
+  | { type: 'SET_SORT'; field: keyof Task }
+  | { type: 'TOGGLE_SORT_DIRECTION' };
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case 'SET_FILTER':
+      return {
+        ...state,
+        filter: {
+          ...state.filter,
+          [action.field]: action.value
+        }
+      };
+    case 'SET_SORT':
+      return {
+        ...state,
+        sortField: action.field,
+        sortDirection: 'asc'
+      };
+    case 'TOGGLE_SORT_DIRECTION':
+      return {
+        ...state,
+        sortDirection: state.sortDirection === 'asc' ? 'desc' : 'asc'
+      };
+    default:
+      return state;
+  }
+}
+
 export default function TaskList({ tasks, users, onEdit, onDelete, onStatusChange }: TaskListProps) {
-  const [sortField, setSortField] = useState<keyof Task>('due_date');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [filter, setFilter] = useState({
-    status: '',
-    assignee: '',
-    search: '',
+  const [state, dispatch] = useReducer(reducer, {
+    filter: {
+      status: '',
+      assignee: '',
+      search: '',
+    },
+    sortField: 'due_date',
+    sortDirection: 'asc'
   });
 
   const handleSort = (field: keyof Task) => {
-    if (field === sortField) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    if (field === state.sortField) {
+      dispatch({ type: 'TOGGLE_SORT_DIRECTION' });
     } else {
-      setSortField(field);
-      setSortDirection('asc');
+      dispatch({ type: 'SET_SORT', field });
     }
   };
 
   const filteredAndSortedTasks = tasks
     .filter(task => {
-      const matchesStatus = !filter.status || task.status === filter.status;
-      const matchesAssignee = !filter.assignee || task.assignee_id === filter.assignee;
-      const matchesSearch = !filter.search || 
-        task.title.toLowerCase().includes(filter.search.toLowerCase()) ||
-        task.description?.toLowerCase().includes(filter.search.toLowerCase());
+      const matchesStatus = !state.filter.status || task.status === state.filter.status;
+      const matchesAssignee = !state.filter.assignee || task.assignee_id === state.filter.assignee;
+      const matchesSearch = !state.filter.search || 
+        task.title.toLowerCase().includes(state.filter.search.toLowerCase()) ||
+        task.description?.toLowerCase().includes(state.filter.search.toLowerCase());
       return matchesStatus && matchesAssignee && matchesSearch;
     })
     .sort((a, b) => {
-      const aValue = a[sortField];
-      const bValue = b[sortField];
+      const aValue = a[state.sortField];
+      const bValue = b[state.sortField];
       if (aValue === bValue) return 0;
       const comparison = aValue > bValue ? 1 : -1;
-      return sortDirection === 'asc' ? comparison : -comparison;
+      return state.sortDirection === 'asc' ? comparison : -comparison;
     });
 
   const getStatusLabel = (status: string) => {
@@ -89,15 +131,16 @@ export default function TaskList({ tasks, users, onEdit, onDelete, onStatusChang
           <input
             type="text"
             placeholder="Search tasks..."
-            value={filter.search}
-            onChange={(e) => setFilter({ ...filter, search: e.target.value })}
+            value={state.filter.search}
+            onChange={(e) => dispatch({ type: 'SET_FILTER', field: 'search', value: e.target.value })}
             className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           />
         </div>
         <select
-          value={filter.status}
-          onChange={(e) => setFilter({ ...filter, status: e.target.value })}
+          value={state.filter.status}
+          onChange={(e) => dispatch({ type: 'SET_FILTER', field: 'status', value: e.target.value })}
           className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          data-testid="status-filter"
         >
           <option value="">All Statuses</option>
           <option value="todo">To Do</option>
@@ -107,8 +150,8 @@ export default function TaskList({ tasks, users, onEdit, onDelete, onStatusChang
           <option value="archived">Archived</option>
         </select>
         <select
-          value={filter.assignee}
-          onChange={(e) => setFilter({ ...filter, assignee: e.target.value })}
+          value={state.filter.assignee}
+          onChange={(e) => dispatch({ type: 'SET_FILTER', field: 'assignee', value: e.target.value })}
           className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
         >
           <option value="">All Assignees</option>

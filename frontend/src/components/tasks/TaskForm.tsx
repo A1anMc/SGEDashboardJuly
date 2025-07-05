@@ -104,6 +104,7 @@ export default function TaskForm({ task, users, projects, onSubmit, onCancel }: 
         <input
           type="text"
           {...register('title')}
+          aria-label="Title"
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
         />
         {errors.title && (
@@ -115,6 +116,7 @@ export default function TaskForm({ task, users, projects, onSubmit, onCancel }: 
         <label className="block text-sm font-medium text-gray-700">Description</label>
         <textarea
           {...register('description')}
+          aria-label="Description"
           rows={4}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
         />
@@ -134,6 +136,7 @@ export default function TaskForm({ task, users, projects, onSubmit, onCancel }: 
           <label className="block text-sm font-medium text-gray-700">Priority</label>
           <select
             {...register('priority')}
+            aria-label="Priority"
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           >
             <option value="low">Low</option>
@@ -226,6 +229,7 @@ export default function TaskForm({ task, users, projects, onSubmit, onCancel }: 
           <label className="block text-sm font-medium text-gray-700">Status</label>
           <select
             {...register('status')}
+            aria-label="Status"
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           >
             <option value="todo">To Do</option>
