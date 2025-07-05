@@ -24,8 +24,8 @@ from app.routers import grants, metrics, program_logic, projects, team_members, 
 from app.core.config import settings
 from app.db.session import engine
 
-# Create all tables in the database
-Base.metadata.create_all(bind=engine)
+# Create all tables in the database - commented out for testing
+# Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Shadow Goose Entertainment API",
