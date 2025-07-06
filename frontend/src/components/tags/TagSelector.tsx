@@ -10,15 +10,15 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
-} from '@/components/ui/command';
+} from '../ui/command';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+} from '../ui/popover';
+import { Badge } from '../ui/badge';
+import { Input } from '../ui/input';
+import { Button } from '../ui/button';
 import { X } from 'lucide-react';
 
 interface TagSelectorProps {
