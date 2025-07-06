@@ -17,12 +17,28 @@ class Settings(BaseSettings):
     PORT: int = int(os.getenv("PORT", 8000))
     
     # CORS Configuration
-    CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "https://*.onrender.com",        # Render domains
-        "https://dashboard.shadowgoose.com"  # Production domain
-    ]
+    CORS_ORIGINS: List[str] = []
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Set CORS origins based on environment or environment variable
+        if not self.CORS_ORIGINS:
+            cors_env = os.getenv("CORS_ORIGINS", "")
+            if cors_env:
+                # Parse comma-separated string from environment
+                self.CORS_ORIGINS = [origin.strip() for origin in cors_env.split(",") if origin.strip()]
+            else:
+                # Default origins based on environment
+                if self.ENV == "production":
+                    self.CORS_ORIGINS = [
+                        "https://sge-dashboard.onrender.com",
+                        "https://*.onrender.com"
+                    ]
+                else:
+                    self.CORS_ORIGINS = [
+                        "http://localhost:3000",
+                        "http://127.0.0.1:3000"
+                    ]
     CORS_ALLOW_CREDENTIALS: bool = True
     CORS_ALLOW_METHODS: List[str] = ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
     CORS_ALLOW_HEADERS: List[str] = ["*"]

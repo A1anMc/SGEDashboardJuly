@@ -13,7 +13,7 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: CORS_ORIGINS
-        value: https://sge-dashboard.onrender.com
+        value: https://sge-dashboard.onrender.com,https://*.onrender.com
       - key: FRONTEND_URL
         value: https://sge-dashboard.onrender.com
       - key: ENVIRONMENT
