@@ -57,6 +57,7 @@ class Settings(BaseSettings):
     DATABASE_MAX_OVERFLOW: int = int(os.getenv("DATABASE_MAX_OVERFLOW", "10"))
     DATABASE_POOL_TIMEOUT: int = int(os.getenv("DATABASE_POOL_TIMEOUT", "30"))
     DATABASE_POOL_RECYCLE: int = int(os.getenv("DATABASE_POOL_RECYCLE", "1800"))  # 30 minutes
+    DATABASE_RETRY_LIMIT: int = int(os.getenv("DATABASE_RETRY_LIMIT", "5"))  # Connection retry attempts
     DATABASE_ECHO: bool = ENV == "development"
     DATABASE_SSL_REQUIRED: bool = ENV == "production"
     
