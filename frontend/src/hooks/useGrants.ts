@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { grantsApi, ScraperRunRequest } from '@/services/grants';
-import { GrantFilters, Grant, CreateGrantRequest, UpdateGrantRequest } from '@/types/models';
+import { grantsApi, ScraperRunRequest } from '../services/grants';
+import { GrantFilters, Grant, CreateGrantRequest, UpdateGrantRequest } from '../types/models';
 import { toast } from 'react-hot-toast';
 
 export const useGrants = (filters: GrantFilters = {}) => {

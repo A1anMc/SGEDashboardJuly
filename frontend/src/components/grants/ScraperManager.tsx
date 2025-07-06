@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { grantsApi, ScraperRunRequest } from '@/services/grants';
+import { grantsApi, ScraperRunRequest } from '../../services/grants';
 import { toast } from 'react-hot-toast';
 import { PlayIcon, ClockIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 

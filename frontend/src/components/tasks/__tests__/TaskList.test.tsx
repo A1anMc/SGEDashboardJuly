@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '../../../test-utils';
 import TaskList from '../TaskList';
-import { Task, User } from '@/types/models';
+import { Task, User } from '../../../types/models';
 
 // Mock tasks with different statuses
 const mockTasks: Task[] = [

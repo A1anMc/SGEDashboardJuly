@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import TaskList from '@/components/tasks/TaskList';
-import TaskForm from '@/components/tasks/TaskForm';
-import { Task, User, Project, CreateTaskRequest, UpdateTaskRequest } from '@/types/models';
-import { tasksApi, usersApi, projectsApi } from '@/services/api';
+import TaskList from '../../../components/tasks/TaskList';
+import TaskForm from '../../../components/tasks/TaskForm';
+import { Task, User, Project, CreateTaskRequest, UpdateTaskRequest } from '../../../types/models';
+import { tasksApi, usersApi, projectsApi } from '../../../services/api';
 import { Dialog } from '@headlessui/react';
 
 export default function TasksPage() {
@@ -16,24 +16,36 @@ export default function TasksPage() {
   // Fetch tasks
   const { data: tasks = [], isLoading: isLoadingTasks } = useQuery({
     queryKey: ['tasks'],
-    queryFn: tasksApi.getTasks,
+    queryFn: async () => {
+      const response = await tasksApi.getAll();
+      return response.data as Task[];
+    },
   });
 
   // Fetch users
   const { data: users = [], isLoading: isLoadingUsers } = useQuery({
     queryKey: ['users'],
-    queryFn: usersApi.getUsers,
+    queryFn: async () => {
+      const response = await usersApi.getAll();
+      return response.data as User[];
+    },
   });
 
   // Fetch projects
   const { data: projects = [], isLoading: isLoadingProjects } = useQuery({
     queryKey: ['projects'],
-    queryFn: projectsApi.getProjects,
+    queryFn: async () => {
+      const response = await projectsApi.getAll();
+      return response.data as Project[];
+    },
   });
 
   // Create task mutation
   const createTask = useMutation({
-    mutationFn: (data: CreateTaskRequest) => tasksApi.createTask(data),
+    mutationFn: async (data: CreateTaskRequest) => {
+      const response = await tasksApi.create(data);
+      return response.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       setIsFormOpen(false);
@@ -42,8 +54,10 @@ export default function TasksPage() {
 
   // Update task mutation
   const updateTask = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateTaskRequest }) => 
-      tasksApi.updateTask(id, data),
+    mutationFn: async ({ id, data }: { id: string; data: UpdateTaskRequest }) => {
+      const response = await tasksApi.update(id, data);
+      return response.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       setIsFormOpen(false);
@@ -53,7 +67,10 @@ export default function TasksPage() {
 
   // Delete task mutation
   const deleteTask = useMutation({
-    mutationFn: (id: string) => tasksApi.deleteTask(id),
+    mutationFn: async (id: string) => {
+      const response = await tasksApi.delete(id);
+      return response.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },

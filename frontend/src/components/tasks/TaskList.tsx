@@ -1,5 +1,5 @@
 import React, { useReducer } from 'react';
-import { Task, User } from '@/types/models';
+import { Task, User } from '../../types/models';
 import { format } from 'date-fns';
 
 interface TaskListProps {

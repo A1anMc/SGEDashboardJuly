@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useGrants } from '@/hooks/useGrants';
-import { GrantList } from '@/components/grants/GrantList';
-import { GrantForm } from '@/components/grants/GrantForm';
-import { Grant, GrantFilters } from '@/types/models';
+import { useGrants } from '../../../hooks/useGrants';
+import { GrantList } from '../../../components/grants/GrantList';
+import { GrantForm } from '../../../components/grants/GrantForm';
+import { Grant, GrantFilters } from '../../../types/models';
 import { Dialog } from '@headlessui/react';
 
 export default function GrantsPage() {

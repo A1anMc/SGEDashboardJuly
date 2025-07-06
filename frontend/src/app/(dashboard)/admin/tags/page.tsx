@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { TagManager } from '@/components/tags/TagManager';
+import { TagManager } from '../../../../components/tags/TagManager';
 
 export const metadata: Metadata = {
   title: 'Tag Management - SGE Dashboard',

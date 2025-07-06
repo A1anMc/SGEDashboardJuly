@@ -1,5 +1,5 @@
 import { api } from './api';
-import { Grant, GrantFilters, CreateGrantInput } from '@/types/models';
+import { Grant, GrantFilters, CreateGrantInput } from '../types/models';
 
 export interface GrantsResponse {
   items: Grant[];
@@ -23,6 +23,18 @@ export interface GrantDashboard {
     month: string;
     applications: number;
   }>;
+}
+
+export interface ScraperRunRequest {
+  sources?: string[];
+  force_refresh?: boolean;
+}
+
+export interface ScraperStatus {
+  status: string;
+  last_run?: string;
+  next_scheduled?: string;
+  available_sources: string[];
 }
 
 export const grantsApi = {
@@ -52,5 +64,15 @@ export const grantsApi = {
 
   runScraper: async () => {
     await api.post('/scraper/run');
+  },
+
+  getScraperStatus: async () => {
+    const response = await api.get<ScraperStatus>('/scraper/status');
+    return response.data;
+  },
+
+  runScrapers: async (request: ScraperRunRequest) => {
+    const response = await api.post('/scraper/run', request);
+    return response.data;
   },
 }; 

@@ -23,9 +23,9 @@ import {
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
-import { Tag } from '@/types/models';
+import { Tag } from '../../types/models';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/services/api';
+import { api } from '../../services/api';
 import { toast } from 'react-hot-toast';
 
 interface TagFormData {

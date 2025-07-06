@@ -1,5 +1,5 @@
 import { api } from './api';
-import { Tag, TagFormData, TagCategory } from '@/types/models';
+import { Tag, TagFormData, TagCategory } from '../types/models';
 
 export interface TagsResponse {
   items: Tag[];

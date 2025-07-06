@@ -1,7 +1,7 @@
 import React from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { grantsApi } from '@/services/grants';
-import { CreateGrantInput, Grant } from '@/types/models';
+import { grantsApi } from '../../services/grants';
+import { CreateGrantInput, Grant } from '../../types/models';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
 

@@ -1,5 +1,4 @@
 /** @type {import('next').NextConfig} */
-const path = require('path');
 
 const nextConfig = {
   output: 'standalone',
@@ -12,23 +11,7 @@ const nextConfig = {
   env: {
     BACKEND_URL: process.env.BACKEND_URL || 'http://localhost:8000'
   },
-  webpack(config, { isServer }) {
-    // Ensure the alias works for both client and server builds
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@': path.resolve(__dirname, 'src'),
-      '@/lib': path.resolve(__dirname, 'src/lib'),
-      '@/components': path.resolve(__dirname, 'src/components'),
-      '@/services': path.resolve(__dirname, 'src/services'),
-    };
-    
-    // Add fallback for module resolution
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-    };
-    
-    return config;
-  },
+
   headers: async () => {
     const isProd = process.env.NODE_ENV === 'production';
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';

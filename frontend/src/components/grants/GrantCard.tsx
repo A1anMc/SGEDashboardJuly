@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grant } from '@/types/models';
+import { Grant } from '../../types/models';
 import { format } from 'date-fns';
 
 interface GrantCardProps {

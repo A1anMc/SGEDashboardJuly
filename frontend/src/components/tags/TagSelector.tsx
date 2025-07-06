@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/services/api';
-import { Tag } from '@/types/models';
+import { api } from '../../services/api';
+import { Tag } from '../../types/models';
 import {
   Command,
   CommandEmpty,

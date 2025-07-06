@@ -1,6 +1,6 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+import DashboardLayout from '../components/layout/DashboardLayout';
 
 export const metadata: Metadata = {
   title: 'SGE Dashboard',

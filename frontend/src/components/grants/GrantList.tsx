@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { grantsApi } from '@/services/grants';
-import { Grant, GrantFilters } from '@/types/models';
+import { grantsApi } from '../../services/grants';
+import { Grant, GrantFilters } from '../../types/models';
 import { GrantCard } from './GrantCard';
 
 interface GrantListProps {

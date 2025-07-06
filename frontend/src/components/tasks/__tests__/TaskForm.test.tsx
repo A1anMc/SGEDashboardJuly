@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '../../../test-utils';
 import TaskForm from '../TaskForm';
-import { Task, User, Project } from '@/types/models';
+import { Task, User, Project } from '../../../types/models';
 
 const mockTask: Task = {
   id: '1',
