@@ -3,14 +3,30 @@ const path = require('path');
 
 const nextConfig = {
   output: 'standalone',
+  experimental: {
+    webpackBuildWorker: true,
+  },
   images: {
     domains: ['localhost', 'sge-dashboard-web.onrender.com'],
   },
   env: {
     BACKEND_URL: process.env.BACKEND_URL || 'http://localhost:8000'
   },
-  webpack(config) {
-    config.resolve.alias['@'] = path.resolve(__dirname, 'src');
+  webpack(config, { isServer }) {
+    // Ensure the alias works for both client and server builds
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, 'src'),
+      '@/lib': path.resolve(__dirname, 'src/lib'),
+      '@/components': path.resolve(__dirname, 'src/components'),
+      '@/services': path.resolve(__dirname, 'src/services'),
+    };
+    
+    // Add fallback for module resolution
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+    };
+    
     return config;
   },
   headers: async () => {
