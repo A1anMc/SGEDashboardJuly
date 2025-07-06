@@ -97,6 +97,12 @@ export default function TaskList({ tasks, users, onEdit, onDelete, onStatusChang
     .sort((a, b) => {
       const aValue = a[state.sortField];
       const bValue = b[state.sortField];
+      
+      // Handle undefined values
+      if (aValue === undefined && bValue === undefined) return 0;
+      if (aValue === undefined) return 1;
+      if (bValue === undefined) return -1;
+      
       if (aValue === bValue) return 0;
       const comparison = aValue > bValue ? 1 : -1;
       return state.sortDirection === 'asc' ? comparison : -comparison;

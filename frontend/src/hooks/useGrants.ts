@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { grantsApi, ScraperRunRequest } from '../services/grants';
-import { GrantFilters, Grant, CreateGrantRequest, UpdateGrantRequest } from '../types/models';
+import { GrantFilters, Grant, CreateGrantRequest, UpdateGrantRequest, CreateGrantInput } from '../types/models';
 import { toast } from 'react-hot-toast';
 
-export const useGrants = (filters: GrantFilters = {}) => {
+export const useGrants = (filters: GrantFilters = { page: 1, size: 10 }) => {
   const queryClient = useQueryClient();
 
   // Query for grants list
@@ -20,7 +20,15 @@ export const useGrants = (filters: GrantFilters = {}) => {
 
   // Create grant mutation
   const createMutation = useMutation({
-    mutationFn: (grant: CreateGrantRequest) => grantsApi.createGrant(grant),
+    mutationFn: (grant: CreateGrantRequest) => {
+      const grantInput: CreateGrantInput = {
+        ...grant,
+        due_date: grant.deadline.toISOString(),
+        status: grant.status,
+        tags: grant.tags || [],
+      };
+      return grantsApi.createGrant(grantInput);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['grants'] });
       queryClient.invalidateQueries({ queryKey: ['grants', 'dashboard'] });
@@ -29,8 +37,17 @@ export const useGrants = (filters: GrantFilters = {}) => {
 
   // Update grant mutation
   const updateMutation = useMutation({
-    mutationFn: ({ id, grant }: { id: number; grant: UpdateGrantRequest }) => 
-      grantsApi.updateGrant(id, grant),
+    mutationFn: ({ id, grant }: { id: string; grant: UpdateGrantRequest }) => {
+      const grantInput: CreateGrantInput = {
+        title: grant.title || '',
+        description: grant.description || '',
+        amount: grant.amount || 0,
+        due_date: grant.deadline ? grant.deadline.toISOString() : undefined,
+        status: grant.status || 'draft',
+        tags: grant.tags || [],
+      };
+      return grantsApi.updateGrant(id, grantInput);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['grants'] });
       queryClient.invalidateQueries({ queryKey: ['grants', 'dashboard'] });
@@ -39,7 +56,7 @@ export const useGrants = (filters: GrantFilters = {}) => {
 
   // Delete grant mutation
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => grantsApi.deleteGrant(id),
+    mutationFn: (id: string) => grantsApi.deleteGrant(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['grants'] });
       queryClient.invalidateQueries({ queryKey: ['grants', 'dashboard'] });
@@ -48,7 +65,10 @@ export const useGrants = (filters: GrantFilters = {}) => {
 
   // Run scraper mutation
   const runScraperMutation = useMutation({
-    mutationFn: (request?: ScraperRunRequest) => grantsApi.runScrapers(request),
+    mutationFn: (request?: ScraperRunRequest) => {
+      const scraperRequest: ScraperRunRequest = request || {};
+      return grantsApi.runScrapers(scraperRequest);
+    },
     onSuccess: () => {
       // Refetch grants after a delay to allow scraper to complete
       setTimeout(() => {
@@ -63,15 +83,15 @@ export const useGrants = (filters: GrantFilters = {}) => {
     total: data?.total || 0,
     page: data?.page || 1,
     size: data?.size || 10,
-    hasNext: data?.has_next || false,
-    hasPrev: data?.has_prev || false,
+    hasNext: data ? (data.page * data.size) < data.total : false,
+    hasPrev: data ? data.page > 1 : false,
     isLoading,
     error,
     refetch,
     createGrant: (grant: CreateGrantRequest) => createMutation.mutate(grant),
-    updateGrant: (id: number, grant: UpdateGrantRequest) => 
+    updateGrant: (id: string, grant: UpdateGrantRequest) => 
       updateMutation.mutate({ id, grant }),
-    deleteGrant: (id: number) => deleteMutation.mutate(id),
+    deleteGrant: (id: string) => deleteMutation.mutate(id),
     runScraper: (request?: ScraperRunRequest) => runScraperMutation.mutate(request),
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,

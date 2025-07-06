@@ -137,7 +137,8 @@ export interface CreateGrantRequest {
   description: string;
   amount: number;
   deadline: Date;
-  tags: string[];
+  status: 'open' | 'closed' | 'draft';
+  tags?: string[];
 }
 
 export interface UpdateGrantRequest extends Partial<CreateGrantRequest> {
@@ -157,15 +158,21 @@ export interface UpdateTagRequest extends Partial<CreateTagRequest> {
   id: string;
 }
 
+export interface TagFormData {
+  name: string;
+  description?: string;
+  color?: string;
+}
+
 export interface CreateTaskRequest {
   title: string;
-  description: string;
+  description?: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
   assignee_id?: string;
   due_date?: Date;
   estimated_hours?: number;
   project_id: string;
-  tags: string[];
+  tags?: string[];
 }
 
 export interface UpdateTaskRequest extends Partial<CreateTaskRequest> {

@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Task, User, Project, CreateTaskRequest, UpdateTaskRequest } from '../../types/models';
 
-const baseTaskSchema = z.object({
+const taskFormSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   due_date: z.string().optional(),
@@ -12,18 +12,12 @@ const baseTaskSchema = z.object({
   assignee_id: z.string().optional(),
   project_id: z.string().optional(),
   estimated_hours: z.number().optional(),
-  tags: z.array(z.string()).default([]),
+  tags: z.array(z.string()).optional(),
+  id: z.string().optional(),
+  status: z.enum(['todo', 'in_progress', 'in_review', 'done', 'archived']).optional(),
 });
 
-const createTaskSchema = baseTaskSchema;
-
-const updateTaskSchema = baseTaskSchema.extend({
-  id: z.string(),
-  status: z.enum(['todo', 'in_progress', 'in_review', 'done', 'archived']),
-});
-
-type CreateTaskFormData = z.infer<typeof createTaskSchema>;
-type UpdateTaskFormData = z.infer<typeof updateTaskSchema>;
+type TaskFormData = z.infer<typeof taskFormSchema>;
 
 interface TaskFormProps {
   task?: Task;
@@ -35,8 +29,6 @@ interface TaskFormProps {
 
 export default function TaskForm({ task, users, projects, onSubmit, onCancel }: TaskFormProps) {
   const isUpdate = !!task;
-  const schema = isUpdate ? updateTaskSchema : createTaskSchema;
-  type FormData = typeof isUpdate extends true ? UpdateTaskFormData : CreateTaskFormData;
 
   const {
     register,
@@ -44,11 +36,12 @@ export default function TaskForm({ task, users, projects, onSubmit, onCancel }: 
     formState: { errors },
     setValue,
     watch,
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
+  } = useForm<TaskFormData>({
+    resolver: zodResolver(taskFormSchema),
     defaultValues: task ? {
       ...task,
-      tags: task.tags.map(tag => tag.id),
+      due_date: task.due_date ? new Date(task.due_date).toISOString().slice(0, 16) : undefined,
+      tags: task.tags?.map(tag => tag.id) || [],
     } : {
       priority: 'medium',
       tags: [],
@@ -56,13 +49,15 @@ export default function TaskForm({ task, users, projects, onSubmit, onCancel }: 
   });
 
   const [tagInput, setTagInput] = useState('');
-  const tags = watch('tags');
+  const tags = watch('tags') || [];
 
   useEffect(() => {
     if (task) {
       Object.entries(task).forEach(([key, value]) => {
         if (key === 'tags') {
-          setValue('tags' as any, task.tags.map(tag => tag.id));
+          setValue('tags' as any, task.tags?.map(tag => tag.id) || []);
+        } else if (key === 'due_date' && value) {
+          setValue('due_date' as any, new Date(value as Date).toISOString().slice(0, 16));
         } else {
           setValue(key as any, value);
         }
@@ -81,20 +76,25 @@ export default function TaskForm({ task, users, projects, onSubmit, onCancel }: 
     setValue('tags', tags.filter(tag => tag !== tagToRemove) as any);
   };
 
-  const onSubmitForm = (data: FormData) => {
+  const onSubmitForm = (data: TaskFormData) => {
+    const processedData = {
+      ...data,
+      due_date: data.due_date ? new Date(data.due_date) : undefined,
+    };
+    
     if (isUpdate) {
       const updateData: UpdateTaskRequest = {
         id: task.id,
-        ...data,
+        ...processedData,
       };
       onSubmit(updateData);
-    } else {
-      const createData: CreateTaskRequest = {
-        ...data,
-        status: 'todo',
-      };
-      onSubmit(createData);
-    }
+          } else {
+        const createData: CreateTaskRequest = {
+          ...processedData,
+          project_id: processedData.project_id || '',
+        };
+        onSubmit(createData);
+      }
   };
 
   return (
