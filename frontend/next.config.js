@@ -5,8 +5,7 @@ const nextConfig = {
     domains: ['localhost', 'sge-dashboard-web.onrender.com'],
   },
   env: {
-    BACKEND_URL: process.env.BACKEND_URL || 'http://localhost:8000',
-    NODE_ENV: process.env.NODE_ENV || 'development'
+    BACKEND_URL: process.env.BACKEND_URL || 'http://localhost:8000'
   },
   headers: async () => {
     const isProd = process.env.NODE_ENV === 'production';

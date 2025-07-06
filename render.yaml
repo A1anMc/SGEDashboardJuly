@@ -30,8 +30,6 @@ services:
     envVars:
       - key: BACKEND_URL
         value: https://sge-dashboard-api.onrender.com
-      - key: NODE_ENV
-        value: production
     autoDeploy: true
 
 databases:
