@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const path = require('path');
+
 const nextConfig = {
   output: 'standalone',
   images: {
@@ -6,6 +8,10 @@ const nextConfig = {
   },
   env: {
     BACKEND_URL: process.env.BACKEND_URL || 'http://localhost:8000'
+  },
+  webpack(config) {
+    config.resolve.alias['@'] = path.resolve(__dirname, 'src');
+    return config;
   },
   headers: async () => {
     const isProd = process.env.NODE_ENV === 'production';
