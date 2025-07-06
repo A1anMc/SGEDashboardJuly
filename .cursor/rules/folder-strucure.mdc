@@ -1,0 +1,12 @@
+Project Rule: Folder Structure
+When: Working with the dashboard project
+
+Do: Treat frontend/ as the only frontend source directory and backend/ as the canonical backend directory
+
+Why: Prevent confusion with new-frontend/ or SGE_Dashboard_Scaffold
+
+---
+description:
+globs:
+alwaysApply: false
+---

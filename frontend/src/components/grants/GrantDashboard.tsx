@@ -1,191 +1,124 @@
 import React from 'react';
-import { Card, Grid, Typography, Box, Chip, LinearProgress } from '@mui/material';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import Typography from '@mui/material/Typography';
+import LinearProgress from '@mui/material/LinearProgress';
+import Chip from '@mui/material/Chip';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
-import { useQuery } from '@tanstack/react-query';
-import { fetchGrantDashboard } from '@/services/grants';
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+interface DashboardData {
+  metrics: {
+    total_active: number;
+    total_value: number;
+    success_rate: number;
+    pending_applications: number;
+  };
+  status_distribution: {
+    name: string;
+    value: number;
+  }[];
+  monthly_applications: {
+    month: string;
+    applications: number;
+  }[];
+}
 
-const GrantDashboard: React.FC = () => {
-  const { data: dashboard, isLoading } = useQuery({
-    queryKey: ['grantDashboard'],
-    queryFn: fetchGrantDashboard
-  });
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
-  if (isLoading) {
-    return <LinearProgress />;
-  }
+interface GrantDashboardProps {
+  dashboard: DashboardData;
+}
 
-  if (!dashboard) {
-    return <Typography>No dashboard data available</Typography>;
-  }
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-AU', {
+export default function GrantDashboard({ dashboard }: GrantDashboardProps) {
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'AUD',
+      currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(amount);
+    }).format(value);
   };
 
-  // Transform data for charts
-  const industryData = Object.entries(dashboard.categories.by_industry).map(([name, value]) => ({
-    name,
-    value
-  }));
-
-  const locationData = Object.entries(dashboard.categories.by_location).map(([name, value]) => ({
-    name,
-    value
-  }));
-
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ flexGrow: 1, p: 3 }}>
+      <Typography variant="h4" sx={{ mb: 4 }}>Grants Dashboard</Typography>
+
       {/* Metrics Overview */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={3}>
-          <Card sx={{ p: 2, height: '100%' }}>
-            <Typography variant="h6" color="primary">Active Grants</Typography>
-            <Typography variant="h3">{dashboard.metrics.total_active}</Typography>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <Card sx={{ p: 2, height: '100%' }}>
-            <Typography variant="h6" color="primary">Total Available</Typography>
-            <Typography variant="h3">
-              {formatCurrency(dashboard.metrics.total_amount_available)}
-            </Typography>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <Card sx={{ p: 2, height: '100%' }}>
-            <Typography variant="h6" color="primary">Upcoming Deadlines</Typography>
-            <Typography variant="h3">{dashboard.metrics.upcoming_deadlines}</Typography>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <Card sx={{ p: 2, height: '100%' }}>
-            <Typography variant="h6" color="primary">Avg Match Score</Typography>
-            <Typography variant="h3">{Math.round(dashboard.metrics.avg_match_score)}%</Typography>
-          </Card>
-        </Grid>
-      </Grid>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 3, mb: 4 }}>
+        <Card sx={{ p: 2, height: '100%' }}>
+          <Typography variant="h6" color="primary">Active Grants</Typography>
+          <Typography variant="h3">{dashboard.metrics.total_active}</Typography>
+        </Card>
+        <Card sx={{ p: 2, height: '100%' }}>
+          <Typography variant="h6" color="primary">Total Value</Typography>
+          <Typography variant="h3">{formatCurrency(dashboard.metrics.total_value)}</Typography>
+        </Card>
+        <Card sx={{ p: 2, height: '100%' }}>
+          <Typography variant="h6" color="primary">Success Rate</Typography>
+          <Typography variant="h3">{dashboard.metrics.success_rate}%</Typography>
+          <LinearProgress 
+            variant="determinate" 
+            value={dashboard.metrics.success_rate} 
+            sx={{ mt: 1 }}
+          />
+        </Card>
+        <Card sx={{ p: 2, height: '100%' }}>
+          <Typography variant="h6" color="primary">Pending Applications</Typography>
+          <Typography variant="h3">{dashboard.metrics.pending_applications}</Typography>
+        </Card>
+      </Box>
 
-      {/* Charts Row */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={6}>
-          <Card sx={{ p: 2, height: '400px' }}>
-            <Typography variant="h6" gutterBottom>Grants by Industry</Typography>
-            <ResponsiveContainer width="100%" height="90%">
-              <BarChart data={industryData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" fill="#0088FE" />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <Card sx={{ p: 2, height: '400px' }}>
-            <Typography variant="h6" gutterBottom>Grants by Location</Typography>
-            <ResponsiveContainer width="100%" height="90%">
-              <PieChart>
-                <Pie
-                  data={locationData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  label
-                >
-                  {locationData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Timeline */}
-      <Card sx={{ p: 2, mb: 4 }}>
-        <Typography variant="h6" gutterBottom>Grant Timeline</Typography>
-        <Grid container spacing={2}>
-          {Object.entries(dashboard.timeline).map(([period, data]) => (
-            <Grid item xs={12} sm={6} md={2.4} key={period}>
-              <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
-                <Typography variant="subtitle1" sx={{ textTransform: 'capitalize' }}>
-                  {period.replace('_', ' ')}
-                </Typography>
-                <Typography variant="h6">{formatCurrency(data.total_amount)}</Typography>
-                <Typography color="text.secondary">{data.count} grants</Typography>
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
-      </Card>
-
-      {/* Insights */}
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Card sx={{ p: 2, height: '100%' }}>
-            <Typography variant="h6" gutterBottom>Best Matches</Typography>
-            {dashboard.matching_insights.best_matches.map((match, index) => (
-              <Box key={match.grant_id} sx={{ mb: 2 }}>
-                <Typography variant="subtitle1">{match.title}</Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <LinearProgress
-                    variant="determinate"
-                    value={match.score}
-                    sx={{ flexGrow: 1 }}
-                  />
-                  <Typography variant="body2">{match.score}%</Typography>
-                </Box>
-              </Box>
+      {/* Charts */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: '8fr 4fr', gap: 3 }}>
+        <Card sx={{ p: 2, height: '100%' }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>Monthly Applications</Typography>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={dashboard.monthly_applications}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="applications" fill="#8884d8" />
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+        <Card sx={{ p: 2, height: '100%' }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>Status Distribution</Typography>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={dashboard.status_distribution}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {dashboard.status_distribution.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+          <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {dashboard.status_distribution.map((entry, index) => (
+              <Chip
+                key={entry.name}
+                label={`${entry.name}: ${entry.value}`}
+                sx={{
+                  backgroundColor: COLORS[index % COLORS.length],
+                  color: 'white',
+                }}
+              />
             ))}
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <Card sx={{ p: 2, height: '100%' }}>
-            <Typography variant="h6" gutterBottom>Insights & Recommendations</Typography>
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2" color="error" gutterBottom>
-                Common Mismatches
-              </Typography>
-              {dashboard.matching_insights.common_mismatches.map((mismatch, index) => (
-                <Chip
-                  key={index}
-                  label={mismatch}
-                  color="error"
-                  variant="outlined"
-                  sx={{ m: 0.5 }}
-                />
-              ))}
-            </Box>
-            <Box>
-              <Typography variant="subtitle2" color="primary" gutterBottom>
-                Suggestions
-              </Typography>
-              {dashboard.matching_insights.suggested_improvements.map((suggestion, index) => (
-                <Typography key={index} variant="body2" sx={{ mb: 1 }}>
-                  • {suggestion}
-                </Typography>
-              ))}
-            </Box>
-          </Card>
-        </Grid>
-      </Grid>
+          </Box>
+        </Card>
+      </Box>
     </Box>
   );
-};
-
-export default GrantDashboard; 
+} 

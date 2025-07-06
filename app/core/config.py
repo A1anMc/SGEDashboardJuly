@@ -3,6 +3,9 @@ from typing import List, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
+    # Environment
+    ENV: str = os.getenv("ENV", "development")
+    
     # API Configuration
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "SGE Dashboard"
@@ -15,61 +18,59 @@ class Settings(BaseSettings):
     
     # CORS Configuration
     CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",     # Next.js development server
-        "http://127.0.0.1:3000",     # Next.js alternative local URL
-        "http://localhost:5173",     # Vite default port
-        "http://127.0.0.1:5173",     # Vite alternative local URL
-        "https://dashboard.shadowgoose.com",  # Production frontend
-        "https://*.vercel.app"       # Vercel preview deployments
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://*.onrender.com",        # Render domains
+        "https://dashboard.shadowgoose.com"  # Production domain
     ]
     CORS_ALLOW_CREDENTIALS: bool = True
-    CORS_ALLOW_METHODS: List[str] = ["*"]
+    CORS_ALLOW_METHODS: List[str] = ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
     CORS_ALLOW_HEADERS: List[str] = ["*"]
     
+    # Security Configuration
+    SECURITY_HEADERS: bool = ENV == "production"
+    RATE_LIMIT_PER_SECOND: int = int(os.getenv("RATE_LIMIT_PER_SECOND", "10"))
+    SESSION_COOKIE_HTTPONLY: bool = True
+    SESSION_COOKIE_SECURE: bool = ENV == "production"
+    SESSION_COOKIE_SAMESITE: str = "Lax"
+    
     # Database Configuration
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./app.db")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///app.db")
+    # Render Postgres Optimizations
+    DATABASE_POOL_SIZE: int = int(os.getenv("DATABASE_POOL_SIZE", "5"))  # Reduced for Render
+    DATABASE_MAX_OVERFLOW: int = int(os.getenv("DATABASE_MAX_OVERFLOW", "10"))
+    DATABASE_POOL_TIMEOUT: int = int(os.getenv("DATABASE_POOL_TIMEOUT", "30"))
+    DATABASE_POOL_RECYCLE: int = int(os.getenv("DATABASE_POOL_RECYCLE", "1800"))  # 30 minutes
+    DATABASE_ECHO: bool = ENV == "development"
+    DATABASE_SSL_REQUIRED: bool = ENV == "production"
     
     # JWT Configuration
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-for-testing")
+    SECRET_KEY: str = os.getenv("SECRET_KEY")
+    if not SECRET_KEY and ENV == "production":
+        raise ValueError("SECRET_KEY environment variable is required in production")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     
-    # Email Configuration
-    MAIL_USERNAME: str = os.getenv("MAIL_USERNAME", "test@example.com")
-    MAIL_PASSWORD: str = os.getenv("MAIL_PASSWORD", "test_password")
-    MAIL_FROM: str = os.getenv("MAIL_FROM", "test@example.com")
-    MAIL_PORT: int = int(os.getenv("MAIL_PORT", "587"))
-    MAIL_SERVER: str = os.getenv("MAIL_SERVER", "smtp.mailtrap.io")
-    MAIL_FROM_NAME: str = os.getenv("MAIL_FROM_NAME", "SGE Dashboard")
-    MAIL_TLS: bool = True
-    MAIL_SSL: bool = False
-    USE_CREDENTIALS: bool = True
+    # Monitoring Configuration
+    SENTRY_DSN: Optional[str] = os.getenv("SENTRY_DSN")
+    SENTRY_ENVIRONMENT: str = ENV
+    SENTRY_TRACES_SAMPLE_RATE: float = float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "1.0"))
+    
+    # Email Configuration (SendGrid)
+    SENDGRID_API_KEY: str = os.getenv("SENDGRID_API_KEY", "")
+    EMAIL_FROM: str = os.getenv("EMAIL_FROM", "noreply@shadowgoose.com")
+    EMAIL_FROM_NAME: str = os.getenv("EMAIL_FROM_NAME", "Shadow Goose Entertainment")
     
     # Frontend URLs
-    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
-    DASHBOARD_URL: str = os.getenv("DASHBOARD_URL", "http://localhost:3000/dashboard")
+    FRONTEND_URL: str = os.getenv(
+        "FRONTEND_URL",
+        "https://sge-dashboard-web.onrender.com" if ENV == "production" else "http://localhost:3000"
+    )
     
     # Logging Configuration
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    LOG_FILE: str = "logs/app.log"
-    
-    # Supabase Configuration
-    SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
-    SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
-    
-    # Airtable Configuration
-    AIRTABLE_API_KEY: str = os.getenv("AIRTABLE_API_KEY", "")
-    AIRTABLE_BASE_ID: str = os.getenv("AIRTABLE_BASE_ID", "")
-    
-    # External APIs Configuration
-    BUSINESS_GOV_API_KEY: str = os.getenv("BUSINESS_GOV_API_KEY", "")
-    GRANTS_GOV_API_KEY: str = os.getenv("GRANTS_GOV_API_KEY", "")
-    
-    # SendGrid Configuration
-    SENDGRID_API_KEY: str = os.getenv("SENDGRID_API_KEY", "")
-    EMAIL_FROM: str = os.getenv("EMAIL_FROM", "noreply@shadowgoose.com")
-    EMAIL_FROM_NAME: str = os.getenv("EMAIL_FROM_NAME", "Shadow Goose Entertainment")
+    LOG_JSON: bool = ENV == "production"  # Use JSON logging in production
     
     model_config = SettingsConfigDict(case_sensitive=True)
 

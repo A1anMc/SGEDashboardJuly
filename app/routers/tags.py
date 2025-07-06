@@ -2,7 +2,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from app.db.deps import get_db
+from app.core.deps import get_db
 from app.models.tag import Tag, TagCategory
 from app.models.user import User
 from app.core.deps import get_current_user

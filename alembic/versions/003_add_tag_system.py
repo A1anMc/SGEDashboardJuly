@@ -15,24 +15,12 @@ branch_labels = None
 depends_on = None
 
 def upgrade():
-    # Create tag category enum
-    op.execute("""
-        CREATE TYPE tagcategory AS ENUM (
-            'industry',
-            'location',
-            'org_type',
-            'funding_purpose',
-            'audience',
-            'other'
-        )
-    """)
-    
     # Create tags table
     op.create_table(
         'tags',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('name', sa.String(length=255), nullable=False),
-        sa.Column('category', sa.Enum('industry', 'location', 'org_type', 'funding_purpose', 'audience', 'other', name='tagcategory'), nullable=False),
+        sa.Column('category', sa.String(length=50), nullable=False),
         sa.Column('description', sa.String(length=500), nullable=True),
         sa.Column('parent_id', sa.Integer(), nullable=True),
         sa.Column('synonyms', sa.String(length=1000), nullable=True),
@@ -41,7 +29,8 @@ def upgrade():
         sa.Column('created_by_id', sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(['created_by_id'], ['user.id'], ondelete='SET NULL'),
         sa.ForeignKeyConstraint(['parent_id'], ['tags.id'], ondelete='SET NULL'),
-        sa.PrimaryKeyConstraint('id')
+        sa.PrimaryKeyConstraint('id'),
+        sa.CheckConstraint("category IN ('industry', 'location', 'org_type', 'funding_purpose', 'audience', 'other')", name='valid_category_check')
     )
     
     # Create indexes
@@ -96,7 +85,4 @@ def downgrade():
     op.drop_table('grant_tags')
     op.drop_index(op.f('ix_tags_category'), table_name='tags')
     op.drop_index(op.f('ix_tags_name'), table_name='tags')
-    op.drop_table('tags')
-    
-    # Drop enum
-    op.execute("DROP TYPE tagcategory") 
+    op.drop_table('tags') 

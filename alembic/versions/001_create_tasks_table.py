@@ -1,7 +1,7 @@
 """create tasks table
 
 Revision ID: 001_create_tasks_table
-Revises: 
+Revises: 000_create_user_table
 Create Date: 2024-03-21 09:00:00.000000
 
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '001_create_tasks_table'
-down_revision = None
+down_revision = '000_create_user_table'
 branch_labels = None
 depends_on = None
 
@@ -34,20 +34,6 @@ def upgrade():
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.Column('updated_at', sa.DateTime(), nullable=False),
         sa.Column('completed_at', sa.DateTime(), nullable=True),
-        sa.PrimaryKeyConstraint('id')
-    )
-    
-    # Create task_comment table
-    op.create_table(
-        'task_comment',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('task_id', sa.Integer(), nullable=False),
-        sa.Column('user_id', sa.Integer(), nullable=False),
-        sa.Column('content', sa.Text(), nullable=False),
-        sa.Column('created_at', sa.DateTime(), nullable=False),
-        sa.Column('updated_at', sa.DateTime(), nullable=False),
-        sa.ForeignKeyConstraint(['task_id'], ['task.id'], ondelete='CASCADE'),
-        sa.ForeignKeyConstraint(['user_id'], ['user.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
     )
     
@@ -81,5 +67,4 @@ def upgrade():
 
 def downgrade():
     op.drop_table('time_entry')
-    op.drop_table('task_comment')
     op.drop_table('task') 

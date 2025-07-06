@@ -8,7 +8,6 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from fastapi_utils.tasks import repeat_every
 from dotenv import load_dotenv
 
 # Import Base and all models to ensure they're registered
@@ -21,7 +20,7 @@ from app.models.program_logic import ProgramLogic  # noqa: F401
 from app.models.grant import Grant  # noqa: F401
 from app.models.task import Task, TaskComment, TimeEntry  # noqa: F401
 
-from app.routers import grants, metrics, program_logic, projects, team_members, users, tasks
+from app.routers import grants, tasks, tags, comments
 from app.core.config import settings
 from app.db.session import engine
 
@@ -44,13 +43,10 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(users.router, prefix="/api", tags=["users"])
-app.include_router(projects.router, prefix="/api", tags=["projects"])
-app.include_router(team_members.router, prefix="/api", tags=["team_members"])
-app.include_router(metrics.router, prefix="/api", tags=["metrics"])
-app.include_router(program_logic.router, prefix="/api", tags=["program_logic"])
 app.include_router(grants.router, prefix="/api", tags=["grants"])
 app.include_router(tasks.router, prefix="/api", tags=["tasks"])
+app.include_router(tags.router, prefix="/api", tags=["tags"])
+app.include_router(comments.router, prefix="/api", tags=["comments"])
 
 @app.get("/")
 def read_root():

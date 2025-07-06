@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+'use client';
+
+import React, { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -8,244 +9,225 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { toast } from 'react-hot-toast';
-import { TagCategory, Tag } from '@/types/models';
+import { Tag } from '@/types/models';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/services/api';
+import { toast } from 'react-hot-toast';
 
 interface TagFormData {
   name: string;
-  category: TagCategory;
   description?: string;
-  parent_id?: number;
-  synonyms?: string[];
+  color?: string;
 }
 
 export function TagManager() {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<TagCategory | 'all'>('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [formData, setFormData] = useState<TagFormData>({
-    name: '',
-    category: TagCategory.INDUSTRY,
-  });
-  
+  const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
   const queryClient = useQueryClient();
-  
-  // Fetch tags
+
   const { data: tags, isLoading } = useQuery({
-    queryKey: ['tags', selectedCategory, searchTerm],
+    queryKey: ['tags'],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      if (selectedCategory !== 'all') params.append('category', selectedCategory);
-      if (searchTerm) params.append('search', searchTerm);
-      const response = await api.get(`/tags?${params.toString()}`);
+      const response = await api.get<Tag[]>('/tags');
       return response.data;
     },
   });
-  
-  // Create tag mutation
-  const createTag = useMutation({
+
+  const createMutation = useMutation({
     mutationFn: async (data: TagFormData) => {
-      const response = await api.post('/tags', data);
+      const response = await api.post<Tag>('/tags', data);
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tags'] });
       setIsOpen(false);
-      setFormData({ name: '', category: TagCategory.INDUSTRY });
       toast.success('Tag created successfully');
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.detail || 'Failed to create tag');
+    onError: (error) => {
+      toast.error('Failed to create tag');
+      console.error('Error creating tag:', error);
     },
   });
-  
-  // Delete tag mutation
-  const deleteTag = useMutation({
-    mutationFn: async (id: number) => {
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: TagFormData }) => {
+      const response = await api.put<Tag>(`/tags/${id}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tags'] });
+      setIsOpen(false);
+      toast.success('Tag updated successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to update tag');
+      console.error('Error updating tag:', error);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
       await api.delete(`/tags/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tags'] });
       toast.success('Tag deleted successfully');
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.detail || 'Failed to delete tag');
+    onError: (error) => {
+      toast.error('Failed to delete tag');
+      console.error('Error deleting tag:', error);
     },
   });
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    createTag.mutate(formData);
-  };
-  
-  const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this tag?')) {
-      deleteTag.mutate(id);
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const data: TagFormData = {
+      name: formData.get('name') as string,
+      description: formData.get('description') as string,
+      color: formData.get('color') as string,
+    };
+
+    if (selectedTag) {
+      updateMutation.mutate({ id: selectedTag.id, data });
+    } else {
+      createMutation.mutate(data);
     }
   };
-  
+
+  const handleEdit = (tag: Tag) => {
+    setSelectedTag(tag);
+    setIsOpen(true);
+  };
+
+  const handleDelete = async (tag: Tag) => {
+    if (window.confirm('Are you sure you want to delete this tag?')) {
+      deleteMutation.mutate(tag.id);
+    }
+  };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Tag Management</h1>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Tag Management</h2>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button>Create New Tag</Button>
+            <Button
+              onClick={() => {
+                setSelectedTag(null);
+                setIsOpen(true);
+              }}
+            >
+              Add Tag
+            </Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Tag</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
+            <form onSubmit={handleSubmit}>
+              <DialogHeader>
+                <DialogTitle>
+                  {selectedTag ? 'Edit Tag' : 'Create New Tag'}
+                </DialogTitle>
+                <DialogDescription>
+                  {selectedTag
+                    ? 'Edit the details of the existing tag.'
+                    : 'Add a new tag to help categorize grants and projects.'}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name" className="text-right">
+                    Name
+                  </Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    defaultValue={selectedTag?.name}
+                    className="col-span-3"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="description" className="text-right">
+                    Description
+                  </Label>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    defaultValue={selectedTag?.description}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="color" className="text-right">
+                    Color
+                  </Label>
+                  <Input
+                    id="color"
+                    name="color"
+                    type="color"
+                    defaultValue={selectedTag?.color || '#000000'}
+                    className="col-span-3 h-10"
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="category">Category</Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value: TagCategory) =>
-                    setFormData({ ...formData, category: value })
-                  }
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsOpen(false)}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.values(TagCategory).map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category.replace('_', ' ').toUpperCase()}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="synonyms">Synonyms (comma-separated)</Label>
-                <Input
-                  id="synonyms"
-                  value={formData.synonyms?.join(', ') || ''}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      synonyms: e.target.value.split(',').map((s) => s.trim()),
-                    })
-                  }
-                />
-              </div>
-              <Button type="submit" disabled={createTag.isPending}>
-                {createTag.isPending ? 'Creating...' : 'Create Tag'}
-              </Button>
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  {selectedTag ? 'Update Tag' : 'Create Tag'}
+                </Button>
+              </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
       </div>
-      
-      <div className="flex gap-4 mb-6">
-        <div className="w-64">
-          <Select
-            value={selectedCategory}
-            onValueChange={(value: TagCategory | 'all') => setSelectedCategory(value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {Object.values(TagCategory).map((category) => (
-                <SelectItem key={category} value={category}>
-                  {category.replace('_', ' ').toUpperCase()}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex-1">
-          <Input
-            placeholder="Search tags..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
-      
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Synonyms</TableHead>
-            <TableHead>Usage</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isLoading ? (
+
+      <div className="border rounded-lg">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={6} className="text-center">
-                Loading...
-              </TableCell>
+              <TableHead>Name</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Usage</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
-          ) : tags?.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center">
-                No tags found
-              </TableCell>
-            </TableRow>
-          ) : (
-            tags?.map((tag: Tag) => (
+          </TableHeader>
+          <TableBody>
+            {tags?.map((tag) => (
               <TableRow key={tag.id}>
-                <TableCell>{tag.name}</TableCell>
                 <TableCell>
-                  <Badge variant="secondary">
-                    {tag.category.replace('_', ' ').toUpperCase()}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: tag.color || '#000000' }}
+                    />
+                    {tag.name}
+                  </div>
                 </TableCell>
                 <TableCell>{tag.description}</TableCell>
-                <TableCell>
-                  {tag.synonyms?.map((synonym) => (
-                    <Badge key={synonym} variant="outline" className="mr-1">
-                      {synonym}
-                    </Badge>
-                  ))}
-                </TableCell>
                 <TableCell>
                   <div className="flex gap-2">
                     <Badge variant="default">{tag.grant_count} Grants</Badge>
@@ -253,19 +235,28 @@ export function TagManager() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDelete(tag.id)}
-                  >
-                    Delete
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(tag)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDelete(tag)}
+                    >
+                      Delete
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 } 

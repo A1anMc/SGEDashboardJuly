@@ -3,27 +3,60 @@
 ## System Map
 
 ```
-Frontend (Next.js + Tailwind @ Vercel)
-  ↕ API (FastAPI @ Render)
+Frontend (Next.js 14.0.0 + Tailwind)
+  ↕ API (FastAPI @ localhost:8000)
     ↕ Database (SQLite/PostgreSQL)
-    ↕ Scraper Services (Python + BeautifulSoup)
-    ↕ Airtable (Metrics Sync)
+    ↕ Scraper Services (aiohttp + BeautifulSoup)
+    ↕ Tag System
 ```
 
 ## Components
-- Frontend: UI Views, API Utility, Chart Components
-- Backend: Routers, Services, Models, Task Management
-- Database: SQL Tables (`projects`, `tasks`, `grants`, `metrics`, etc.)
-- Deployment: Render (backend), Vercel (frontend)
+- Frontend: 
+  - UI Components (React + TypeScript)
+  - Tailwind CSS for styling
+  - API Client Services
+  - Component Testing (Jest)
+- Backend: 
+  - FastAPI Routers (grants, tasks, tags, comments)
+  - SQLAlchemy Models
+  - Async Scraper Services
+  - Authentication System
+- Database: 
+  - SQLite for Development
+  - PostgreSQL for Production
+  - Alembic Migrations
+- Testing:
+  - Frontend: Jest + React Testing Library
+  - Backend: pytest
+  - API: Postman Collections
 
 ## Data Flow
-1. User enters/edits data (project, task, grant)
-2. Backend stores it in database
-3. Scrapers run daily and add new grants
-4. Airtable form metrics sync via backend
-5. Frontend fetches and visualises all data
+1. User Interface Layer
+   - Next.js Pages and Components
+   - Form Handling and Validation
+   - Real-time Updates
+2. API Layer
+   - RESTful Endpoints
+   - JWT Authentication
+   - Request Validation
+3. Service Layer
+   - Business Logic
+   - Data Processing
+   - External Integrations
+4. Data Layer
+   - Database Operations
+   - Caching (if implemented)
+   - Data Migrations
 
-## Documentation
-- Task Management System: See `task_management.md`
+## Current Features
+- Grant Management System
+- Task Tracking
+- Tag System
+- Comment Threading
+- User Authentication
+
+## Documentation Map
+- Task Management: See `task_management.md`
 - Project Planning: See `plan.md`
 - Development Timeline: See `roadmap.md`
+- Strategic Overview: See `strategic_handoff.md`

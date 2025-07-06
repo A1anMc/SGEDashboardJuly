@@ -1,166 +1,127 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Tag, TagCategory } from '@/types/models';
-import { tagsApi } from '@/services/tags';
+import { api } from '@/services/api';
+import { Tag } from '@/types/models';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 
 interface TagSelectorProps {
-  selectedTags: number[];
-  onTagsChange: (tagIds: number[]) => void;
-  category?: TagCategory;
-  placeholder?: string;
-  maxTags?: number;
-  disabled?: boolean;
+  selectedTags: string[];
+  onTagsChange: (tags: string[]) => void;
 }
 
-export function TagSelector({
-  selectedTags,
-  onTagsChange,
-  category,
-  placeholder = "Select tags...",
-  maxTags = Infinity,
-  disabled = false
-}: TagSelectorProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isOpen, setIsOpen] = useState(false);
-  
-  // Fetch available tags
-  const { data: tags, isLoading } = useQuery({
-    queryKey: ['tags', category, searchTerm],
+export function TagSelector({ selectedTags, onTagsChange }: TagSelectorProps) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+
+  const { data: tags } = useQuery({
+    queryKey: ['tags'],
     queryFn: async () => {
-      if (searchTerm) {
-        return tagsApi.searchTags(searchTerm, category);
-      } else if (category) {
-        return tagsApi.getTagsByCategory(category);
-      } else {
-        const response = await tagsApi.getTags();
-        return response.items;
-      }
+      const response = await api.get<Tag[]>('/tags');
+      return response.data;
     },
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
-  
-  // Fetch selected tags details
-  const { data: selectedTagDetails } = useQuery({
-    queryKey: ['tags', 'selected', selectedTags],
-    queryFn: async () => {
-      const details = await Promise.all(
-        selectedTags.map(id => tagsApi.getTag(id))
-      );
-      return details;
-    },
-    enabled: selectedTags.length > 0,
-  });
-  
-  const handleTagSelect = (tagId: number) => {
+
+  const filteredTags = tags?.filter((tag) =>
+    tag.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleSelect = (tagId: string) => {
     if (selectedTags.includes(tagId)) {
-      onTagsChange(selectedTags.filter(id => id !== tagId));
-    } else if (selectedTags.length < maxTags) {
+      onTagsChange(selectedTags.filter((id) => id !== tagId));
+    } else {
       onTagsChange([...selectedTags, tagId]);
     }
-    setIsOpen(false);
   };
-  
-  const handleTagRemove = (tagId: number) => {
-    onTagsChange(selectedTags.filter(id => id !== tagId));
+
+  const handleRemove = (tagId: string) => {
+    onTagsChange(selectedTags.filter((id) => id !== tagId));
   };
-  
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-  
+
   return (
     <div className="space-y-2">
-      <div className="flex flex-wrap gap-2 min-h-[2.5rem] p-2 border rounded-md">
-        {selectedTagDetails?.map((tag) => (
-          <Badge
-            key={tag.id}
-            variant="secondary"
-            className="flex items-center gap-1"
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between"
           >
-            {tag.name}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-4 w-4 p-0"
-              onClick={() => handleTagRemove(tag.id)}
-              disabled={disabled}
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          </Badge>
-        ))}
-        {selectedTags.length < maxTags && (
-          <div className="flex-1">
-            <Select
-              open={isOpen}
-              onOpenChange={setIsOpen}
-              disabled={disabled}
-            >
-              <SelectTrigger className="border-0 p-0 h-auto min-h-0">
-                <SelectValue placeholder={placeholder} />
-              </SelectTrigger>
-              <SelectContent>
-                <div className="p-2">
-                  <Input
-                    placeholder="Search tags..."
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                    className="mb-2"
+            Select tags...
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[400px] p-0">
+          <Command>
+            <CommandInput
+              placeholder="Search tags..."
+              value={search}
+              onValueChange={setSearch}
+            />
+            <CommandEmpty>No tags found.</CommandEmpty>
+            <CommandGroup>
+              {filteredTags?.map((tag) => (
+                <CommandItem
+                  key={tag.id}
+                  value={tag.name}
+                  onSelect={() => handleSelect(tag.id)}
+                >
+                  <div
+                    className="w-3 h-3 rounded-full mr-2"
+                    style={{ backgroundColor: tag.color || '#000000' }}
                   />
-                </div>
-                <div className="max-h-[200px] overflow-y-auto">
-                  {isLoading ? (
-                    <div className="p-2 text-center text-gray-500">
-                      Loading...
-                    </div>
-                  ) : tags?.length === 0 ? (
-                    <div className="p-2 text-center text-gray-500">
-                      No tags found
-                    </div>
-                  ) : (
-                    tags?.map((tag) => (
-                      <SelectItem
-                        key={tag.id}
-                        value={tag.id.toString()}
-                        onSelect={() => handleTagSelect(tag.id)}
-                        disabled={
-                          selectedTags.includes(tag.id) ||
-                          (selectedTags.length >= maxTags)
-                        }
-                      >
-                        <div className="flex items-center justify-between">
-                          <span>{tag.name}</span>
-                          {tag.description && (
-                            <span className="text-sm text-gray-500">
-                              {tag.description}
-                            </span>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))
+                  {tag.name}
+                  {selectedTags.includes(tag.id) && (
+                    <span className="ml-auto text-green-600">✓</span>
                   )}
-                </div>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </Command>
+        </PopoverContent>
+      </Popover>
+
+      <div className="flex flex-wrap gap-2">
+        {selectedTags.map((tagId) => {
+          const tag = tags?.find((t) => t.id === tagId);
+          if (!tag) return null;
+          return (
+            <Badge
+              key={tag.id}
+              variant="secondary"
+              className="flex items-center gap-1"
+            >
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: tag.color || '#000000' }}
+              />
+              {tag.name}
+              <button
+                className="ml-1 hover:text-destructive"
+                onClick={() => handleRemove(tag.id)}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          );
+        })}
       </div>
-      {maxTags < Infinity && (
-        <p className="text-sm text-gray-500">
-          {selectedTags.length} of {maxTags} tags selected
-        </p>
-      )}
     </div>
   );
 } 

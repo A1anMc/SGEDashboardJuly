@@ -1,0 +1,313 @@
+INFO:     Will watch for changes in these directories: ['/Users/alanmccarthy/Desktop/July SGE Dashbaord']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [93574] using WatchFiles
+2025-07-06 18:02:51,977 INFO sqlalchemy.engine.Engine select pg_catalog.version()
+2025-07-06 18:02:51,977 INFO sqlalchemy.engine.Engine [raw sql] {}
+2025-07-06 18:02:51,980 INFO sqlalchemy.engine.Engine select current_schema()
+2025-07-06 18:02:51,980 INFO sqlalchemy.engine.Engine [raw sql] {}
+2025-07-06 18:02:51,982 INFO sqlalchemy.engine.Engine show standard_conforming_strings
+2025-07-06 18:02:51,982 INFO sqlalchemy.engine.Engine [raw sql] {}
+2025-07-06 18:02:51,986 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-07-06 18:02:51,987 INFO sqlalchemy.engine.Engine SELECT 1
+2025-07-06 18:02:51,987 INFO sqlalchemy.engine.Engine [generated in 0.00090s] {}
+2025-07-06 18:02:51,988 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     Started server process [93577]
+INFO:     Waiting for application startup.
+2025-07-06 18:02:52,498 - app.main - INFO - Starting up application...
+2025-07-06 18:02:52,499 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-07-06 18:02:52,499 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-07-06 18:02:52,499 INFO sqlalchemy.engine.Engine CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+2025-07-06 18:02:52,499 - sqlalchemy.engine.Engine - INFO - CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+2025-07-06 18:02:52,499 INFO sqlalchemy.engine.Engine [generated in 0.00035s] {}
+2025-07-06 18:02:52,499 - sqlalchemy.engine.Engine - INFO - [generated in 0.00035s] {}
+2025-07-06 18:02:52,501 INFO sqlalchemy.engine.Engine CREATE EXTENSION IF NOT EXISTS pg_trgm;
+2025-07-06 18:02:52,501 - sqlalchemy.engine.Engine - INFO - CREATE EXTENSION IF NOT EXISTS pg_trgm;
+2025-07-06 18:02:52,501 INFO sqlalchemy.engine.Engine [generated in 0.00021s] {}
+2025-07-06 18:02:52,501 - sqlalchemy.engine.Engine - INFO - [generated in 0.00021s] {}
+2025-07-06 18:02:52,502 INFO sqlalchemy.engine.Engine CREATE EXTENSION IF NOT EXISTS hstore;
+2025-07-06 18:02:52,502 - sqlalchemy.engine.Engine - INFO - CREATE EXTENSION IF NOT EXISTS hstore;
+2025-07-06 18:02:52,502 INFO sqlalchemy.engine.Engine [generated in 0.00025s] {}
+2025-07-06 18:02:52,502 - sqlalchemy.engine.Engine - INFO - [generated in 0.00025s] {}
+2025-07-06 18:02:52,503 - app.db.init_db - INFO - Database extensions initialized successfully
+2025-07-06 18:02:52,517 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-07-06 18:02:52,517 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-07-06 18:02:52,529 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-07-06 18:02:52,529 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-07-06 18:02:52,529 INFO sqlalchemy.engine.Engine [generated in 0.00046s] {'table_name': 'user', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-07-06 18:02:52,529 - sqlalchemy.engine.Engine - INFO - [generated in 0.00046s] {'table_name': 'user', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-07-06 18:02:52,537 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-07-06 18:02:52,537 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-07-06 18:02:52,537 INFO sqlalchemy.engine.Engine [cached since 0.008839s ago] {'table_name': 'project', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-07-06 18:02:52,537 - sqlalchemy.engine.Engine - INFO - [cached since 0.008839s ago] {'table_name': 'project', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-07-06 18:02:52,539 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-07-06 18:02:52,539 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-07-06 18:02:52,539 INFO sqlalchemy.engine.Engine [cached since 0.01104s ago] {'table_name': 'task', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-07-06 18:02:52,539 - sqlalchemy.engine.Engine - INFO - [cached since 0.01104s ago] {'table_name': 'task', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-07-06 18:02:52,544 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-07-06 18:02:52,544 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-07-06 18:02:52,545 INFO sqlalchemy.engine.Engine [cached since 0.01614s ago] {'table_name': 'task_comment', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-07-06 18:02:52,545 - sqlalchemy.engine.Engine - INFO - [cached since 0.01614s ago] {'table_name': 'task_comment', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-07-06 18:02:52,546 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-07-06 18:02:52,546 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-07-06 18:02:52,546 INFO sqlalchemy.engine.Engine [cached since 0.018s ago] {'table_name': 'time_entry', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-07-06 18:02:52,546 - sqlalchemy.engine.Engine - INFO - [cached since 0.018s ago] {'table_name': 'time_entry', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-07-06 18:02:52,548 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-07-06 18:02:52,548 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-07-06 18:02:52,549 INFO sqlalchemy.engine.Engine [cached since 0.02034s ago] {'table_name': 'tags', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-07-06 18:02:52,549 - sqlalchemy.engine.Engine - INFO - [cached since 0.02034s ago] {'table_name': 'tags', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-07-06 18:02:52,552 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-07-06 18:02:52,552 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-07-06 18:02:52,552 INFO sqlalchemy.engine.Engine [cached since 0.02373s ago] {'table_name': 'grants', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-07-06 18:02:52,552 - sqlalchemy.engine.Engine - INFO - [cached since 0.02373s ago] {'table_name': 'grants', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-07-06 18:02:52,554 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-07-06 18:02:52,554 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-07-06 18:02:52,555 INFO sqlalchemy.engine.Engine [cached since 0.02643s ago] {'table_name': 'team_member', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-07-06 18:02:52,555 - sqlalchemy.engine.Engine - INFO - [cached since 0.02643s ago] {'table_name': 'team_member', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-07-06 18:02:52,558 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-07-06 18:02:52,558 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-07-06 18:02:52,559 INFO sqlalchemy.engine.Engine [cached since 0.03006s ago] {'table_name': 'metric', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-07-06 18:02:52,559 - sqlalchemy.engine.Engine - INFO - [cached since 0.03006s ago] {'table_name': 'metric', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-07-06 18:02:52,561 INFO sqlalchemy.engine.Engine COMMIT
+2025-07-06 18:02:52,561 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-07-06 18:02:52,562 - app.db.init_db - INFO - Database tables created successfully
+2025-07-06 18:02:52,562 INFO sqlalchemy.engine.Engine COMMIT
+2025-07-06 18:02:52,562 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-07-06 18:02:52,563 - app.main - INFO - Database initialized successfully
+2025-07-06 18:02:52,564 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-07-06 18:02:52,564 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-07-06 18:02:52,565 INFO sqlalchemy.engine.Engine SELECT 1
+2025-07-06 18:02:52,565 - sqlalchemy.engine.Engine - INFO - SELECT 1
+2025-07-06 18:02:52,565 INFO sqlalchemy.engine.Engine [cached since 0.579s ago] {}
+2025-07-06 18:02:52,565 - sqlalchemy.engine.Engine - INFO - [cached since 0.579s ago] {}
+2025-07-06 18:02:52,567 - app.db.init_db - INFO - Database connection test successful
+2025-07-06 18:02:52,567 INFO sqlalchemy.engine.Engine COMMIT
+2025-07-06 18:02:52,567 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-07-06 18:02:52,573 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-07-06 18:02:52,573 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-07-06 18:02:52,573 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s]) AND pg_catalog.pg_class.relpersistence != %(relpersistence_1)s AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-07-06 18:02:52,573 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s]) AND pg_catalog.pg_class.relpersistence != %(relpersistence_1)s AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-07-06 18:02:52,574 INFO sqlalchemy.engine.Engine [generated in 0.00134s] {'param_1': 'r', 'param_2': 'p', 'relpersistence_1': 't', 'nspname_1': 'pg_catalog'}
+2025-07-06 18:02:52,574 - sqlalchemy.engine.Engine - INFO - [generated in 0.00134s] {'param_1': 'r', 'param_2': 'p', 'relpersistence_1': 't', 'nspname_1': 'pg_catalog'}
+2025-07-06 18:02:52,578 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-07-06 18:02:52,578 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-07-06 18:02:52,579 - app.db.init_db - INFO - All required tables exist
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/core/config.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [93577]
+WARNING:  WatchFiles detected changes in 'app/core/config.py'. Reloading...
+Process SpawnProcess-3:
+Traceback (most recent call last):
+  File "/Users/alanmccarthy/.pyenv/versions/3.11.7/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/Users/alanmccarthy/.pyenv/versions/3.11.7/lib/python3.11/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py", line 78, in subprocess_started
+    target(sockets=sockets)
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/server.py", line 62, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alanmccarthy/.pyenv/versions/3.11.7/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/alanmccarthy/.pyenv/versions/3.11.7/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/server.py", line 69, in serve
+    config.load()
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/config.py", line 458, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alanmccarthy/.pyenv/versions/3.11.7/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/app/main.py", line 5, in <module>
+    from app.core.config import settings
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/app/core/config.py", line 77, in <module>
+    settings = Settings()
+              ^^^^^^^^^^
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/pydantic_settings/main.py", line 84, in __init__
+    super().__init__(
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/pydantic/main.py", line 171, in __init__
+    self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for Settings
+SECRET_KEY
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.6/v/string_type
+WARNING:  WatchFiles detected changes in 'app/main.py'. Reloading...
+WARNING:  WatchFiles detected changes in 'app/main.py'. Reloading...
+Process SpawnProcess-5:
+Traceback (most recent call last):
+  File "/Users/alanmccarthy/.pyenv/versions/3.11.7/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/Users/alanmccarthy/.pyenv/versions/3.11.7/lib/python3.11/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py", line 78, in subprocess_started
+    target(sockets=sockets)
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/server.py", line 62, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alanmccarthy/.pyenv/versions/3.11.7/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/alanmccarthy/.pyenv/versions/3.11.7/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/server.py", line 69, in serve
+    config.load()
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/config.py", line 458, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/importer.py", line 24, in import_from_string
+    raise exc from None
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alanmccarthy/.pyenv/versions/3.11.7/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/app/main.py", line 5, in <module>
+    from slowapi import Limiter, _rate_limit_exceeded_handler
+ModuleNotFoundError: No module named 'slowapi'
+WARNING:  WatchFiles detected changes in 'app/main.py'. Reloading...
+WARNING:  WatchFiles detected changes in 'app/main.py'. Reloading...
+Process SpawnProcess-7:
+Traceback (most recent call last):
+  File "/Users/alanmccarthy/.pyenv/versions/3.11.7/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/Users/alanmccarthy/.pyenv/versions/3.11.7/lib/python3.11/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py", line 78, in subprocess_started
+    target(sockets=sockets)
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/server.py", line 62, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alanmccarthy/.pyenv/versions/3.11.7/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/alanmccarthy/.pyenv/versions/3.11.7/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/server.py", line 69, in serve
+    config.load()
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/config.py", line 458, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/importer.py", line 24, in import_from_string
+    raise exc from None
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alanmccarthy/.pyenv/versions/3.11.7/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/app/main.py", line 6, in <module>
+    from slowapi import Limiter, _rate_limit_exceeded_handler
+ModuleNotFoundError: No module named 'slowapi'
+WARNING:  WatchFiles detected changes in 'venv/lib/python3.11/site-packages/limits/aio/storage/memcached/emcache.py', 'venv/lib/python3.11/site-packages/limits/storage/__init__.py', 'venv/lib/python3.11/site-packages/deprecated/__init__.py', 'venv/lib/python3.11/site-packages/limits/aio/storage/redis/redispy.py', 'venv/lib/python3.11/site-packages/limits/aio/storage/memcached/bridge.py', 'venv/lib/python3.11/site-packages/limits/aio/storage/redis/__init__.py', 'venv/lib/python3.11/site-packages/limits/aio/__init__.py', 'venv/lib/python3.11/site-packages/limits/strategies.py', 'venv/lib/python3.11/site-packages/limits/storage/mongodb.py', 'venv/lib/python3.11/site-packages/limits/storage/redis_cluster.py', 'venv/lib/python3.11/site-packages/slowapi/extension.py', 'venv/lib/python3.11/site-packages/wrapt/decorators.py', 'venv/lib/python3.11/site-packages/slowapi/util.py', 'venv/lib/python3.11/site-packages/limits/aio/storage/memcached/memcachio.py', 'venv/lib/python3.11/site-packages/limits/version.py', 'venv/lib/python3.11/site-packages/limits/aio/storage/__init__.py', 'venv/lib/python3.11/site-packages/wrapt/patches.py', 'venv/lib/python3.11/site-packages/slowapi/wrappers.py', 'venv/lib/python3.11/site-packages/limits/aio/storage/redis/bridge.py', 'venv/lib/python3.11/site-packages/limits/storage/base.py', 'venv/lib/python3.11/site-packages/limits/aio/storage/mongodb.py', 'venv/lib/python3.11/site-packages/limits/aio/storage/memcached/__init__.py', 'venv/lib/python3.11/site-packages/limits/errors.py', 'venv/lib/python3.11/site-packages/wrapt/__wrapt__.py', 'venv/lib/python3.11/site-packages/wrapt/weakrefs.py', 'venv/lib/python3.11/site-packages/limits/storage/memory.py', 'venv/lib/python3.11/site-packages/wrapt/wrappers.py', 'venv/lib/python3.11/site-packages/limits/aio/strategies.py', 'venv/lib/python3.11/site-packages/limits/limits.py', 'venv/lib/python3.11/site-packages/wrapt/arguments.py', 'venv/lib/python3.11/site-packages/limits/__init__.py', 'venv/lib/python3.11/site-packages/limits/aio/storage/redis/coredis.py', 'venv/lib/python3.11/site-packages/limits/storage/redis.py', 'venv/lib/python3.11/site-packages/slowapi/middleware.py', 'venv/lib/python3.11/site-packages/wrapt/importer.py', 'venv/lib/python3.11/site-packages/limits/aio/storage/base.py', 'venv/lib/python3.11/site-packages/limits/_version.py', 'venv/lib/python3.11/site-packages/slowapi/errors.py', 'venv/lib/python3.11/site-packages/limits/storage/memcached.py', 'venv/lib/python3.11/site-packages/wrapt/__init__.py', 'venv/lib/python3.11/site-packages/limits/typing.py', 'venv/lib/python3.11/site-packages/deprecated/classic.py', 'venv/lib/python3.11/site-packages/limits/storage/registry.py', 'venv/lib/python3.11/site-packages/limits/aio/storage/memory.py', 'venv/lib/python3.11/site-packages/slowapi/__init__.py', 'venv/lib/python3.11/site-packages/limits/aio/storage/redis/valkey.py', 'venv/lib/python3.11/site-packages/limits/util.py', 'venv/lib/python3.11/site-packages/limits/storage/redis_sentinel.py', 'venv/lib/python3.11/site-packages/deprecated/sphinx.py'. Reloading...
+Process SpawnProcess-8:
+Traceback (most recent call last):
+  File "/Users/alanmccarthy/.pyenv/versions/3.11.7/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/Users/alanmccarthy/.pyenv/versions/3.11.7/lib/python3.11/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py", line 78, in subprocess_started
+    target(sockets=sockets)
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/server.py", line 62, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alanmccarthy/.pyenv/versions/3.11.7/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/alanmccarthy/.pyenv/versions/3.11.7/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/server.py", line 69, in serve
+    config.load()
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/config.py", line 458, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/importer.py", line 24, in import_from_string
+    raise exc from None
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/venv/lib/python3.11/site-packages/uvicorn/importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alanmccarthy/.pyenv/versions/3.11.7/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/Users/alanmccarthy/Desktop/July SGE Dashbaord/app/main.py", line 10, in <module>
+    import sentry_sdk
+ModuleNotFoundError: No module named 'sentry_sdk'

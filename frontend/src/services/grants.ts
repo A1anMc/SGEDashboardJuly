@@ -1,5 +1,5 @@
 import { api } from './api';
-import { Grant, GrantFilters } from '@/types/models';
+import { Grant, GrantFilters, CreateGrantInput } from '@/types/models';
 
 export interface GrantsResponse {
   items: Grant[];
@@ -11,82 +11,46 @@ export interface GrantsResponse {
 export interface GrantDashboard {
   metrics: {
     total_active: number;
-    total_amount_available: number;
-    upcoming_deadlines: number;
-    avg_match_score: number;
+    total_value: number;
+    success_rate: number;
+    pending_applications: number;
   };
-  categories: {
-    by_industry: Record<string, number>;
-    by_location: Record<string, number>;
-    by_org_type: Record<string, number>;
-    by_funding_range: Record<string, number>;
-  };
-  timeline: {
-    this_week: DeadlineGroup;
-    next_week: DeadlineGroup;
-    this_month: DeadlineGroup;
-    next_month: DeadlineGroup;
-    later: DeadlineGroup;
-  };
-  matching_insights: {
-    best_matches: Array<{
-      grant_id: number;
-      title: string;
-      score: number;
-    }>;
-    common_mismatches: string[];
-    suggested_improvements: string[];
-  };
-  last_updated: string;
-}
-
-interface DeadlineGroup {
-  grants: Array<{
-    id: number;
-    title: string;
-    deadline: string;
-    amount: number;
+  status_distribution: Array<{
+    name: string;
+    value: number;
   }>;
-  total_amount: number;
-  count: number;
+  monthly_applications: Array<{
+    month: string;
+    applications: number;
+  }>;
 }
 
 export const grantsApi = {
   getGrants: async (filters?: GrantFilters) => {
-    const response = await api.get<{ items: Grant[]; total: number }>('/grants', { params: filters });
+    const response = await api.get<GrantsResponse>('/grants', { params: filters });
     return response.data;
   },
 
-  getGrant: async (id: number) => {
+  getGrant: async (id: string) => {
     const response = await api.get<Grant>(`/grants/${id}`);
     return response.data;
   },
 
-  createGrant: async (data: Partial<Grant>) => {
+  createGrant: async (data: CreateGrantInput) => {
     const response = await api.post<Grant>('/grants', data);
     return response.data;
   },
 
-  updateGrant: async (id: number, data: Partial<Grant>) => {
+  updateGrant: async (id: string, data: CreateGrantInput) => {
     const response = await api.put<Grant>(`/grants/${id}`, data);
     return response.data;
   },
 
-  deleteGrant: async (id: number) => {
+  deleteGrant: async (id: string) => {
     await api.delete(`/grants/${id}`);
-  },
-
-  getTags: async (): Promise<string[]> => {
-    const { data } = await api.get('/grants/tags');
-    return data;
   },
 
   runScraper: async () => {
     await api.post('/scraper/run');
   },
-};
-
-export const fetchGrantDashboard = async (): Promise<GrantDashboard> => {
-  const response = await api.get<GrantDashboard>('/grants/dashboard');
-  return response.data;
 }; 

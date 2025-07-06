@@ -16,22 +16,23 @@ export interface Grant {
   description: string;
   amount: number;
   deadline: Date;
-  status: 'open' | 'closed' | 'pending';
-  tags: Tag[];
-  createdAt: Date;
-  updatedAt: Date;
+  status: 'open' | 'closed' | 'draft';
+  source_url?: string;
+  eligibility_criteria?: string[];
+  tags: string[];
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface Tag {
   id: string;
   name: string;
-  color: string;
-  category: TagCategory;
   description?: string;
-  parent_id?: string;
-  synonyms?: string[];
-  createdAt: Date;
-  updatedAt: Date;
+  color?: string;
+  grant_count: number;
+  project_count: number;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export enum TagCategory {
@@ -170,4 +171,21 @@ export interface CreateTaskRequest {
 export interface UpdateTaskRequest extends Partial<CreateTaskRequest> {
   id: string;
   status?: 'todo' | 'in_progress' | 'in_review' | 'done' | 'archived';
+}
+
+export interface GrantFilters {
+  status?: 'open' | 'closed' | 'draft';
+  page: number;
+  size: number;
+}
+
+export interface CreateGrantInput {
+  title: string;
+  description: string;
+  amount: number;
+  due_date?: string;
+  status: 'open' | 'closed' | 'draft';
+  source_url?: string;
+  eligibility_criteria?: string[];
+  tags?: string[];
 }

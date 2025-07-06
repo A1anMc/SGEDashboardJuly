@@ -1,0 +1,41 @@
+services:
+  - name: sge-dashboard-api
+    type: web
+    env: python
+    rootDir: .
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:$PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sge-dashboard-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://sge-dashboard.onrender.com
+      - key: FRONTEND_URL
+        value: https://sge-dashboard.onrender.com
+      - key: ENVIRONMENT
+        value: production
+    healthCheckPath: /health
+    autoDeploy: true
+
+  - name: sge-dashboard
+    type: web
+    env: node
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: BACKEND_URL
+        value: https://sge-dashboard-api.onrender.com
+      - key: NODE_ENV
+        value: production
+    autoDeploy: true
+
+databases:
+  - name: sge-dashboard-db
+    databaseName: sge_dashboard
+    plan: starter
+    ipAllowList: []  # Only allow internal connections 
