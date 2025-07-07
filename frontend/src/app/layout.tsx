@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import DashboardLayout from '../components/layout/DashboardLayout';
+import QueryProvider from '@/components/QueryProvider';
 
 export const metadata: Metadata = {
   title: 'SGE Dashboard',
@@ -16,7 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full bg-gray-100">
       <body className="h-full">
-        <DashboardLayout>{children}</DashboardLayout>
+        <QueryProvider>
+          <DashboardLayout>{children}</DashboardLayout>
+        </QueryProvider>
       </body>
     </html>
   );
