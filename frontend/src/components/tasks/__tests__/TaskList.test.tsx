@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '../../../test-utils';
+import { render, screen, fireEvent, waitFor } from '../../../../tests/test-utils';
 import TaskList from '../TaskList';
 import { Task, User } from '../../../types/models';
 
