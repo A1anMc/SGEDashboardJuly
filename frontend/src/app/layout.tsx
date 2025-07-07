@@ -1,7 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import DashboardLayout from '../components/layout/DashboardLayout';
-import QueryProvider from '@/components/QueryProvider';
+import QueryProvider from '../components/QueryProvider';
 
 export const metadata: Metadata = {
   title: 'SGE Dashboard',
