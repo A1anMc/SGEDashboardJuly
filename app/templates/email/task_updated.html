@@ -1,78 +1,70 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
+    <title>Task Update</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
             color: #333;
-        }
-        .container {
             max-width: 600px;
             margin: 0 auto;
             padding: 20px;
         }
         .header {
-            background-color: #f8f9fa;
+            background-color: #4a90e2;
+            color: white;
             padding: 20px;
-            border-radius: 5px;
-            margin-bottom: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
         }
-        .task-details {
-            background-color: #fff;
+        .content {
+            background-color: #f9f9f9;
             padding: 20px;
             border: 1px solid #ddd;
-            border-radius: 5px;
+            border-radius: 0 0 5px 5px;
         }
-        .updates {
-            background-color: #e9ecef;
+        .task-title {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        .update-info {
+            background-color: #fff;
             padding: 15px;
+            border: 1px solid #eee;
             border-radius: 5px;
-            margin: 20px 0;
+            margin: 15px 0;
         }
-        .update-item {
-            margin-bottom: 10px;
-        }
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: #fff;
-            text-decoration: none;
-            border-radius: 5px;
+        .footer {
             margin-top: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h2>Task Updated</h2>
-            <p>The following task has been updated:</p>
-            <h3>{{ task_title }}</h3>
+    <div class="header">
+        <h1>Task Update</h1>
+    </div>
+    <div class="content">
+        <div class="task-title">
+            {{ task_title }}
         </div>
         
-        <div class="task-details">
-            <p><strong>Description:</strong><br>{{ task_description }}</p>
-            <p><strong>Current Status:</strong> {{ task_status }}</p>
-            
-            <div class="updates">
-                <h4>Changes Made:</h4>
-                {% for field, change in updates.items() %}
-                <div class="update-item">
-                    <strong>{{ field }}:</strong>
-                    <span>{{ change.old }} → {{ change.new }}</span>
-                </div>
-                {% endfor %}
-            </div>
+        <div class="update-info">
+            <p><strong>Update Type:</strong> {{ update_type }}</p>
+            <p><strong>Updated By:</strong> {{ updated_by }}</p>
         </div>
         
-        <a href="{{ dashboard_url }}" class="button">View Task</a>
+        <p>Please review the task updates and take any necessary action.</p>
         
-        <p style="margin-top: 20px; font-size: 12px; color: #666;">
-            This is an automated message from the Shadow Goose Entertainment Dashboard.
-            Please do not reply to this email.
-        </p>
+        <p>Best regards,<br>SGE Dashboard Team</p>
+    </div>
+    <div class="footer">
+        <p>This is an automated message from the SGE Dashboard. Please do not reply to this email.</p>
     </div>
 </body>
 </html> 

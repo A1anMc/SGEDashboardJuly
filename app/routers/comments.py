@@ -1,12 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
-from datetime import datetime
 
 from app.core.deps import get_db, get_current_user
 from app.models.task import TaskComment
 from app.models.user import User
-from app.schemas.task import CommentCreate, CommentUpdate, CommentResponse, ReactionUpdate
+from app.schemas.task import CommentCreate, CommentUpdate, CommentResponse
 
 router = APIRouter(prefix="/comments", tags=["comments"])
 

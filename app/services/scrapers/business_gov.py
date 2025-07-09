@@ -1,32 +1,32 @@
 import aiohttp
 import logging
 from bs4 import BeautifulSoup
-from typing import List, Dict
+from typing import List, Dict, Optional
 from .base_scraper import BaseScraper
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
 class BusinessGovScraper(BaseScraper):
     """Scraper for business.gov.au grants."""
     
-    BASE_URL = "https://business.gov.au"
-    GRANTS_URL = f"{BASE_URL}/grants-and-programs"
+    def __init__(self, db_session: Session, http_session: Optional[aiohttp.ClientSession] = None):
+        super().__init__(db_session, "business.gov.au")
+        self.http_session = http_session
+        self.base_url = "https://business.gov.au"
+        self.grants_url = f"{self.base_url}/grants-and-programs"
     
-    def __init__(self, db):
-        super().__init__(db, "business.gov.au")
-    
-    async def scrape(self) -> List[Dict]:
-        """
-        Scrape grants from business.gov.au.
-        Returns list of normalized grant dictionaries.
-        """
+    async def scrape(self) -> List[dict]:
+        """Scrape grants from Business.gov.au."""
+        logger.info("Running Business.gov.au scraper")
+        grants = []
+        
         try:
-            grants = []
-            async with aiohttp.ClientSession() as session:
-                # Fetch main grants page
-                async with session.get(self.GRANTS_URL) as response:
+            if self.http_session:
+                session = self.http_session
+                async with session.get(self.grants_url) as response:
                     if response.status != 200:
-                        logger.error(f"Failed to fetch grants page: {response.status}")
+                        logger.error(f"Failed to fetch grants list: {response.status}")
                         return []
                     
                     html = await response.text()
@@ -43,7 +43,7 @@ class BusinessGovScraper(BaseScraper):
                             link = element.find('a')['href']
                             
                             # Fetch detailed grant page
-                            full_url = f"{self.BASE_URL}{link}" if link.startswith('/') else link
+                            full_url = f"{self.base_url}{link}" if link.startswith('/') else link
                             grant_details = await self._fetch_grant_details(session, full_url)
                             
                             if grant_details:
@@ -85,10 +85,11 @@ class BusinessGovScraper(BaseScraper):
                 date_elements = soup.find_all('div', class_='date-field')
                 for date_elem in date_elements:
                     label = date_elem.find('label').text.lower()
+                    date_value = date_elem.find('span').text.strip()
                     if 'open' in label:
-                        details['open_date'] = date_elem.find('span').text.strip()
-                    elif 'close' in label or 'deadline' in label:
-                        details['deadline'] = date_elem.find('span').text.strip()
+                        details['open_date'] = date_value
+                    elif any(term in label for term in ['close', 'deadline', 'closing']):
+                        details['deadline'] = date_value
                 
                 # Extract funding amounts
                 amount_elem = soup.find('div', class_='funding-amount')
@@ -104,8 +105,8 @@ class BusinessGovScraper(BaseScraper):
                 if eligibility_elem:
                     org_types = []
                     for item in eligibility_elem.find_all('li'):
-                        text = item.text.lower()
-                        if any(term in text for term in ['business', 'organisation', 'enterprise']):
+                        text = item.text.strip()
+                        if any(term in text.lower() for term in ['business', 'organisation', 'enterprise']):
                             org_types.append(text)
                     details['org_types'] = org_types
                 

@@ -1,7 +1,9 @@
 import pytest
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from app.models.task import Task, TaskComment, TimeEntry, TaskStatus, TaskPriority
+from app.models.task import Task, TaskStatus, TaskPriority
+from app.models.task_comment import TaskComment
+from app.models.time_entry import TimeEntry
 from app.models.user import User
 from app.models.project import Project
 
@@ -20,9 +22,12 @@ def test_user(db: Session) -> User:
 @pytest.fixture
 def test_project(db: Session, test_user: User) -> Project:
     project = Project(
-        title="Test Project",
+        name="Test Project",
         description="A test project",
-        owner_id=test_user.id
+        status="active",
+        owner_id=test_user.id,
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow()
     )
     db.add(project)
     db.commit()

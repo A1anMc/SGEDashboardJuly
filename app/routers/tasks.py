@@ -1,11 +1,11 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 from datetime import datetime
 
 from app.core.deps import get_db, get_current_user
-from app.models.task import Task, TaskComment, TimeEntry
+from app.models.task import Task, TaskComment
 from app.models.user import User
 from app.schemas.task import (
     TaskCreate,
@@ -13,10 +13,9 @@ from app.schemas.task import (
     TaskResponse,
     CommentCreate,
     CommentUpdate,
-    CommentResponse,
-    ReactionUpdate
+    CommentResponse
 )
-from app.core.email import send_task_assignment_email, send_task_update_email
+from app.core.email import send_task_assignment_email
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -209,14 +208,14 @@ def delete_comment(
     db.commit()
     return {"message": "Comment deleted successfully"}
 
-@router.post("/comments/{comment_id}/reaction", response_model=CommentResponse)
-async def update_reaction(
+@router.post("/comments/{comment_id}/reactions/{emoji}", response_model=CommentResponse)
+async def add_reaction(
     comment_id: int,
-    reaction: ReactionUpdate,
+    emoji: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Add or remove a reaction to a comment"""
+    """Add a reaction to a comment"""
     db_comment = db.query(TaskComment).filter(TaskComment.id == comment_id).first()
     if not db_comment:
         raise HTTPException(status_code=404, detail="Comment not found")
@@ -225,31 +224,51 @@ async def update_reaction(
     if not db_comment.reactions:
         db_comment.reactions = {}
     
-    if reaction.action == "add":
-        # Initialize emoji list if not present
-        if reaction.emoji not in db_comment.reactions:
-            db_comment.reactions[reaction.emoji] = []
+    # Initialize emoji list if not present
+    if emoji not in db_comment.reactions:
+        db_comment.reactions[emoji] = []
+    
+    # Add user to reaction list if not already present
+    if current_user.id not in db_comment.reactions[emoji]:
+        db_comment.reactions[emoji].append(current_user.id)
         
-        # Add user to reaction list if not already present
-        if current_user.id not in db_comment.reactions[reaction.emoji]:
-            db_comment.reactions[reaction.emoji].append(current_user.id)
-            
-        # Mark the reactions field as modified
-        flag_modified(db_comment, "reactions")
-    else:  # remove
-        # Remove user from reaction list if present
-        if reaction.emoji in db_comment.reactions:
-            if current_user.id in db_comment.reactions[reaction.emoji]:
-                db_comment.reactions[reaction.emoji].remove(current_user.id)
-                # Remove emoji key if no users have reacted with it
-                if not db_comment.reactions[reaction.emoji]:
-                    del db_comment.reactions[reaction.emoji]
-                    
-                # Mark the reactions field as modified
-                flag_modified(db_comment, "reactions")
+    # Mark the reactions field as modified
+    flag_modified(db_comment, "reactions")
     
     db.commit()
     db.refresh(db_comment)
+    
+    return db_comment
+
+@router.delete("/comments/{comment_id}/reactions/{emoji}", response_model=CommentResponse)
+async def remove_reaction(
+    comment_id: int,
+    emoji: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Remove a reaction from a comment"""
+    db_comment = db.query(TaskComment).filter(TaskComment.id == comment_id).first()
+    if not db_comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    
+    # Initialize reactions if None
+    if not db_comment.reactions:
+        db_comment.reactions = {}
+    
+    # Remove user from reaction list if present
+    if emoji in db_comment.reactions and current_user.id in db_comment.reactions[emoji]:
+        db_comment.reactions[emoji].remove(current_user.id)
+        
+        # Remove emoji key if no users have reacted with it
+        if not db_comment.reactions[emoji]:
+            db_comment.reactions.pop(emoji)
+        
+        # Mark the reactions field as modified
+        flag_modified(db_comment, "reactions")
+        
+        db.commit()
+        db.refresh(db_comment)
     
     return db_comment
 

@@ -5,18 +5,27 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.engine import Engine
 from datetime import datetime
-from alembic import command
-from alembic.config import Config
+
+# Set test environment variables
+os.environ["SECRET_KEY"] = "test_secret_key_for_testing_only"
+os.environ["JWT_SECRET_KEY"] = "test_jwt_secret_key_for_testing_only"
+os.environ["DATABASE_URL"] = "sqlite:///./test.db"  # Use SQLite for testing
+os.environ["SUPABASE_URL"] = "https://test.supabase.co"
+os.environ["SUPABASE_SERVICE_ROLE_KEY"] = "test_service_role_key"
+os.environ["SUPABASE_ANON_KEY"] = "test_anon_key"
+os.environ["SUPABASE_JWT_SECRET"] = "test_jwt_secret"
+os.environ["TESTING"] = "True"  # Flag to bypass database validation
 
 # Import Base and all models to ensure they're registered
 from app.db.base import Base
 from app.models.user import User  # noqa: F401
 from app.models.project import Project  # noqa: F401
-from app.models.task import Task, TaskComment, TimeEntry  # noqa: F401
+from app.models.task import Task  # noqa: F401
+from app.models.task_comment import TaskComment  # noqa: F401
+from app.models.time_entry import TimeEntry  # noqa: F401
 
 from app.main import app
 from app.core.deps import get_db
-from app.core.config import settings
 from app.core.security import create_access_token
 
 # Enable SQLite foreign key support
@@ -119,7 +128,7 @@ def test_user2(db):
 def test_project(db, test_user):
     """Create a test project."""
     project = Project(
-        title="Test Project",
+        name="Test Project",
         description="Test Project Description",
         status="active",
         owner_id=test_user.id,

@@ -3,7 +3,6 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.email import send_test_email
-from app.main import app
 
 @pytest.mark.asyncio
 async def test_send_email():
@@ -21,7 +20,7 @@ def test_task_assignment_email(client: TestClient, db: Session, test_user, test_
     """Test that email is sent when task is assigned"""
     # Create a task assigned to test_user2
     response = client.post(
-        "/tasks/",
+        "/api/v1/tasks/",
         json={
             "title": "Test Task",
             "description": "Test Description",

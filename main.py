@@ -1,14 +1,7 @@
-import logging
-import os
 from datetime import datetime
-from pathlib import Path
-from typing import List
 
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
-from dotenv import load_dotenv
 
 # Import Base and all models to ensure they're registered
 from app.db.base import Base  # noqa: F401
@@ -21,7 +14,6 @@ from app.models.grant import Grant  # noqa: F401
 from app.models.task import Task, TaskComment, TimeEntry  # noqa: F401
 
 from app.routers import grants, tasks, tags, comments
-from app.core.config import settings
 from app.db.session import engine
 
 # Create all tables in the database

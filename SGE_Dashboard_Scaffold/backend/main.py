@@ -1,8 +1,4 @@
-import logging
-import os
 from datetime import datetime
-from pathlib import Path
-from typing import List
 
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,7 +9,6 @@ from dotenv import load_dotenv
 
 from app.routers import grants, metrics, program_logic, projects, team
 from app.services.scrapers import business_gov, community_grants, grantconnect, grants_gov
-from app.core.config import settings
 from app.core.logging import setup_logging
 
 # Load environment variables

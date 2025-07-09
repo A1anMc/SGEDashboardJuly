@@ -1,11 +1,10 @@
-from typing import List, Optional
+from typing import List
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 from pydantic import EmailStr, BaseModel
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 import os
 from dotenv import load_dotenv
-from app.core.config import settings
 
 load_dotenv()
 
@@ -17,12 +16,12 @@ email_conf = ConnectionConfig(
     MAIL_USERNAME=os.getenv("MAIL_USERNAME", "test@example.com"),
     MAIL_PASSWORD=os.getenv("MAIL_PASSWORD", "test_password"),
     MAIL_FROM=os.getenv("MAIL_FROM", "test@example.com"),
-    MAIL_PORT=int(os.getenv("MAIL_PORT", "587")),
-    MAIL_SERVER=os.getenv("MAIL_SERVER", "smtp.mailtrap.io"),
+    MAIL_PORT=int(os.getenv("MAIL_PORT", "1025")),  # Default port for Python's SMTP debugging server
+    MAIL_SERVER=os.getenv("MAIL_SERVER", "localhost"),  # Use local SMTP server for testing
     MAIL_FROM_NAME=os.getenv("MAIL_FROM_NAME", "SGE Dashboard"),
-    MAIL_STARTTLS=True,
+    MAIL_STARTTLS=False,  # Disable TLS for testing
     MAIL_SSL_TLS=False,
-    USE_CREDENTIALS=True,
+    USE_CREDENTIALS=False,  # Disable credentials for testing
     TEMPLATE_FOLDER=BASE_DIR / "templates" / "email"
 )
 
@@ -69,12 +68,12 @@ async def send_task_update_email(email_to: List[EmailStr], task_title: str, upda
     
     await fastmail.send_message(message, template_name="task_updated.html")
 
-async def send_test_email(recipient_email: str) -> None:
+async def send_test_email(email_to: str) -> None:
     """
     Send a test email to verify the email configuration.
     
     Args:
-        recipient_email: Email address to send the test to
+        email_to: Email address to send the test to
     """
     test_task = {
         "title": "Test Task",
@@ -85,7 +84,7 @@ async def send_test_email(recipient_email: str) -> None:
     }
 
     await send_task_assignment_email(
-        recipient_email=[recipient_email],
+        email_to=[email_to],
         task_title=test_task["title"],
         task_description=test_task["description"],
         assignee_name=test_task["assignee_name"]

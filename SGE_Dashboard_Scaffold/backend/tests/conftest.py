@@ -1,4 +1,3 @@
-import os
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event
@@ -7,12 +6,6 @@ from sqlalchemy.engine import Engine
 
 # Import Base and all models to ensure they're registered
 from app.db.base_class import Base
-from app.models.grant import GrantModel  # Import explicitly to ensure model is registered
-from app.models.user import User
-from app.models.team_member import TeamMember
-from app.models.project import Project
-from app.models.metric import Metric
-from app.models.program_logic import ProgramLogic
 from app.main import app
 from app.core.deps import get_db
 

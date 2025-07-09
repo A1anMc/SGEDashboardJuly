@@ -1,5 +1,5 @@
 import { api } from './api';
-import { Grant, GrantFilters, CreateGrantInput } from '../types/models';
+import { Grant, GrantFilters, CreateGrantInput, UpdateGrantRequest } from '../types/models';
 
 export interface GrantsResponse {
   items: Grant[];
@@ -35,6 +35,9 @@ export interface ScraperStatus {
   last_run?: string;
   next_scheduled?: string;
   available_sources: string[];
+  active_sources: string[];
+  error_count: number;
+  success_count: number;
 }
 
 export const grantsApi = {
@@ -43,7 +46,7 @@ export const grantsApi = {
     return response.data;
   },
 
-  getGrant: async (id: string) => {
+  getGrant: async (id: number) => {
     const response = await api.get<Grant>(`/grants/${id}`);
     return response.data;
   },
@@ -53,12 +56,12 @@ export const grantsApi = {
     return response.data;
   },
 
-  updateGrant: async (id: string, data: CreateGrantInput) => {
+  updateGrant: async (id: number, data: Partial<CreateGrantInput>) => {
     const response = await api.put<Grant>(`/grants/${id}`, data);
     return response.data;
   },
 
-  deleteGrant: async (id: string) => {
+  deleteGrant: async (id: number) => {
     await api.delete(`/grants/${id}`);
   },
 
@@ -73,6 +76,17 @@ export const grantsApi = {
 
   runScrapers: async (request: ScraperRunRequest) => {
     const response = await api.post('/scraper/run', request);
+    return response.data;
+  },
+
+  // New endpoints for managing grant sources
+  getSources: async () => {
+    const response = await api.get<string[]>('/grants/sources');
+    return response.data;
+  },
+
+  getBySource: async (source: string, filters?: GrantFilters) => {
+    const response = await api.get<GrantsResponse>(`/grants/source/${source}`, { params: filters });
     return response.data;
   },
 }; 

@@ -136,6 +136,14 @@ The project is organized into the following main directories:
 
 The Shadow Goose Entertainment Dashboard is a centralized platform designed to streamline operations for media projects. It provides robust tools for tracking project progress, mapping program logic against the Impact Compass framework, discovering and managing Australian grant opportunities, and visualizing key impact metrics. This dashboard aims to enhance efficiency and provide clear insights into project performance and funding avenues.
 
+## Error Handling
+
+The SGE Dashboard implements a comprehensive error handling system. For detailed information, see:
+
+- [Error Handling Architecture](docs/architecture/error-handling.md) - System design and implementation details
+- [Error Handling Guidelines](docs/CONTRIBUTING.md#error-handling-guidelines) - Guidelines for contributors
+- [Error Handling Examples](README.dev.md#error-handling) - Code examples and best practices
+
 ## License
 
 This project is private and confidential.

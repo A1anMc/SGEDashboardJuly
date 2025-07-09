@@ -1,46 +1,44 @@
+from pydantic import BaseModel
+from typing import Optional, Dict
 from datetime import datetime
-from typing import List, Optional, Dict
-from pydantic import BaseModel, Field
+from app.models.task import TaskStatus, TaskPriority
 
 class TaskBase(BaseModel):
-    """Base schema for task data."""
+    """Base schema for tasks."""
     title: str
     description: Optional[str] = None
-    status: str = Field(default="todo", pattern="^(todo|in_progress|in_review|done|archived)$")
-    priority: str = Field(default="medium", pattern="^(low|medium|high|urgent)$")
+    status: Optional[str] = TaskStatus.PENDING
+    priority: Optional[str] = TaskPriority.MEDIUM
     estimated_hours: Optional[int] = None
-    actual_hours: Optional[int] = None
     due_date: Optional[datetime] = None
     project_id: int
     assignee_id: Optional[int] = None
-    tags: Optional[List[str]] = None
-    attachments: Optional[List[str]] = None
+    tags: Optional[Dict] = None
 
 class TaskCreate(TaskBase):
-    """Schema for creating a new task."""
+    """Schema for creating a task."""
     pass
 
 class TaskUpdate(BaseModel):
     """Schema for updating a task."""
     title: Optional[str] = None
     description: Optional[str] = None
-    status: Optional[str] = Field(None, pattern="^(todo|in_progress|in_review|done|archived)$")
-    priority: Optional[str] = Field(None, pattern="^(low|medium|high|urgent)$")
+    status: Optional[str] = None
+    priority: Optional[str] = None
     estimated_hours: Optional[int] = None
     actual_hours: Optional[int] = None
     due_date: Optional[datetime] = None
-    project_id: Optional[int] = None
     assignee_id: Optional[int] = None
-    tags: Optional[List[str]] = None
-    attachments: Optional[List[str]] = None
+    tags: Optional[Dict] = None
 
 class TaskResponse(TaskBase):
     """Schema for task responses."""
     id: int
     creator_id: Optional[int]
+    actual_hours: int
+    completed_at: Optional[datetime]
     created_at: datetime
     updated_at: datetime
-    completed_at: Optional[datetime] = None
     
     class Config:
         from_attributes = True
@@ -69,11 +67,6 @@ class CommentResponse(CommentBase):
     
     class Config:
         from_attributes = True
-
-class ReactionUpdate(BaseModel):
-    """Schema for updating reactions."""
-    emoji: str
-    action: str = Field(pattern="^(add|remove)$")
 
 class TimeEntryBase(BaseModel):
     """Base schema for time entry data."""
