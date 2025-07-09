@@ -12,6 +12,17 @@ const nextConfig = {
     BACKEND_URL: process.env.BACKEND_URL || 'http://localhost:8000'
   },
 
+  // Add API rewrites
+  rewrites: async () => {
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${backendUrl}/api/:path*`,
+      },
+    ];
+  },
+
   headers: async () => {
     const isProd = process.env.NODE_ENV === 'production';
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';

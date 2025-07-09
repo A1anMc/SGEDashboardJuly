@@ -1,9 +1,7 @@
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.models.program_logic import ProgramLogic as ProgramLogicModel
-from app.schemas.program_logic import ProgramLogicCreate
 
 def test_create_program_logic(client: TestClient, db: Session):
     logic_data = {

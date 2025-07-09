@@ -1,78 +1,57 @@
 import aiohttp
 import logging
-from bs4 import BeautifulSoup
 from typing import List, Dict, Optional
-from datetime import datetime
 from .base_scraper import BaseScraper
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
 class GrantConnectScraper(BaseScraper):
     """Scraper for GrantConnect (grantconnect.gov.au)."""
     
-    BASE_URL = "https://www.grants.gov.au"
-    SEARCH_URL = f"{BASE_URL}/api/v1/grants/search"
+    def __init__(self, db_session: Session, http_session: Optional[aiohttp.ClientSession] = None):
+        super().__init__(db_session, "grants.gov.au")
+        self.http_session = http_session
+        self.base_url = "https://www.grants.gov.au"
+        self.search_url = f"{self.base_url}/api/v1/grants/search"
     
-    def __init__(self, db):
-        super().__init__(db, "grantconnect.gov.au")
-    
-    async def scrape(self) -> List[Dict]:
-        """
-        Scrape grants from GrantConnect.
-        Uses their JSON API for better reliability.
-        """
+    async def scrape(self) -> List[dict]:
+        """Scrape grants from GrantConnect API."""
+        logger.info("Running GrantConnect scraper")
+        grants = []
+        
         try:
-            grants = []
-            async with aiohttp.ClientSession() as session:
-                # Initial search parameters
-                params = {
-                    "status": "open",
-                    "type": "grant",
-                    "page": 1,
-                    "limit": 100,
-                    "sort": "openDate",
-                    "order": "desc"
-                }
-                
-                while True:
-                    try:
-                        async with session.get(self.SEARCH_URL, params=params) as response:
-                            if response.status != 200:
-                                logger.error(f"Failed to fetch grants: {response.status}")
-                                break
+            if self.http_session:
+                session = self.http_session
+                async with session.get(self.search_url) as response:
+                    if response.status != 200:
+                        logger.error(f"Failed to fetch grants list: {response.status}")
+                        return []
+                    
+                    data = await response.json()
+                    grant_list = data.get("grants", [])
+                    
+                    for grant_data in grant_list:
+                        try:
+                            grant_id = grant_data.get("id")
+                            if not grant_id:
+                                continue
                             
-                            data = await response.json()
-                            if not data.get("grants"):
-                                break
+                            # Fetch detailed grant information
+                            details = await self._fetch_grant_details(session, grant_id)
                             
-                            for grant in data["grants"]:
-                                try:
-                                    # Fetch detailed grant info
-                                    grant_id = grant["id"]
-                                    details = await self._fetch_grant_details(session, grant_id)
-                                    
-                                    if details:
-                                        grant_data = {
-                                            "title": grant["title"],
-                                            "description": grant["description"],
-                                            "source_url": f"{self.BASE_URL}/grants/{grant_id}",
-                                            **details
-                                        }
-                                        grants.append(self.normalize_grant_data(grant_data))
-                                
-                                except Exception as e:
-                                    logger.error(f"Error processing grant {grant.get('title', 'Unknown')}: {str(e)}")
-                                    continue
+                            if details:
+                                grant_info = {
+                                    "title": grant_data.get("title"),
+                                    "description": grant_data.get("description"),
+                                    "source_url": f"{self.base_url}/grants/{grant_id}",
+                                    **details
+                                }
+                                grants.append(self.normalize_grant_data(grant_info))
                             
-                            # Check if there are more pages
-                            if len(data["grants"]) < params["limit"]:
-                                break
-                            
-                            params["page"] += 1
-                            
-                    except Exception as e:
-                        logger.error(f"Error fetching grants page {params['page']}: {str(e)}")
-                        break
+                        except Exception as e:
+                            logger.error(f"Error processing grant {grant_id}: {str(e)}")
+                            continue
             
             logger.info(f"Successfully scraped {len(grants)} grants from GrantConnect")
             return grants
@@ -86,14 +65,14 @@ class GrantConnectScraper(BaseScraper):
         Fetch detailed grant information using the API.
         """
         try:
-            url = f"{self.BASE_URL}/api/v1/grants/{grant_id}"
+            url = f"{self.base_url}/api/v1/grants/{grant_id}"
             async with session.get(url) as response:
                 if response.status != 200:
                     logger.error(f"Failed to fetch grant details: {response.status}")
                     return {}
                 
                 data = await response.json()
-                grant = data["grant"]
+                grant = data.get("grant", {})
                 
                 details = {
                     "open_date": grant.get("openDate"),

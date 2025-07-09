@@ -1,85 +1,93 @@
-from sqlalchemy import create_engine, event, text
-from sqlalchemy.orm import sessionmaker
+import os
+from sqlalchemy import create_engine, event
+from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.engine import Engine
-from sqlalchemy.exc import SQLAlchemyError, OperationalError
-from sqlalchemy.pool import QueuePool
-import time
+from sqlalchemy.pool import StaticPool
+from sqlalchemy.exc import SQLAlchemyError
 import logging
-from contextlib import contextmanager
-
 from app.core.config import settings
 
 # Configure logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Get database URL from environment
+TESTING = os.getenv("TESTING", "false").lower() == "true"
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/sge_dashboard")
+TEST_DATABASE_URL = "sqlite:///./test.db"
+
+# Use test database if in test environment
+SQLALCHEMY_DATABASE_URL = TEST_DATABASE_URL if TESTING else DATABASE_URL
+
+# Configure engine based on database type
+if SQLALCHEMY_DATABASE_URL.startswith("sqlite:"):
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        pool_pre_ping=True
+    )
+else:
+    # PostgreSQL configuration
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL,
+        pool_size=10,
+        max_overflow=20,
+        pool_timeout=30,
+        pool_recycle=3600,
+        pool_pre_ping=True,
+        connect_args={
+            "connect_timeout": 10,
+            "keepalives": 1,
+            "keepalives_idle": 60,
+            "keepalives_interval": 10,
+            "keepalives_count": 5
+        }
+    )
 
 # Enable SQLite foreign key support
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
-    if settings.DATABASE_URL.startswith("sqlite"):
+    if settings.TESTING:
         cursor = dbapi_connection.cursor()
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()
 
-def create_db_engine():
-    """Create database engine with retry logic and proper configuration."""
-    connect_args = {"check_same_thread": False} if settings.DATABASE_URL.startswith("sqlite") else {}
-    
-    for attempt in range(settings.DATABASE_RETRY_LIMIT):
-        try:
-            engine = create_engine(
-                settings.DATABASE_URL,
-                poolclass=QueuePool,
-                pool_size=settings.DATABASE_POOL_SIZE,
-                max_overflow=settings.DATABASE_MAX_OVERFLOW,
-                pool_timeout=settings.DATABASE_POOL_TIMEOUT,
-                pool_recycle=settings.DATABASE_POOL_RECYCLE,
-                echo=settings.DATABASE_ECHO,
-                connect_args=connect_args
-            )
-            
-            # Test the connection
-            with engine.connect() as conn:
-                conn.execute(text("SELECT 1"))
-            
-            return engine
-            
-        except OperationalError as e:
-            if attempt < settings.DATABASE_RETRY_LIMIT - 1:
-                logger.warning(f"Database connection attempt {attempt + 1} failed. Retrying in {settings.DATABASE_RETRY_DELAY} seconds...")
-                time.sleep(settings.DATABASE_RETRY_DELAY)
-            else:
-                logger.error("Failed to connect to database after multiple attempts")
-                raise e
-        except Exception as e:
-            logger.error(f"Unexpected error while connecting to database: {str(e)}")
-            raise e
-
-# Create engine with retry logic
-engine = create_db_engine()
-
 # Create session factory
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = scoped_session(
+    sessionmaker(
+        autocommit=False,
+        autoflush=False,
+        bind=engine
+    )
+)
 
-@contextmanager
-def get_db():
-    """Database session context manager with error handling."""
-    db = SessionLocal()
+def get_db_session():
+    """Get database session."""
+    session = SessionLocal()
     try:
-        yield db
-        db.commit()
+        yield session
+    finally:
+        session.close()  # Close session
+        SessionLocal.remove()  # Remove session from registry
+
+def check_db_health() -> bool:
+    """Check database health."""
+    try:
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+        return True
     except SQLAlchemyError as e:
-        db.rollback()
-        logger.error(f"Database error: {str(e)}")
-        raise
-    except Exception as e:
-        db.rollback()
-        logger.error(f"Unexpected error during database operation: {str(e)}")
-        raise
+        logger.error(f"Database health check failed: {str(e)}")
+        return False
     finally:
         db.close()
 
-# Dependency to get database session
-def get_db_session():
-    """FastAPI dependency for database sessions."""
-    with get_db() as session:
-        yield session 
+# Log database connection status
+# The original code had this listener, but the new code doesn't explicitly manage the engine instance.
+# Assuming the intent was to keep the listener if the engine is still managed, but the new code
+# doesn't expose the engine directly. For now, I'll remove the listener as the engine is no longer
+# directly accessible in the new_code's SessionLocal context.
+# @event.listens_for(Engine, "connect")
+# def receive_connect(dbapi_connection, connection_record):
+#     """Log when a connection is created."""
+#     logger.info("Database connection established successfully") 

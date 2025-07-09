@@ -1,6 +1,6 @@
 from typing import List
 from pydantic_settings import BaseSettings
-from pydantic import AnyHttpUrl, validator
+from pydantic import validator
 from dotenv import load_dotenv
 import os
 

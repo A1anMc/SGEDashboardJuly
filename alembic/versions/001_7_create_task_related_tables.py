@@ -15,20 +15,6 @@ branch_labels = None
 depends_on = None
 
 def upgrade():
-    # Create task_comment table
-    op.create_table(
-        'task_comment',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('content', sa.Text(), nullable=False),
-        sa.Column('created_at', sa.DateTime(), nullable=False),
-        sa.Column('updated_at', sa.DateTime(), nullable=False),
-        sa.Column('task_id', sa.Integer(), nullable=False),
-        sa.Column('user_id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['task_id'], ['task.id'], ondelete='CASCADE'),
-        sa.ForeignKeyConstraint(['user_id'], ['user.id'], ondelete='CASCADE'),
-        sa.PrimaryKeyConstraint('id')
-    )
-    
     # Create time_entry table
     op.create_table(
         'time_entry',
@@ -37,7 +23,7 @@ def upgrade():
         sa.Column('description', sa.Text(), nullable=True),
         sa.Column('started_at', sa.DateTime(), nullable=False),
         sa.Column('ended_at', sa.DateTime(), nullable=False),
-        sa.Column('created_at', sa.DateTime(), nullable=False),
+        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP')),
         sa.Column('task_id', sa.Integer(), nullable=False),
         sa.Column('user_id', sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(['task_id'], ['task.id'], ondelete='CASCADE'),
@@ -47,4 +33,3 @@ def upgrade():
 
 def downgrade():
     op.drop_table('time_entry')
-    op.drop_table('task_comment')

@@ -1,170 +1,145 @@
 from abc import ABC, abstractmethod
+from typing import List, Dict, Any, Optional
 from datetime import datetime
-from typing import List, Dict, Optional
 import logging
+from bs4 import BeautifulSoup
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from app.models.grant import Grant, IndustryFocus, LocationEligibility, OrgType
+from app.core.security import verify_external_request
+from app.core.config import settings
+from app.models.grant import Grant
 
+# Configure logging
 logger = logging.getLogger(__name__)
 
 class BaseScraper(ABC):
     """Base class for all grant scrapers."""
     
-    def __init__(self, db: Session, source_name: str):
-        self.db = db
-        self.source_name = source_name
+    def __init__(self, db_session: Session, source_id: str):
+        """Initialize the scraper with a database session and source ID."""
+        if source_id not in settings.ALLOWED_SCRAPER_SOURCES:
+            raise ValueError(f"Invalid scraper source: {source_id}")
         
+        self.db = db_session
+        self.source_id = source_id
+        self.source_config = settings.ALLOWED_SCRAPER_SOURCES[source_id]
+        self.base_url = self.source_config["base_url"]
+    
     @abstractmethod
-    async def scrape(self) -> List[Dict]:
-        """
-        Implement this method in each scraper to return a list of grant dictionaries.
-        Must return normalized grant data matching our schema.
-        """
+    async def scrape(self) -> List[Dict[str, Any]]:
+        """Scrape grants from the source. Must be implemented by subclasses."""
         pass
     
-    def normalize_grant_data(self, raw_data: Dict) -> Dict:
-        """
-        Normalize raw grant data to match our schema.
-        Handles missing fields and data type conversion.
-        """
+    def normalize_grant_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Normalize grant data to a standard format."""
+        normalized = {
+            "title": data.get("title", ""),
+            "description": data.get("description", ""),
+            "source_url": data.get("source_url", ""),
+            "open_date": self._parse_date(data.get("open_date")),
+            "deadline": self._parse_date(data.get("deadline")),
+            "min_amount": data.get("min_amount"),
+            "max_amount": data.get("max_amount"),
+            "contact_email": data.get("contact_email", ""),
+            "industry_focus": data.get("industry_focus", "other"),
+            "location": data.get("location", "national"),
+            "org_types": data.get("org_types", []),
+            "funding_purpose": data.get("funding_purpose", []),
+            "audience_tags": data.get("audience_tags", [])
+        }
+        
+        # Clean text fields
+        for field in ["title", "description", "contact_email"]:
+            if normalized[field]:
+                normalized[field] = self._clean_text(normalized[field])
+        
+        return normalized
+    
+    async def _make_request(self, url: str, method: str = "GET", **kwargs) -> Optional[str]:
+        """Make a verified request to an external URL."""
         try:
-            return {
-                "title": raw_data.get("title", "").strip(),
-                "description": raw_data.get("description", "").strip(),
-                "source": self.source_name,
-                "source_url": raw_data.get("source_url"),
-                "industry_focus": self._normalize_industry(raw_data.get("industry_focus")),
-                "location_eligibility": self._normalize_location(raw_data.get("location")),
-                "org_type_eligible": self._normalize_org_types(raw_data.get("org_types", [])),
-                "funding_purpose": raw_data.get("funding_purpose", []),
-                "audience_tags": raw_data.get("audience_tags", []),
-                "open_date": self._parse_date(raw_data.get("open_date")),
-                "deadline": self._parse_date(raw_data.get("deadline")),
-                "min_amount": raw_data.get("min_amount"),
-                "max_amount": raw_data.get("max_amount"),
-                "application_url": raw_data.get("application_url"),
-                "contact_email": raw_data.get("contact_email"),
-                "notes": raw_data.get("notes"),
-                "status": "active"
-            }
+            response = await verify_external_request(url, method, **kwargs)
+            if response and response.status == 200:
+                return await response.text()
+            else:
+                logger.error(f"Error fetching {url}: Status {response.status if response else 'No response'}")
+                return None
         except Exception as e:
-            logger.error(f"Error normalizing grant data: {str(e)}")
-            raise
+            logger.error(f"Error making request to {url}: {str(e)}")
+            return None
     
-    def save_grants(self, grants: List[Dict]) -> None:
-        """
-        Save normalized grant data to database.
-        Updates existing grants or creates new ones.
-        """
+    def _parse_html(self, html: str) -> BeautifulSoup:
+        """Parse HTML content safely."""
         try:
-            for grant_data in grants:
-                # Validate required fields
-                if not all(grant_data.get(field) for field in ["title", "description", "source"]):
-                    logger.warning(f"Skipping grant due to missing required fields: {grant_data.get('title', 'Unknown')}")
-                    continue
-                
-                existing = self.db.query(Grant).filter(
-                    Grant.source == self.source_name,
-                    Grant.application_url == grant_data.get("application_url")
-                ).first()
-                
-                if existing:
-                    # Update existing grant
-                    for key, value in grant_data.items():
-                        setattr(existing, key, value)
-                    existing.updated_at = datetime.utcnow()
-                    logger.info(f"Updated existing grant: {existing.title}")
-                else:
-                    # Create new grant
-                    grant = Grant(**grant_data)
-                    self.db.add(grant)
-                    logger.info(f"Created new grant: {grant_data['title']}")
-            
-            self.db.commit()
-            
+            return BeautifulSoup(html, 'html.parser')
         except Exception as e:
-            logger.error(f"Error saving grants: {str(e)}")
-            self.db.rollback()
-            raise
+            logger.error(f"Error parsing HTML: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error parsing grant data"
+            )
     
-    def _normalize_industry(self, industry: Optional[str]) -> IndustryFocus:
-        """Map source-specific industry to our IndustryFocus enum."""
-        industry_map = {
-            "media": IndustryFocus.MEDIA,
-            "film": IndustryFocus.MEDIA,
-            "television": IndustryFocus.MEDIA,
-            "digital media": IndustryFocus.MEDIA,
-            "arts": IndustryFocus.CREATIVE_ARTS,
-            "creative": IndustryFocus.CREATIVE_ARTS,
-            "culture": IndustryFocus.CREATIVE_ARTS
-        }
-        if not industry:
-            return IndustryFocus.OTHER
-        
-        normalized = industry.lower().strip()
-        return industry_map.get(normalized, IndustryFocus.OTHER)
+    def _clean_text(self, text: str) -> str:
+        """Clean and normalize text content."""
+        if not text:
+            return ""
+        return " ".join(text.split())
     
-    def _normalize_location(self, location: Optional[str]) -> LocationEligibility:
-        """Map source-specific location to our LocationEligibility enum."""
-        location_map = {
-            "national": LocationEligibility.NATIONAL,
-            "australia": LocationEligibility.NATIONAL,
-            "vic": LocationEligibility.VIC,
-            "victoria": LocationEligibility.VIC,
-            "nsw": LocationEligibility.NSW,
-            "new south wales": LocationEligibility.NSW,
-            # Add other states as needed
-        }
-        if not location:
-            return LocationEligibility.NATIONAL
-            
-        normalized = location.lower().strip()
-        return location_map.get(normalized, LocationEligibility.OTHER)
-    
-    def _normalize_org_types(self, org_types: List[str]) -> List[OrgType]:
-        """Map source-specific org types to our OrgType enum."""
-        org_type_map = {
-            "social enterprise": OrgType.SOCIAL_ENTERPRISE,
-            "not for profit": OrgType.NFP,
-            "nfp": OrgType.NFP,
-            "small business": OrgType.SME,
-            "sme": OrgType.SME,
-            "startup": OrgType.STARTUP,
-            "any": OrgType.ANY
-        }
-        
-        normalized = []
-        for org_type in org_types:
-            if not org_type:
-                continue
-            mapped = org_type_map.get(org_type.lower().strip())
-            if mapped:
-                normalized.append(mapped)
-        
-        return normalized if normalized else [OrgType.ANY]
-    
-    def _parse_date(self, date_str: Optional[str]) -> Optional[datetime]:
-        """
-        Parse date string to datetime.
-        Handles common date formats.
-        """
+    def _parse_date(self, date_str: str) -> Optional[datetime]:
+        """Parse date string into datetime object."""
         if not date_str:
             return None
             
-        formats = [
-            "%Y-%m-%d",
-            "%d/%m/%Y",
-            "%Y/%m/%d",
-            "%d-%m-%Y",
-            "%Y-%m-%dT%H:%M:%S",
-            "%Y-%m-%d %H:%M:%S"
+        date_formats = [
+            "%Y-%m-%d",  # 2024-03-20
+            "%d/%m/%Y",  # 20/03/2024
+            "%d-%m-%Y",  # 20-03-2024
+            "%Y/%m/%d",  # 2024/03/20
+            "%d %b %Y",  # 20 Mar 2024
+            "%d %B %Y",  # 20 March 2024
+            "%B %d, %Y"  # March 20, 2024
         ]
         
-        for fmt in formats:
+        for date_format in date_formats:
             try:
-                return datetime.strptime(date_str, fmt)
+                return datetime.strptime(date_str.strip(), date_format)
             except ValueError:
                 continue
         
         logger.warning(f"Could not parse date: {date_str}")
-        return None 
+        return None
+    
+    def _validate_grant_data(self, data: Dict[str, Any]) -> bool:
+        """Validate grant data before saving."""
+        required_fields = ["title", "description", "source_url"]
+        return all(data.get(field) for field in required_fields)
+    
+    async def save_grants(self, grants: List[Dict[str, Any]]) -> List[Grant]:
+        """Save scraped grants to the database."""
+        saved_grants = []
+        for grant_data in grants:
+            if not self._validate_grant_data(grant_data):
+                logger.warning(f"Invalid grant data from {self.source_id}: {grant_data}")
+                continue
+            
+            try:
+                grant = Grant(
+                    source=self.source_id,
+                    **grant_data
+                )
+                self.db.add(grant)
+                saved_grants.append(grant)
+            except Exception as e:
+                logger.error(f"Error saving grant from {self.source_id}: {str(e)}")
+                continue
+        
+        try:
+            self.db.commit()
+            return saved_grants
+        except Exception as e:
+            logger.error(f"Error committing grants to database: {str(e)}")
+            self.db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error saving grants to database"
+            ) 

@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Task Assigned</title>
+    <meta charset="utf-8">
+    <title>New Task Assignment</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -26,54 +25,46 @@
             border: 1px solid #ddd;
             border-radius: 0 0 5px 5px;
         }
-        .task-details {
-            background-color: white;
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 5px;
-            border: 1px solid #eee;
+        .task-title {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 15px;
         }
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #4a90e2;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            margin-top: 15px;
+        .task-description {
+            margin-bottom: 20px;
+            color: #666;
         }
         .footer {
             margin-top: 20px;
             text-align: center;
             font-size: 12px;
-            color: #666;
+            color: #999;
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>New Task Assigned</h1>
+        <h1>New Task Assignment</h1>
     </div>
-    
     <div class="content">
         <p>Hello {{ assignee_name }},</p>
         
-        <p>A new task has been assigned to you in the SGE Dashboard.</p>
+        <p>A new task has been assigned to you:</p>
         
-        <div class="task-details">
-            <h2>{{ task_title }}</h2>
-            <p><strong>Description:</strong><br>{{ task_description }}</p>
-            {% if due_date %}
-            <p><strong>Due Date:</strong> {{ due_date }}</p>
-            {% endif %}
+        <div class="task-title">
+            {{ task_title }}
         </div>
         
-        <p>You can view and manage this task in the dashboard:</p>
-        <a href="{{ task_url }}" class="button">View Task</a>
-        
-        <div class="footer">
-            <p>This is an automated message from the SGE Dashboard. Please do not reply to this email.</p>
+        <div class="task-description">
+            {{ task_description }}
         </div>
+        
+        <p>Please review the task details and take appropriate action.</p>
+        
+        <p>Best regards,<br>SGE Dashboard Team</p>
+    </div>
+    <div class="footer">
+        <p>This is an automated message from the SGE Dashboard. Please do not reply to this email.</p>
     </div>
 </body>
 </html> 

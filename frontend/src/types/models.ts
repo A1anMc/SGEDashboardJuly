@@ -11,17 +11,28 @@ export interface User {
 }
 
 export interface Grant {
-  id: string;
+  id: number;
   title: string;
-  description: string;
-  amount: number;
-  deadline: Date;
-  status: 'open' | 'closed' | 'draft';
+  description?: string;
+  source: string;
   source_url?: string;
-  eligibility_criteria?: string[];
-  tags: string[];
+  application_url?: string;
+  contact_email?: string;
+  min_amount?: number;
+  max_amount?: number;
+  open_date?: Date;
+  deadline?: Date;
+  industry_focus?: string;
+  location_eligibility?: string;
+  org_type_eligible?: string[];
+  funding_purpose?: string[];
+  audience_tags?: string[];
+  status: 'draft' | 'open' | 'closed' | 'archived';
+  notes?: string;
   created_at: Date;
   updated_at: Date;
+  created_by_id?: number;
+  tags: Tag[];
 }
 
 export interface Tag {
@@ -134,15 +145,27 @@ export interface PaginatedResponse<T> {
 // Form types
 export interface CreateGrantRequest {
   title: string;
-  description: string;
-  amount: number;
-  deadline: Date;
-  status: 'open' | 'closed' | 'draft';
+  description?: string;
+  source: string;
+  source_url?: string;
+  application_url?: string;
+  contact_email?: string;
+  min_amount?: number;
+  max_amount?: number;
+  open_date?: Date;
+  deadline?: Date;
+  industry_focus?: string;
+  location_eligibility?: string;
+  org_type_eligible?: string[];
+  funding_purpose?: string[];
+  audience_tags?: string[];
+  status: 'draft' | 'open' | 'closed' | 'archived';
+  notes?: string;
   tags?: string[];
 }
 
 export interface UpdateGrantRequest extends Partial<CreateGrantRequest> {
-  id: string;
+  id: number;
 }
 
 export interface CreateTagRequest {
@@ -181,18 +204,31 @@ export interface UpdateTaskRequest extends Partial<CreateTaskRequest> {
 }
 
 export interface GrantFilters {
-  status?: 'open' | 'closed' | 'draft';
+  status?: 'draft' | 'open' | 'closed' | 'archived';
+  source?: string;
+  industry_focus?: string;
+  location_eligibility?: string;
   page: number;
   size: number;
 }
 
 export interface CreateGrantInput {
   title: string;
-  description: string;
-  amount: number;
-  due_date?: string;
-  status: 'open' | 'closed' | 'draft';
+  description?: string;
+  source: string;
   source_url?: string;
-  eligibility_criteria?: string[];
+  application_url?: string;
+  contact_email?: string;
+  min_amount?: number;
+  max_amount?: number;
+  open_date?: string;
+  deadline?: string;
+  industry_focus?: string;
+  location_eligibility?: string;
+  org_type_eligible?: string[];
+  funding_purpose?: string[];
+  audience_tags?: string[];
+  status: 'draft' | 'open' | 'closed' | 'archived';
+  notes?: string;
   tags?: string[];
 }

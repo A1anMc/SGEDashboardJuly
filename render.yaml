@@ -1,10 +1,10 @@
 services:
-  - name: sge-dashboard-api
-    type: web
+  # Backend API Service
+  - type: web
+    name: sge-dashboard-api
     env: python
-    rootDir: .
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:$PORT
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -12,28 +12,55 @@ services:
           property: connectionString
       - key: SECRET_KEY
         generateValue: true
-      - key: CORS_ORIGINS
-        value: https://sge-dashboard.onrender.com,https://*.onrender.com
-      - key: FRONTEND_URL
-        value: https://sge-dashboard.onrender.com
-      - key: ENVIRONMENT
-        value: production
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: DEBUG
+        value: false
+      - key: LOG_LEVEL
+        value: INFO
     healthCheckPath: /health
-    autoDeploy: true
-
-  - name: sge-dashboard
-    type: web
+    autoDeploy: false  # Require manual deployment approval
+    
+  # Frontend Service
+  - type: web
+    name: sge-dashboard-frontend
     env: node
-    rootDir: frontend
-    buildCommand: npm install && npm run build
-    startCommand: npm run start
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm start
     envVars:
-      - key: BACKEND_URL
-        value: https://sge-dashboard-api.onrender.com
-    autoDeploy: true
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          name: sge-dashboard-api
+          type: web
+          property: url
+      - key: NEXT_PUBLIC_ENABLE_ANALYTICS
+        value: false
+      - key: NEXT_PUBLIC_DEBUG_MODE
+        value: false
+    autoDeploy: false  # Require manual deployment approval
 
 databases:
+  # Enforce PostgreSQL Usage
   - name: sge-dashboard-db
-    databaseName: sge_dashboard
-    plan: starter
-    ipAllowList: []  # Only allow internal connections 
+    type: postgres
+    ipAllowList: []  # Restrict access to Render services only
+    plan: standard  # Specify the plan explicitly
+
+# Global environment restrictions
+envVarGroups:
+  - name: production
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_ECHO
+        value: false
+      - key: DEBUG
+        value: false 

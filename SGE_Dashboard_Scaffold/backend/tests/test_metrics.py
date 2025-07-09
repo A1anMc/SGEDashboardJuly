@@ -1,10 +1,8 @@
 from datetime import datetime
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.models.metric import Metric as MetricModel
-from app.schemas.metric import MetricCreate
 
 def test_create_metric(client: TestClient, db: Session):
     metric_data = {

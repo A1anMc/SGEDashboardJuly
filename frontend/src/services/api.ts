@@ -1,16 +1,44 @@
+/**
+ * API Service Configuration and Error Handling
+ * 
+ * This module provides a configured Axios instance with error handling, retry logic,
+ * and authentication. It implements a standardized approach to handling API errors
+ * across the application.
+ * 
+ * Key features:
+ * - Global error handling
+ * - Authentication token management
+ * - Request/response interceptors
+ * - Automatic retry with exponential backoff
+ * - Standardized error responses
+ */
+
 import axios from 'axios';
+import { handleApiError, shouldRetry, getRetryDelay } from '../utils/error-handling';
 
-const baseURL = process.env.BACKEND_URL || 'http://localhost:8000';
+const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
 
+/**
+ * Configured Axios instance for API requests
+ * - Includes authentication header management
+ * - Handles CORS with credentials
+ * - Implements global error handling
+ * - Provides automatic retry for failed requests
+ */
 const api = axios.create({
-  baseURL,
+  baseURL: `${baseURL}/api/v1`,  // Add API version prefix
   headers: {
     'Content-Type': 'application/json',
   },
   withCredentials: true, // Important for cookies/auth
 });
 
-// Add request interceptor for auth
+/**
+ * Request interceptor for authentication
+ * - Adds authentication token to requests if available
+ * - Token is retrieved from localStorage
+ * - Handles request errors
+ */
 api.interceptors.request.use(
   (config) => {
     // Get token from localStorage or cookie if needed
@@ -25,42 +53,93 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor for error handling
+/**
+ * Response interceptor for error handling
+ * - Implements retry logic for failed requests
+ * - Handles authentication errors
+ * - Processes and standardizes error responses
+ * 
+ * Retry Strategy:
+ * - Retries on network errors and 5xx responses
+ * - Uses exponential backoff with jitter
+ * - Maximum 3 retry attempts
+ * 
+ * Error Handling:
+ * - 401: Redirects to login
+ * - Other errors: Processed by handleApiError
+ */
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    const config = error.config;
+
+    // Check if we should retry the request
+    if (!config._retry && shouldRetry(error, config._retryCount || 0)) {
+      config._retry = true;
+      config._retryCount = (config._retryCount || 0) + 1;
+
+      // Wait for the calculated delay
+      const delay = getRetryDelay(config._retryCount);
+      await new Promise(resolve => setTimeout(resolve, delay));
+
+      // Retry the request
+      return api(config);
+    }
+
+    // Handle unauthorized access
     if (error.response?.status === 401) {
-      // Handle unauthorized access
       localStorage.removeItem('token');
       window.location.href = '/login';
+      return Promise.reject(error);
     }
+
+    // Handle other errors
+    handleApiError(error);
     return Promise.reject(error);
   }
 );
 
-// API service instances
+/**
+ * Task-related API endpoints
+ * @typedef {Object} Task
+ * @property {string} id - Task ID
+ * @property {string} title - Task title
+ * @property {string} description - Task description
+ */
 export const tasksApi = {
-  getAll: () => api.get('/api/v1/tasks'),
-  getById: (id: string) => api.get(`/api/v1/tasks/${id}`),
-  create: (data: any) => api.post('/api/v1/tasks', data),
-  update: (id: string, data: any) => api.put(`/api/v1/tasks/${id}`, data),
-  delete: (id: string) => api.delete(`/api/v1/tasks/${id}`),
+  getAll: () => api.get<ApiResponse<Task[]>>('/tasks'),
+  getById: (id: string) => api.get<ApiResponse<Task>>(`/tasks/${id}`),
+  create: (data: CreateTaskRequest) => api.post<ApiResponse<Task>>('/tasks', data),
+  update: (id: string, data: UpdateTaskRequest) => api.put<ApiResponse<Task>>(`/tasks/${id}`, data),
+  delete: (id: string) => api.delete<ApiResponse<void>>(`/tasks/${id}`),
 };
 
+/**
+ * User-related API endpoints
+ * @typedef {Object} User
+ * @property {string} id - User ID
+ * @property {string} email - User email
+ */
 export const usersApi = {
-  getAll: () => api.get('/api/v1/users'),
-  getById: (id: string) => api.get(`/api/v1/users/${id}`),
-  create: (data: any) => api.post('/api/v1/users', data),
-  update: (id: string, data: any) => api.put(`/api/v1/users/${id}`, data),
-  delete: (id: string) => api.delete(`/api/v1/users/${id}`),
+  getAll: () => api.get<ApiResponse<User[]>>('/users'),
+  getById: (id: string) => api.get<ApiResponse<User>>(`/users/${id}`),
+  create: (data: CreateUserRequest) => api.post<ApiResponse<User>>('/users', data),
+  update: (id: string, data: UpdateUserRequest) => api.put<ApiResponse<User>>(`/users/${id}`, data),
+  delete: (id: string) => api.delete<ApiResponse<void>>(`/users/${id}`),
 };
 
+/**
+ * Project-related API endpoints
+ * @typedef {Object} Project
+ * @property {string} id - Project ID
+ * @property {string} name - Project name
+ */
 export const projectsApi = {
-  getAll: () => api.get('/api/v1/projects'),
-  getById: (id: string) => api.get(`/api/v1/projects/${id}`),
-  create: (data: any) => api.post('/api/v1/projects', data),
-  update: (id: string, data: any) => api.put(`/api/v1/projects/${id}`, data),
-  delete: (id: string) => api.delete(`/api/v1/projects/${id}`),
+  getAll: () => api.get<ApiResponse<Project[]>>('/projects'),
+  getById: (id: string) => api.get<ApiResponse<Project>>(`/projects/${id}`),
+  create: (data: CreateProjectRequest) => api.post<ApiResponse<Project>>('/projects', data),
+  update: (id: string, data: UpdateProjectRequest) => api.put<ApiResponse<Project>>(`/projects/${id}`, data),
+  delete: (id: string) => api.delete<ApiResponse<void>>(`/projects/${id}`),
 };
 
 // Export the main api instance
