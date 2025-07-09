@@ -1,276 +1,235 @@
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from app.models.task_comment import TaskComment
+from app.models.reaction import Reaction
 from app.core.config import settings
+from app.models.user import User
+from app.models.task import Task
 
-def test_create_comment(client: TestClient, db: Session, test_user, test_task):
-    """Test creating a new comment"""
-    task_id = test_task.id
-    user_id = test_user.id
-    access_token = test_user.access_token
-    
-    response = client.post(
-        f"{settings.API_V1_STR}/tasks/comments",
-        json={
-            "task_id": task_id,
-            "content": "Test comment",
-            "mentions": []
-        },
-        headers={"Authorization": f"Bearer {access_token}"}
-    )
-    
-    assert response.status_code == 200
-    data = response.json()
-    assert data["content"] == "Test comment"
-    assert data["task_id"] == task_id
-    assert data["user_id"] == user_id
-    assert "created_at" in data
-    assert "updated_at" in data
-
-async def test_create_threaded_comment(test_task, test_user, db_session, client: TestClient):
-    """Test creating a threaded comment"""
-    task_id = test_task.id
-    
-    # Create parent comment
-    parent_comment = TaskComment(
-        task_id=task_id,
-        user_id=test_user.id,
-        content="Parent comment"
-    )
-    db_session.add(parent_comment)
-    db_session.commit()
-    
-    parent_id = parent_comment.id
-    
-    # Create reply
-    reply_response = client.post(
-        f"{settings.API_V1_STR}/tasks/comments",
-        json={
-            "task_id": task_id,
-            "content": "Reply comment",
-            "parent_id": parent_id,
-            "mentions": []
-        },
-        headers={"Authorization": f"Bearer {test_user.access_token}"}
-    )
-    
-    assert reply_response.status_code == 200
-    data = reply_response.json()
-    assert data["content"] == "Reply comment"
-    assert data["parent_id"] == parent_id
-
-async def test_get_task_comments(test_task, test_user, db_session, client: TestClient):
-    """Test getting all comments for a task"""
-    task_id = test_task.id
-    
-    # Create parent comment
-    parent_comment = TaskComment(
-        task_id=task_id,
-        user_id=test_user.id,
-        content="Parent comment"
-    )
-    db_session.add(parent_comment)
-    db_session.commit()
-    
-    parent_id = parent_comment.id
-    
-    # Create reply
-    reply_comment = TaskComment(
-        task_id=task_id,
-        user_id=test_user.id,
-        content="Reply comment",
-        parent_id=parent_id
-    )
-    db_session.add(reply_comment)
-    db_session.commit()
-    
-    # Get all comments
-    response = client.get(
-        f"{settings.API_V1_STR}/tasks/comments/task/{task_id}",
-        headers={"Authorization": f"Bearer {test_user.access_token}"}
-    )
-    
-    assert response.status_code == 200
-    data = response.json()
-    assert len(data) == 2  # Both parent and reply comments
-    parent_comment_data = next(c for c in data if c["parent_id"] is None)
-    reply_comment_data = next(c for c in data if c["parent_id"] == parent_id)
-    assert parent_comment_data["content"] == "Parent comment"
-    assert reply_comment_data["content"] == "Reply comment"
-
-async def test_update_comment(test_task, test_user, db_session, client: TestClient):
-    """Test updating a comment"""
-    task_id = test_task.id
+def test_create_comment(authorized_client: TestClient, db: Session, test_user, test_task):
+    """Test creating a comment."""
+    # Create comment data
+    comment_data = {
+        "content": "Test comment",
+        "task_id": test_task.id,
+        "mentions": []
+    }
     
     # Create comment
-    comment = TaskComment(
-        task_id=task_id,
-        user_id=test_user.id,
-        content="Original content"
+    response = authorized_client.post(
+        "/api/v1/comments/",
+        json=comment_data
     )
-    db_session.add(comment)
-    db_session.commit()
+    assert response.status_code == 200
     
-    comment_id = comment.id
+    # Verify response
+    data = response.json()
+    assert data["content"] == comment_data["content"]
+    assert data["task_id"] == comment_data["task_id"]
+    assert data["user_id"] == test_user.id
+
+def test_create_threaded_comment(authorized_client: TestClient, db: Session, test_user, test_task):
+    """Test creating a threaded comment."""
+    # Create parent comment
+    parent_comment = TaskComment(
+        content="Parent comment",
+        task_id=test_task.id,
+        user_id=test_user.id
+    )
+    db.add(parent_comment)
+    db.commit()
+    db.refresh(parent_comment)
+    
+    # Create threaded comment data
+    comment_data = {
+        "content": "Threaded comment",
+        "task_id": test_task.id,
+        "parent_id": parent_comment.id,
+        "mentions": []
+    }
+    
+    # Create threaded comment
+    response = authorized_client.post(
+        "/api/v1/comments/",
+        json=comment_data
+    )
+    assert response.status_code == 200
+    
+    # Verify response
+    data = response.json()
+    assert data["content"] == comment_data["content"]
+    assert data["task_id"] == comment_data["task_id"]
+    assert data["parent_id"] == parent_comment.id
+    assert data["user_id"] == test_user.id
+
+def test_get_task_comments(authorized_client: TestClient, db: Session, test_user, test_task):
+    """Test getting task comments."""
+    # Create test comments
+    comments = [
+        TaskComment(
+            content=f"Test comment {i}",
+            task_id=test_task.id,
+            user_id=test_user.id
+        )
+        for i in range(3)
+    ]
+    db.add_all(comments)
+    db.commit()
+    
+    # Get comments
+    response = authorized_client.get(
+        f"/api/v1/comments/task/{test_task.id}/"
+    )
+    assert response.status_code == 200
+    
+    # Verify response
+    data = response.json()
+    assert len(data) == 3
+    for i, comment in enumerate(data):
+        assert comment["content"] == f"Test comment {i}"
+        assert comment["task_id"] == test_task.id
+        assert comment["user_id"] == test_user.id
+
+def test_update_comment(authorized_client: TestClient, db: Session, test_user, test_task):
+    """Test updating a comment."""
+    # Create test comment
+    comment = TaskComment(
+        content="Original content",
+        task_id=test_task.id,
+        user_id=test_user.id
+    )
+    db.add(comment)
+    db.commit()
+    db.refresh(comment)
+    
+    # Update comment data
+    update_data = {
+        "content": "Updated content",
+        "mentions": []
+    }
     
     # Update comment
-    update_response = client.put(
-        f"{settings.API_V1_STR}/tasks/comments/{comment_id}",
-        json={
-            "content": "Updated content",
-            "mentions": []
-        },
-        headers={"Authorization": f"Bearer {test_user.access_token}"}
+    response = authorized_client.put(
+        f"/api/v1/comments/{comment.id}/",
+        json=update_data
     )
+    assert response.status_code == 200
     
-    assert update_response.status_code == 200
-    data = update_response.json()
-    assert data["content"] == "Updated content"
+    # Verify response
+    data = response.json()
+    assert data["content"] == update_data["content"]
+    assert data["task_id"] == test_task.id
+    assert data["user_id"] == test_user.id
 
-async def test_delete_comment(test_task, test_user, db_session, client: TestClient):
-    """Test deleting a comment"""
-    task_id = test_task.id
-    
-    # Create comment
+def test_delete_comment(authorized_client: TestClient, db: Session, test_user, test_task):
+    """Test deleting a comment."""
+    # Create test comment
     comment = TaskComment(
-        task_id=task_id,
-        user_id=test_user.id,
-        content="Test comment"
+        content="Test comment",
+        task_id=test_task.id,
+        user_id=test_user.id
     )
-    db_session.add(comment)
-    db_session.commit()
-    
-    comment_id = comment.id
+    db.add(comment)
+    db.commit()
+    db.refresh(comment)
     
     # Delete comment
-    delete_response = client.delete(
-        f"{settings.API_V1_STR}/tasks/comments/{comment_id}",
-        headers={"Authorization": f"Bearer {test_user.access_token}"}
+    response = authorized_client.delete(
+        f"/api/v1/comments/{comment.id}/"
     )
-    
-    assert delete_response.status_code == 200
+    assert response.status_code == 204
     
     # Verify comment is deleted
-    comment = db_session.query(TaskComment).filter(TaskComment.id == comment_id).first()
-    assert comment is None
+    deleted_comment = db.query(TaskComment).filter(TaskComment.id == comment.id).first()
+    assert deleted_comment is None
 
-def test_add_reaction(client: TestClient, db: Session, test_user, test_task):
-    """Test adding a reaction to a comment"""
-    task_id = test_task.id
-    user_id = test_user.id
-    
-    # Create comment
-    create_response = client.post(
-        f"{settings.API_V1_STR}/tasks/comments",
-        json={
-            "task_id": task_id,
-            "content": "Comment with reaction",
-            "mentions": []
-        },
-        headers={"Authorization": f"Bearer {test_user.access_token}"}
+def test_add_reaction(authorized_client: TestClient, db: Session, test_user, test_task):
+    """Test adding a reaction to a comment."""
+    # Create test comment
+    comment = TaskComment(
+        content="Test comment",
+        task_id=test_task.id,
+        user_id=test_user.id
     )
-    
-    comment_id = create_response.json()["id"]
+    db.add(comment)
+    db.commit()
+    db.refresh(comment)
     
     # Add reaction
-    reaction_response = client.post(
-        f"{settings.API_V1_STR}/tasks/comments/{comment_id}/reactions/👍",
-        headers={"Authorization": f"Bearer {test_user.access_token}"}
+    emoji = "👍"
+    response = authorized_client.post(
+        f"/api/v1/comments/{comment.id}/reactions/{emoji}/"
     )
+    assert response.status_code == 200
     
-    assert reaction_response.status_code == 200
-    data = reaction_response.json()
-    assert "👍" in data
-    assert user_id in data["👍"]
+    # Verify reaction is added
+    reaction = db.query(Reaction).filter(
+        Reaction.comment_id == comment.id,
+        Reaction.user_id == test_user.id
+    ).first()
+    assert reaction is not None
+    assert reaction.emoji == "👍"
 
-def test_remove_reaction(client: TestClient, db: Session, test_user):
-    """Test removing a reaction from a comment"""
-    # Create a task first
-    task_response = client.post(
-        "/api/v1/tasks/",
-        json={
-            "title": "Test Task",
-            "description": "Test Description",
-            "status": "todo",
-            "priority": "medium",
-            "assignee_id": test_user.id
-        },
-        headers={"Authorization": f"Bearer {test_user.access_token}"}
+def test_remove_reaction(authorized_client: TestClient, db: Session, test_user, test_task):
+    """Test removing a reaction from a comment."""
+    # Create test comment
+    comment = TaskComment(
+        content="Test comment",
+        task_id=test_task.id,
+        user_id=test_user.id
     )
-    assert task_response.status_code == 200
-    task_id = task_response.json()["id"]
+    db.add(comment)
+    db.commit()
+    db.refresh(comment)
     
-    # Create a comment
-    response = client.post(
-        "/api/v1/tasks/comments",
-        json={
-            "content": "Test comment",
-            "task_id": task_id
-        },
-        headers={"Authorization": f"Bearer {test_user.access_token}"}
+    # Add reaction
+    reaction = Reaction(
+        emoji="👍",
+        comment_id=comment.id,
+        user_id=test_user.id
+    )
+    db.add(reaction)
+    db.commit()
+    
+    # Remove reaction
+    response = authorized_client.delete(
+        f"/api/v1/comments/{comment.id}/reactions/👍/"
     )
     assert response.status_code == 200
-    comment_id = response.json()["id"]
     
-    # Add a reaction
-    add_response = client.post(
-        f"/api/v1/tasks/comments/{comment_id}/reactions/👍",
-        headers={"Authorization": f"Bearer {test_user.access_token}"}
-    )
-    assert add_response.status_code == 200
-    assert "👍" in add_response.json()["reactions"]
-    
-    # Remove the reaction
-    remove_response = client.delete(
-        f"/api/v1/tasks/comments/{comment_id}/reactions/👍",
-        headers={"Authorization": f"Bearer {test_user.access_token}"}
-    )
-    assert remove_response.status_code == 200
-    assert "👍" not in remove_response.json()["reactions"]
+    # Verify reaction is removed
+    deleted_reaction = db.query(Reaction).filter(
+        Reaction.comment_id == comment.id,
+        Reaction.user_id == test_user.id
+    ).first()
+    assert deleted_reaction is None
 
-def test_multiple_reactions(client: TestClient, db: Session, test_user):
-    """Test adding multiple reactions to a comment"""
-    # Create a task first
-    task_response = client.post(
-        "/api/v1/tasks/",
-        json={
-            "title": "Test Task",
-            "description": "Test Description",
-            "status": "todo",
-            "priority": "medium",
-            "assignee_id": test_user.id
-        },
-        headers={"Authorization": f"Bearer {test_user.access_token}"}
+def test_multiple_reactions(authorized_client: TestClient, db: Session, test_user, test_task):
+    """Test adding multiple reactions to a comment."""
+    # Create test comment
+    comment = TaskComment(
+        content="Test comment",
+        task_id=test_task.id,
+        user_id=test_user.id
     )
-    assert task_response.status_code == 200
-    task_id = task_response.json()["id"]
+    db.add(comment)
+    db.commit()
+    db.refresh(comment)
     
-    # Create a comment
-    response = client.post(
-        "/api/v1/tasks/comments",
-        json={
-            "content": "Test comment",
-            "task_id": task_id
-        },
-        headers={"Authorization": f"Bearer {test_user.access_token}"}
-    )
-    assert response.status_code == 200
-    comment_id = response.json()["id"]
+    # Add multiple reactions
+    emojis = ["👍", "❤️", "😄"]
+    for emoji in emojis:
+        response = authorized_client.post(
+            f"/api/v1/comments/{comment.id}/reactions/{emoji}/"
+        )
+        assert response.status_code == 200
     
-    # Add first reaction
-    response = client.post(
-        f"/api/v1/tasks/comments/{comment_id}/reactions/👍",
-        headers={"Authorization": f"Bearer {test_user.access_token}"}
-    )
-    assert response.status_code == 200
-    assert "👍" in response.json()["reactions"]
-    
-    # Add second reaction
-    response = client.post(
-        f"/api/v1/tasks/comments/{comment_id}/reactions/❤️",
-        headers={"Authorization": f"Bearer {test_user.access_token}"}
-    )
-    assert response.status_code == 200
-    data = response.json()["reactions"]
-    assert "👍" in data
-    assert "❤️" in data 
+    # Verify reactions are added
+    reactions = db.query(Reaction).filter(
+        Reaction.comment_id == comment.id,
+        Reaction.user_id == test_user.id
+    ).all()
+    assert len(reactions) == len(emojis)
+    reaction_emojis = [r.emoji for r in reactions]
+    assert all(emoji in reaction_emojis for emoji in emojis) 

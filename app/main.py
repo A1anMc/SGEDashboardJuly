@@ -1,5 +1,6 @@
 """Main application module."""
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import logging
@@ -8,17 +9,35 @@ from app.core.config import settings
 from app.core.error_handlers import register_exception_handlers
 from app.core.logging_config import setup_logging
 from app.core.rate_limiter import ErrorEndpointRateLimiter
+from app.db.session import get_db_session
+from app.db.init_db import init_db, check_db_health
 from app.api.v1.api import api_router
-from app.db.init_db import init_db, check_db_connected
 
 # Set up logging first
 setup_logging()
 logger = logging.getLogger(__name__)
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan context manager for FastAPI application."""
+    # Startup
+    setup_logging()
+    if not check_db_health():
+        raise RuntimeError("Failed to connect to database")
+    if not init_db():
+        raise RuntimeError("Failed to initialize database")
+    
+    yield
+    
+    # Shutdown
+    # Add any cleanup code here
+    pass
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="Shadow Goose Entertainment Dashboard API"
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    lifespan=lifespan
 )
 
 # Register error handlers
@@ -43,27 +62,12 @@ app.add_middleware(
 # Include API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
-@app.on_event("startup")
-async def startup_event():
-    """Initialize application on startup."""
-    try:
-        logger.info("Checking database connection...")
-        if not check_db_connected():
-            logger.error("Failed to connect to database")
-            raise RuntimeError("Database connection failed")
-            
-        logger.info("Initializing database...")
-        if not init_db():
-            logger.error("Failed to initialize database")
-            raise RuntimeError("Database initialization failed")
-            
-        logger.info("Application startup complete")
-        
-    except Exception as e:
-        logger.error(f"Startup failed: {str(e)}", exc_info=True)
-        raise
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Clean up resources on shutdown."""
-    logger.info("Application shutting down") 
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    """Check application health."""
+    return {
+        "status": "healthy",
+        "database": check_db_health(),
+        "version": settings.VERSION
+    } 

@@ -24,7 +24,6 @@ def upgrade():
         sa.Column('parent_id', sa.Integer(), nullable=True),
         sa.Column('content', sa.Text(), nullable=False),
         sa.Column('mentions', sa.JSON(), nullable=True),
-        sa.Column('reactions', sa.JSON(), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.Column('updated_at', sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(['task_id'], ['task.id'], ondelete='CASCADE'),
@@ -32,6 +31,20 @@ def upgrade():
         sa.ForeignKeyConstraint(['parent_id'], ['task_comment.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
     )
+    
+    # Create reaction table
+    op.create_table(
+        'reaction',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('emoji', sa.String(), nullable=False),
+        sa.Column('user_id', sa.Integer(), nullable=False),
+        sa.Column('comment_id', sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(['user_id'], ['user.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['comment_id'], ['task_comment.id'], ondelete='CASCADE'),
+        sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('user_id', 'comment_id', 'emoji', name='unique_user_comment_reaction')
+    )
 
 def downgrade():
+    op.drop_table('reaction')
     op.drop_table('task_comment') 

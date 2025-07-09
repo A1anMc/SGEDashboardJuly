@@ -38,7 +38,7 @@ class Grant(Base):
     notes = Column(Text, nullable=True)
     
     # Relationships
-    created_by_id = Column(Integer, ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
+    created_by_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_by = relationship("User", back_populates="grants")
     
     # Many-to-many relationship with tags

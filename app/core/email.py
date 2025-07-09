@@ -5,6 +5,7 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 import os
 from dotenv import load_dotenv
+from app.core.config import settings
 
 load_dotenv()
 
@@ -12,80 +13,64 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Email configuration
-email_conf = ConnectionConfig(
-    MAIL_USERNAME=os.getenv("MAIL_USERNAME", "test@example.com"),
-    MAIL_PASSWORD=os.getenv("MAIL_PASSWORD", "test_password"),
-    MAIL_FROM=os.getenv("MAIL_FROM", "test@example.com"),
-    MAIL_PORT=int(os.getenv("MAIL_PORT", "1025")),  # Default port for Python's SMTP debugging server
-    MAIL_SERVER=os.getenv("MAIL_SERVER", "localhost"),  # Use local SMTP server for testing
-    MAIL_FROM_NAME=os.getenv("MAIL_FROM_NAME", "SGE Dashboard"),
-    MAIL_STARTTLS=False,  # Disable TLS for testing
-    MAIL_SSL_TLS=False,
-    USE_CREDENTIALS=False,  # Disable credentials for testing
-    TEMPLATE_FOLDER=BASE_DIR / "templates" / "email"
-)
+def get_email_config():
+    """Get email configuration based on environment"""
+    if settings.TESTING:
+        # Mock email configuration for testing
+        return ConnectionConfig(
+            MAIL_USERNAME="test@example.com",
+            MAIL_PASSWORD="test_password",
+            MAIL_FROM="test@example.com",
+            MAIL_PORT=0,  # Use port 0 to indicate mock server
+            MAIL_SERVER="mock",  # Use mock server for testing
+            MAIL_STARTTLS=False,
+            MAIL_SSL_TLS=False,
+            SUPPRESS_SEND=True,  # Don't actually send emails in tests
+            USE_CREDENTIALS=False,
+            TEMPLATE_FOLDER=str(BASE_DIR / "templates" / "email")
+        )
+    else:
+        # Production email configuration
+        return ConnectionConfig(
+            MAIL_USERNAME=os.getenv("MAIL_USERNAME"),
+            MAIL_PASSWORD=os.getenv("MAIL_PASSWORD"),
+            MAIL_FROM=os.getenv("MAIL_FROM"),
+            MAIL_PORT=int(os.getenv("MAIL_PORT", 587)),
+            MAIL_SERVER=os.getenv("MAIL_SERVER", "smtp.gmail.com"),
+            MAIL_STARTTLS=True,
+            MAIL_SSL_TLS=False,
+            USE_CREDENTIALS=True,
+            TEMPLATE_FOLDER=str(BASE_DIR / "templates" / "email")
+        )
 
-# Initialize FastMail
-fastmail = FastMail(email_conf)
+# Create FastMail instance
+fastmail = FastMail(get_email_config())
 
-# Initialize Jinja2 template environment
+# Load email templates
 template_env = Environment(
     loader=FileSystemLoader(str(BASE_DIR / "templates" / "email"))
 )
 
-class EmailSchema(BaseModel):
-    email: List[EmailStr]
-    subject: str
-    body: dict
-
-async def send_task_assignment_email(email_to: List[EmailStr], task_title: str, task_description: str, assignee_name: str):
-    """Send an email when a task is assigned to a user"""
+async def send_test_email(email: str) -> None:
+    """Send a test email."""
     message = MessageSchema(
-        subject=f"New Task Assignment: {task_title}",
-        recipients=email_to,
-        template_body={
-            "task_title": task_title,
-            "task_description": task_description,
-            "assignee_name": assignee_name
-        },
+        subject="Test Email",
+        recipients=[email],
+        body="This is a test email from the SGE Dashboard.",
         subtype="html"
     )
-    
-    await fastmail.send_message(message, template_name="task_assigned.html")
+    await fastmail.send_message(message)
 
-async def send_task_update_email(email_to: List[EmailStr], task_title: str, update_type: str, updated_by: str):
-    """Send an email when a task is updated"""
+async def send_task_assignment_email(task_id: int, assignee_email: str, task_title: str) -> None:
+    """Send an email when a task is assigned to a user."""
     message = MessageSchema(
-        subject=f"Task Update: {task_title}",
-        recipients=email_to,
-        template_body={
-            "task_title": task_title,
-            "update_type": update_type,
-            "updated_by": updated_by
-        },
+        subject=f"Task Assignment: {task_title}",
+        recipients=[assignee_email],
+        body=f"""
+        <h2>Task Assignment</h2>
+        <p>You have been assigned to task #{task_id}: {task_title}</p>
+        <p>Please log in to the dashboard to view the task details.</p>
+        """,
         subtype="html"
     )
-    
-    await fastmail.send_message(message, template_name="task_updated.html")
-
-async def send_test_email(email_to: str) -> None:
-    """
-    Send a test email to verify the email configuration.
-    
-    Args:
-        email_to: Email address to send the test to
-    """
-    test_task = {
-        "title": "Test Task",
-        "description": "This is a test task to verify email notifications.",
-        "due_date": "2024-12-31",
-        "assignee_name": "Test User",
-        "task_url": "http://localhost:3000/tasks/1"
-    }
-
-    await send_task_assignment_email(
-        email_to=[email_to],
-        task_title=test_task["title"],
-        task_description=test_task["description"],
-        assignee_name=test_task["assignee_name"]
-    ) 
+    await fastmail.send_message(message) 

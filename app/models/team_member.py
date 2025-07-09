@@ -6,11 +6,11 @@ from app.db.base_class import Base
 class TeamMember(Base):
     """TeamMember model for managing project team members."""
     
-    __tablename__ = "team_member"
+    __tablename__ = "team_members"
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
-    project_id = Column(Integer, ForeignKey("project.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     role = Column(String(50), nullable=False)  # e.g., "developer", "designer", "manager"
     joined_at = Column(DateTime, default=datetime.utcnow)
     

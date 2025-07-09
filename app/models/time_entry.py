@@ -6,7 +6,7 @@ from app.db.base_class import Base
 class TimeEntry(Base):
     """Time entry model for tracking time spent on tasks."""
     
-    __tablename__ = "time_entry"
+    __tablename__ = "time_entries"
     
     id = Column(Integer, primary_key=True, index=True)
     duration_minutes = Column(Integer, nullable=False)
@@ -16,9 +16,9 @@ class TimeEntry(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Task relationship
-    task_id = Column(Integer, ForeignKey("task.id", ondelete="CASCADE"), nullable=False)
+    task_id = Column(Integer, ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
     task = relationship("Task", back_populates="time_entries")
     
     # User relationship
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     user = relationship("User", back_populates="time_entries") 

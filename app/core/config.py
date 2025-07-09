@@ -1,7 +1,7 @@
 import os
 from typing import Optional, List, Dict
 from pydantic_settings import BaseSettings
-from pydantic import validator
+from pydantic import field_validator, ConfigDict
 from dotenv import load_dotenv
 
 # Load environment variables before creating settings
@@ -10,7 +10,7 @@ load_dotenv(".envV2")
 class Settings(BaseSettings):
     # Core
     PROJECT_NAME: str = "SGE Dashboard"
-    VERSION: str = "1.0.0"
+    VERSION: str = "0.1.0"
     API_V1_STR: str = "/api/v1"
     DEBUG: bool = False
     HOST: str = "0.0.0.0"
@@ -18,23 +18,20 @@ class Settings(BaseSettings):
     ENV: str = "development"
     
     # Security
-    SECRET_KEY: str
-    JWT_SECRET_KEY: str = "46a046761bd63e9d564f93a9...2cd5ed333909e0e25f07790"
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key")
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "test-key-for-development-only") if not os.getenv("TESTING") else "test-jwt-key"
     JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
-    SECURITY_HEADERS: bool = True
-    
-    # CORS Settings
-    CORS_ORIGINS: List[str] = ["http://localhost:3000"]
-    CORS_ALLOW_CREDENTIALS: bool = True
-    CORS_ALLOW_METHODS: List[str] = ["*"]
-    CORS_ALLOW_HEADERS: List[str] = ["*"]
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
     
     # Database
-    DATABASE_URL: str = "postgresql://alanmccarthy@localhost:5432/sge_dashboard"
-    DATABASE_RETRY_DELAY: int = 5
-    DATABASE_MAX_RETRIES: int = 5  # Increased from 3
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/sge_dashboard")
+    TEST_DATABASE_URL: str = "sqlite:///./test.db"
+    DATABASE_MAX_RETRIES: int = 5
+    DATABASE_RETRY_DELAY: int = 1
     DATABASE_ECHO: bool = False
+    TESTING: bool = os.getenv("TESTING", "false").lower() == "true"
+    
+    # Database Pool Settings
     DATABASE_POOL_SIZE: int = 10
     DATABASE_MAX_OVERFLOW: int = 20
     DATABASE_POOL_TIMEOUT: int = 30
@@ -45,31 +42,18 @@ class Settings(BaseSettings):
     DATABASE_KEEPALIVES_INTERVAL: int = 10
     DATABASE_KEEPALIVES_COUNT: int = 5
     
-    @validator("DATABASE_URL")
-    def validate_database_url(cls, v: str) -> str:
-        """Ensure only PostgreSQL URLs are used, except in testing."""
-        if os.getenv("TESTING") == "True":
-            return v
-        if not v.startswith("postgresql://"):
-            raise ValueError("Only PostgreSQL databases are supported. URL must start with postgresql://")
-        return v
+    # CORS
+    CORS_ORIGINS: List[str] = ["*"]
+    CORS_ALLOW_CREDENTIALS: bool = True
+    CORS_ALLOW_METHODS: List[str] = ["*"]
+    CORS_ALLOW_HEADERS: List[str] = ["*"]
     
     # Supabase
-    SUPABASE_URL: str = "https://your-project-ref.supabase.co"
-    SUPABASE_SERVICE_ROLE_KEY: str = "your-service-role-key"
-    SUPABASE_ANON_KEY: str = "your-anon-key"
-    SUPABASE_JWT_SECRET: str = "your-jwt-secret"
-    
-    @validator("SUPABASE_URL")
-    def validate_supabase_url(cls, v: str) -> str:
-        """Ensure Supabase URL is properly formatted."""
-        if not v.startswith("https://") or not v.endswith(".supabase.co"):
-            raise ValueError("Invalid Supabase URL format. Must be https://[project-ref].supabase.co")
-        return v
-    
-    # Logging
-    LOG_LEVEL: str = "INFO"
-    LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
+    SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
+    SUPABASE_SERVICE_ROLE_KEY: str = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+    SUPABASE_ANON_KEY: str = os.getenv("SUPABASE_ANON_KEY", "")
+    SUPABASE_JWT_SECRET: str = os.getenv("SUPABASE_JWT_SECRET", "")
     
     # Email
     SMTP_TLS: bool = True
@@ -79,6 +63,11 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: Optional[str] = None
     EMAILS_FROM_EMAIL: Optional[str] = None
     EMAILS_FROM_NAME: Optional[str] = None
+    EMAIL_TEMPLATES_DIR: str = "app/email-templates"
+    
+    # Logging
+    LOG_LEVEL: str = "INFO"
+    LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     
     # Sentry
     SENTRY_DSN: Optional[str] = None
@@ -118,15 +107,38 @@ class Settings(BaseSettings):
         "supabase.co"  # Required for Supabase
     ]
     
-    class Config:
-        env_file = ".envV2"
-        case_sensitive = True
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def validate_database_url(cls, v: str, info) -> str:
+        """Validate database URL based on environment."""
+        # If we're testing, use the test database URL
+        if info.data.get("TESTING", False):
+            return info.data.get("TEST_DATABASE_URL", "sqlite:///./test.db")
         
-        @classmethod
-        def parse_env_var(cls, field_name: str, raw_val: str) -> any:
-            """Custom environment variable parsing."""
-            if field_name == "DATABASE_URL" and raw_val.startswith("sqlite:"):
-                raise ValueError("SQLite is not supported. Please use PostgreSQL.")
-            return raw_val
+        # For SQLite URLs, no further validation needed
+        if v.startswith("sqlite:///"):
+            return v
+        
+        # For PostgreSQL URLs, basic validation
+        if not v.startswith("postgresql://"):
+            raise ValueError("DATABASE_URL must start with postgresql:// or sqlite:///")
+        
+        return v
+    
+    @field_validator("SUPABASE_URL")
+    @classmethod
+    def validate_supabase_url(cls, v: str, info) -> str:
+        """Validate Supabase URL."""
+        if not v and not info.data.get("TESTING", False):
+            raise ValueError("SUPABASE_URL is required in non-test environment")
+        return v
+    
+    model_config = ConfigDict(
+        case_sensitive=True,
+        env_file=".envV2",
+        env_file_encoding="utf-8",
+        extra="ignore"  # Ignore extra fields from environment
+    )
 
+# Create settings instance
 settings = Settings() 

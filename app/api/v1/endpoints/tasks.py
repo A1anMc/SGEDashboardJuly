@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Dict
 from datetime import datetime
 
 from app.db.session import get_db_session
 from app.models.task import Task, TaskStatus, TaskPriority
 from app.models.task_comment import TaskComment
+from app.models.reaction import Reaction
 from app.models.user import User
 from app.core.auth import get_current_user
 from app.schemas.task_comment import TaskCommentCreate, TaskCommentUpdate, TaskCommentResponse
@@ -33,10 +34,15 @@ async def create_task(
         project_id=task.project_id,
         creator_id=current_user.id,
         assignee_id=task.assignee_id,
-        tags=task.tags,
+        tags=[],  # Initialize as empty list
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow()
     )
+    
+    # Add tags if provided
+    if task.tags:
+        db_task.tags = task.tags
+    
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
@@ -71,111 +77,12 @@ async def get_task(
     # Placeholder for get task logic
     return {"message": "Get task endpoint"}
 
-@router.post("/comments", response_model=TaskCommentResponse)
-async def create_comment(
-    comment: TaskCommentCreate,
-    db: Session = Depends(get_db_session),
-    current_user: User = Depends(get_current_user)
-):
-    """Create a new comment on a task."""
-    # Verify task exists
-    task = db.query(Task).filter(Task.id == comment.task_id).first()
-    if not task:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Task not found"
-        )
-    
-    # Create comment
-    db_comment = TaskComment(
-        task_id=comment.task_id,
-        user_id=current_user.id,
-        content=comment.content,
-        parent_id=comment.parent_id,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
-        reactions={}
-    )
-    db.add(db_comment)
-    db.commit()
-    db.refresh(db_comment)
-    
-    return db_comment
+# Comment endpoints moved to app/api/v1/endpoints/comments.py
 
-@router.get("/comments/task/{task_id}", response_model=List[TaskCommentResponse])
-async def get_task_comments(
-    task_id: int,
-    db: Session = Depends(get_db_session)
-):
-    """Get all comments for a task."""
-    task = db.query(Task).filter(Task.id == task_id).first()
-    if not task:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Task not found"
-        )
-    
-    comments = db.query(TaskComment).filter(TaskComment.task_id == task_id).all()
-    return comments
-
-@router.put("/comments/{comment_id}", response_model=TaskCommentResponse)
-async def update_comment(
-    comment_id: int,
-    comment_update: TaskCommentUpdate,
-    db: Session = Depends(get_db_session),
-    current_user: User = Depends(get_current_user)
-):
-    """Update a comment."""
-    db_comment = db.query(TaskComment).filter(TaskComment.id == comment_id).first()
-    if not db_comment:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Comment not found"
-        )
-    
-    # Verify ownership
-    if db_comment.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to update this comment"
-        )
-    
-    # Update comment
-    db_comment.content = comment_update.content
-    db_comment.updated_at = datetime.utcnow()
-    db.commit()
-    db.refresh(db_comment)
-    
-    return db_comment
-
-@router.delete("/comments/{comment_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_comment(
-    comment_id: int,
-    db: Session = Depends(get_db_session),
-    current_user: User = Depends(get_current_user)
-):
-    """Delete a comment."""
-    db_comment = db.query(TaskComment).filter(TaskComment.id == comment_id).first()
-    if not db_comment:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Comment not found"
-        )
-    
-    # Verify ownership
-    if db_comment.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to delete this comment"
-        )
-    
-    db.delete(db_comment)
-    db.commit()
-
-@router.post("/comments/{comment_id}/reactions/{reaction_type}")
+@router.post("/comments/{comment_id}/reactions/{emoji}", response_model=Dict[str, List[int]])
 async def add_reaction(
     comment_id: int,
-    reaction_type: str,
+    emoji: str,
     db: Session = Depends(get_db_session),
     current_user: User = Depends(get_current_user)
 ):
@@ -187,24 +94,42 @@ async def add_reaction(
             detail="Comment not found"
         )
     
-    # Add reaction
-    if not db_comment.reactions:
-        db_comment.reactions = {}
+    # Check if reaction already exists
+    existing_reaction = db.query(Reaction).filter(
+        Reaction.comment_id == comment_id,
+        Reaction.user_id == current_user.id,
+        Reaction.emoji == emoji
+    ).first()
     
-    if reaction_type not in db_comment.reactions:
-        db_comment.reactions[reaction_type] = []
+    if existing_reaction:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Reaction already exists"
+        )
     
-    if current_user.id not in db_comment.reactions[reaction_type]:
-        db_comment.reactions[reaction_type].append(current_user.id)
-        db.commit()
-        db.refresh(db_comment)
+    # Create new reaction
+    reaction = Reaction(
+        emoji=emoji,
+        user_id=current_user.id,
+        comment_id=comment_id
+    )
+    db.add(reaction)
+    db.commit()
     
-    return db_comment.reactions
+    # Get all reactions for this comment grouped by emoji
+    reactions = db.query(Reaction).filter(Reaction.comment_id == comment_id).all()
+    reaction_dict = {}
+    for r in reactions:
+        if r.emoji not in reaction_dict:
+            reaction_dict[r.emoji] = []
+        reaction_dict[r.emoji].append(r.user_id)
+    
+    return reaction_dict
 
-@router.delete("/comments/{comment_id}/reactions/{reaction_type}")
+@router.delete("/comments/{comment_id}/reactions/{emoji}", response_model=Dict[str, List[int]])
 async def remove_reaction(
     comment_id: int,
-    reaction_type: str,
+    emoji: str,
     db: Session = Depends(get_db_session),
     current_user: User = Depends(get_current_user)
 ):
@@ -216,13 +141,28 @@ async def remove_reaction(
             detail="Comment not found"
         )
     
-    # Remove reaction
-    if db_comment.reactions and reaction_type in db_comment.reactions:
-        if current_user.id in db_comment.reactions[reaction_type]:
-            db_comment.reactions[reaction_type].remove(current_user.id)
-            if not db_comment.reactions[reaction_type]:
-                del db_comment.reactions[reaction_type]
-            db.commit()
-            db.refresh(db_comment)
+    # Find and remove reaction
+    reaction = db.query(Reaction).filter(
+        Reaction.comment_id == comment_id,
+        Reaction.user_id == current_user.id,
+        Reaction.emoji == emoji
+    ).first()
     
-    return db_comment.reactions 
+    if not reaction:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Reaction not found"
+        )
+    
+    db.delete(reaction)
+    db.commit()
+    
+    # Get all remaining reactions for this comment grouped by emoji
+    reactions = db.query(Reaction).filter(Reaction.comment_id == comment_id).all()
+    reaction_dict = {}
+    for r in reactions:
+        if r.emoji not in reaction_dict:
+            reaction_dict[r.emoji] = []
+        reaction_dict[r.emoji].append(r.user_id)
+    
+    return reaction_dict 

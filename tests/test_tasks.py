@@ -6,6 +6,7 @@ from app.models.task_comment import TaskComment
 from app.models.time_entry import TimeEntry
 from app.models.user import User
 from app.models.project import Project
+from app.models.tag import Tag
 
 @pytest.fixture
 def test_user(db: Session) -> User:
@@ -35,18 +36,25 @@ def test_project(db: Session, test_user: User) -> Project:
     return project
 
 def test_create_task(db: Session, test_user: User, test_project: Project):
+    # Create tags first
+    test_tag = Tag(name="test")
+    important_tag = Tag(name="important")
+    db.add(test_tag)
+    db.add(important_tag)
+    db.commit()
+    
     # Create a basic task
     task = Task(
         title="Test Task",
         description="Test Description",
-        status=TaskStatus.TODO,
-        priority=TaskPriority.MEDIUM,
+        status=TaskStatus.TODO.value,
+        priority=TaskPriority.MEDIUM.value,
         project_id=test_project.id,
         creator_id=test_user.id,
         assignee_id=test_user.id,
         due_date=datetime.utcnow() + timedelta(days=7),
         estimated_hours=4,
-        tags=["test", "important"],
+        tags=[test_tag, important_tag],
         attachments=[]
     )
     db.add(task)
@@ -56,8 +64,8 @@ def test_create_task(db: Session, test_user: User, test_project: Project):
     # Verify task was created correctly
     assert task.id is not None
     assert task.title == "Test Task"
-    assert task.status == TaskStatus.TODO
-    assert task.priority == TaskPriority.MEDIUM
+    assert task.status == TaskStatus.TODO.value
+    assert task.priority == TaskPriority.MEDIUM.value
     assert task.creator_id == test_user.id
     assert task.assignee_id == test_user.id
     assert task.project_id == test_project.id
@@ -69,8 +77,8 @@ def test_task_status_update(db: Session, test_user: User, test_project: Project)
     # Create a task
     task = Task(
         title="Status Test Task",
-        status=TaskStatus.TODO,
-        priority=TaskPriority.LOW,
+        status=TaskStatus.TODO.value,
+        priority=TaskPriority.LOW.value,
         project_id=test_project.id,
         creator_id=test_user.id
     )
@@ -79,20 +87,20 @@ def test_task_status_update(db: Session, test_user: User, test_project: Project)
 
     # Update status
     original_updated_at = task.updated_at
-    task.status = TaskStatus.IN_PROGRESS
+    task.status = TaskStatus.IN_PROGRESS.value
     db.commit()
     db.refresh(task)
 
     # Verify status change and updated_at timestamp
-    assert task.status == TaskStatus.IN_PROGRESS
+    assert task.status == TaskStatus.IN_PROGRESS.value
     assert task.updated_at > original_updated_at
 
 def test_task_comments(db: Session, test_user: User, test_project: Project):
     # Create a task
     task = Task(
         title="Comment Test Task",
-        status=TaskStatus.TODO,
-        priority=TaskPriority.LOW,
+        status=TaskStatus.TODO.value,
+        priority=TaskPriority.LOW.value,
         project_id=test_project.id,
         creator_id=test_user.id
     )
@@ -118,8 +126,8 @@ def test_time_tracking(db: Session, test_user: User, test_project: Project):
     # Create a task
     task = Task(
         title="Time Tracking Test Task",
-        status=TaskStatus.TODO,
-        priority=TaskPriority.LOW,
+        status=TaskStatus.TODO.value,
+        priority=TaskPriority.LOW.value,
         project_id=test_project.id,
         creator_id=test_user.id,
         estimated_hours=4
@@ -152,10 +160,10 @@ def test_time_tracking(db: Session, test_user: User, test_project: Project):
 
 def test_task_constraints(db: Session, test_user: User, test_project: Project):
     # Test invalid status
-    with pytest.raises(Exception):  # Should raise a constraint violation
+    with pytest.raises(ValueError):  # Should raise a ValueError for invalid enum value
         task = Task(
             title="Invalid Status Task",
-            status="invalid_status",  # Invalid status
+            status=TaskStatus("invalid_status"),  # Invalid status
             priority=TaskPriority.LOW,
             project_id=test_project.id,
             creator_id=test_user.id
@@ -164,23 +172,35 @@ def test_task_constraints(db: Session, test_user: User, test_project: Project):
         db.commit()
 
     # Test invalid priority
-    with pytest.raises(Exception):  # Should raise a constraint violation
+    with pytest.raises(ValueError):  # Should raise a ValueError for invalid enum value
         task = Task(
             title="Invalid Priority Task",
             status=TaskStatus.TODO,
-            priority="invalid_priority",  # Invalid priority
+            priority=TaskPriority("invalid_priority"),  # Invalid priority
             project_id=test_project.id,
             creator_id=test_user.id
         )
         db.add(task)
         db.commit()
 
+    # Test valid task creation
+    task = Task(
+        title="Valid Task",
+        status=TaskStatus.TODO,
+        priority=TaskPriority.LOW,
+        project_id=test_project.id,
+        creator_id=test_user.id
+    )
+    db.add(task)
+    db.commit()
+    assert task.id is not None
+
 def test_cascade_delete(db: Session, test_user: User, test_project: Project):
     # Create a task with comments and time entries
     task = Task(
         title="Cascade Test Task",
-        status=TaskStatus.TODO,
-        priority=TaskPriority.LOW,
+        status=TaskStatus.TODO.value,
+        priority=TaskPriority.LOW.value,
         project_id=test_project.id,
         creator_id=test_user.id
     )
@@ -200,10 +220,10 @@ def test_cascade_delete(db: Session, test_user: User, test_project: Project):
     db.add(time_entry)
     db.commit()
 
-    # Delete task
+    # Delete task and verify cascade
     db.delete(task)
     db.commit()
 
-    # Verify cascade delete
+    # Verify comment and time entry were deleted
     assert db.query(TaskComment).filter_by(task_id=task.id).first() is None
     assert db.query(TimeEntry).filter_by(task_id=task.id).first() is None 

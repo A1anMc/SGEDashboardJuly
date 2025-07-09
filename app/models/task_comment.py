@@ -1,23 +1,35 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, JSON, func
 from sqlalchemy.orm import relationship
-from app.db.base_class import Base
+from app.db.base import Base
+from typing import List, Dict
 
 class TaskComment(Base):
-    """Task comment model."""
-    
-    __tablename__ = "task_comment"
+    """Model for task comments."""
+    __tablename__ = "task_comments"
     
     id = Column(Integer, primary_key=True, index=True)
-    task_id = Column(Integer, ForeignKey("task.id"), nullable=False)
-    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
-    content = Column(Text, nullable=False)
-    parent_id = Column(Integer, ForeignKey("task_comment.id"), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    content = Column(String, nullable=False)
+    task_id = Column(Integer, ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    parent_id = Column(Integer, ForeignKey("task_comments.id", ondelete="CASCADE"), nullable=True)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
+    mentions = Column(JSON, nullable=True, default=list)
     
     # Relationships
     task = relationship("Task", back_populates="comments")
     user = relationship("User", back_populates="comments")
-    replies = relationship("TaskComment", backref="parent", remote_side=[id])
-    reactions = relationship("Reaction", back_populates="comment", cascade="all, delete-orphan") 
+    parent = relationship("TaskComment", remote_side=[id], back_populates="replies")
+    replies = relationship("TaskComment", back_populates="parent", cascade="all, delete-orphan")
+    reactions = relationship("Reaction", back_populates="comment", cascade="all, delete-orphan")
+    
+    @property
+    def reaction_summary(self) -> Dict[str, List[int]]:
+        """Get a summary of reactions grouped by emoji."""
+        summary = {}
+        for reaction in self.reactions:
+            if reaction.emoji not in summary:
+                summary[reaction.emoji] = []
+            summary[reaction.emoji].append(reaction.user_id)
+        return summary 

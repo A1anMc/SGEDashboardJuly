@@ -13,7 +13,7 @@ from app.models.program_logic import ProgramLogic  # noqa: F401
 from app.models.grant import Grant  # noqa: F401
 from app.models.task import Task, TaskComment, TimeEntry  # noqa: F401
 
-from app.routers import grants, tasks, tags, comments
+from app.api.v1.api import api_router
 from app.db.session import engine
 
 # Create all tables in the database
@@ -34,11 +34,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(grants.router, prefix="/api", tags=["grants"])
-app.include_router(tasks.router, prefix="/api", tags=["tasks"])
-app.include_router(tags.router, prefix="/api", tags=["tags"])
-app.include_router(comments.router, prefix="/api", tags=["comments"])
+# Include API router
+app.include_router(api_router, prefix="/api/v1")
 
 @app.get("/")
 def read_root():

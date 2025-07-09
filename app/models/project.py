@@ -7,7 +7,7 @@ from app.models.project_tags import project_tags
 class Project(Base):
     """Model for projects."""
     
-    __tablename__ = "project"
+    __tablename__ = "projects"
     
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
@@ -17,7 +17,7 @@ class Project(Base):
     end_date = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    owner_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     
     # Relationships
     owner = relationship("User", back_populates="owned_projects")
