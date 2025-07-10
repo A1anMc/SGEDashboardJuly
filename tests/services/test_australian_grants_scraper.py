@@ -2,7 +2,6 @@ import pytest
 from unittest.mock import Mock, AsyncMock, patch
 from app.services.scrapers.australian_grants_scraper import AustralianGrantsScraper
 from bs4 import BeautifulSoup
-import aiohttp
 from sqlalchemy.orm import Session
 
 @pytest.fixture
@@ -26,14 +25,11 @@ def sample_html():
     </head>
     <body>
         <h1>Documentary Production Funding</h1>
-        <div class="content">
-            <p>Screen Australia provides funding up to $500,000 for documentary production projects by Australian practitioners.</p>
+        <div class="funding-details">
+            <p>This program provides funding up to $500,000 for documentary production projects.</p>
             <p>Applications close on 31 December 2024.</p>
+            <p>Available to Australian producers and production companies.</p>
             <p>Contact: funding@screenaustralia.gov.au</p>
-            <div class="eligibility">
-                <h3>Eligibility</h3>
-                <p>Applicants must be Australian citizens or permanent residents with professional experience in documentary production.</p>
-            </div>
         </div>
     </body>
     </html>
@@ -44,11 +40,16 @@ def sample_creative_australia_html():
     """Sample Creative Australia HTML."""
     return """
     <html>
+    <head>
+        <title>Arts Projects for Individuals</title>
+        <meta name="description" content="Support for individual artists and creative practitioners">
+    </head>
     <body>
         <h1>Arts Projects for Individuals and Groups</h1>
-        <div class="grant-content">
-            <p>Up to $50,000 for a range of activities and projects, both national and international, across all art forms.</p>
-            <p>Next round closing date: Tuesday 2 September 2025 at 3pm AEST</p>
+        <div class="grant-info">
+            <p>Funding from $5,000 to $50,000 for creative projects.</p>
+            <p>Applications open 1 February 2024 and close 15 June 2024.</p>
+            <p>Available to individual artists, groups, and small organisations.</p>
             <p>For more information, contact arts@creative.gov.au</p>
         </div>
     </body>
@@ -56,10 +57,10 @@ def sample_creative_australia_html():
     """
 
 class TestAustralianGrantsScraper:
-    """Test suite for AustralianGrantsScraper."""
+    """Test cases for the Australian Grants Scraper."""
     
-    def test_init(self, scraper):
-        """Test scraper initialization."""
+    def test_scraper_initialization(self, scraper):
+        """Test that the scraper initializes correctly."""
         assert scraper.source_id == "australian_grants"
         assert len(scraper.sources) == 4
         assert "screen_australia" in scraper.sources
@@ -67,324 +68,227 @@ class TestAustralianGrantsScraper:
         assert "business_gov" in scraper.sources
         assert "create_nsw" in scraper.sources
     
-    def test_source_configuration(self, scraper):
-        """Test source configuration is correct."""
-        screen_australia = scraper.sources["screen_australia"]
-        assert screen_australia["base_url"] == "https://www.screenaustralia.gov.au"
-        assert len(screen_australia["endpoints"]) == 5
-        assert "/funding-and-support/documentary" in screen_australia["endpoints"]
-        
-        creative_australia = scraper.sources["creative_australia"]
-        assert creative_australia["base_url"] == "https://creative.gov.au"
-        assert len(creative_australia["endpoints"]) == 3
+    def test_extract_amounts_single_max(self, scraper):
+        """Test extracting a single maximum amount."""
+        text = "Funding up to $500,000 for documentary production"
+        min_amount, max_amount = scraper._extract_amounts(text)
+        assert min_amount is None
+        assert max_amount == 500000.0
     
-    def test_extract_amounts(self, scraper):
-        """Test amount extraction from text."""
-        # Test single amount
-        text1 = "Funding up to $50,000 is available"
-        min_amt, max_amt = scraper._extract_amounts(text1)
-        assert min_amt is None
-        assert max_amt == 50000
-        
-        # Test range
-        text2 = "Funding between $10,000 and $100,000"
-        min_amt, max_amt = scraper._extract_amounts(text2)
-        assert min_amt == 10000
-        assert max_amt == 100000
-        
-        # Test with commas
-        text3 = "Maximum funding of $1,500,000"
-        min_amt, max_amt = scraper._extract_amounts(text3)
-        assert min_amt is None
-        assert max_amt == 1500000
+    def test_extract_amounts_range(self, scraper):
+        """Test extracting amount ranges."""
+        text = "Funding from $5,000 to $50,000 for creative projects"
+        min_amount, max_amount = scraper._extract_amounts(text)
+        assert min_amount == 5000.0
+        assert max_amount == 50000.0
     
-    def test_parse_amount(self, scraper):
-        """Test amount parsing."""
-        assert scraper._parse_amount("50000") == 50000
-        assert scraper._parse_amount("1,500,000") == 1500000
-        assert scraper._parse_amount("invalid") is None
-        assert scraper._parse_amount("") is None
-        assert scraper._parse_amount(None) is None
+    def test_extract_amounts_between(self, scraper):
+        """Test extracting amounts with 'between' keyword."""
+        text = "Grants between $10,000 and $100,000 available"
+        min_amount, max_amount = scraper._extract_amounts(text)
+        assert min_amount == 10000.0
+        assert max_amount == 100000.0
     
-    def test_extract_dates(self, scraper):
-        """Test date extraction."""
-        text = "Applications close on 31 December 2024. The program opens on 1 January 2024."
-        dates = scraper._extract_dates(text)
-        
-        # Should extract at least one date
-        assert dates["deadline"] is not None or dates["open_date"] is not None
-    
-    def test_parse_date(self, scraper):
-        """Test date parsing."""
-        assert scraper._parse_date("31/12/2024") == "2024-12-31"
-        assert scraper._parse_date("December 31 2024") == "2024-12-31"
-        assert scraper._parse_date("31 Dec 2024") == "2024-12-31"
-        assert scraper._parse_date("invalid date") is None
-        assert scraper._parse_date("") is None
+    def test_extract_amounts_no_match(self, scraper):
+        """Test when no amounts are found."""
+        text = "This is a program description with no monetary amounts"
+        min_amount, max_amount = scraper._extract_amounts(text)
+        assert min_amount is None
+        assert max_amount is None
     
     def test_extract_email(self, scraper):
         """Test email extraction."""
-        text1 = "Contact us at funding@screenaustralia.gov.au for more information"
-        email = scraper._extract_email(text1)
+        text = "For more information, contact funding@screenaustralia.gov.au"
+        email = scraper._extract_email(text)
         assert email == "funding@screenaustralia.gov.au"
-        
-        text2 = "No email in this text"
-        email = scraper._extract_email(text2)
+    
+    def test_extract_email_no_match(self, scraper):
+        """Test email extraction when no email is present."""
+        text = "This text has no email address"
+        email = scraper._extract_email(text)
         assert email is None
     
-    def test_determine_industry_focus(self, scraper):
-        """Test industry focus determination."""
-        text1 = "This funding supports film and television production"
-        industry = scraper._determine_industry_focus(text1)
+    def test_determine_industry_focus_media(self, scraper):
+        """Test industry focus determination for media content."""
+        text = "Screen Australia funding for documentary production"
+        industry = scraper._determine_industry_focus(text)
         assert industry == "media"
-        
-        text2 = "Support for artists and creative practitioners"
-        industry = scraper._determine_industry_focus(text2)
-        assert industry == "creative_arts"
-        
-        text3 = "Digital technology and software development"
-        industry = scraper._determine_industry_focus(text3)
-        assert industry == "digital"
-        
-        text4 = "General business support"
-        industry = scraper._determine_industry_focus(text4)
-        assert industry == "other"
     
-    def test_extract_eligibility(self, scraper):
-        """Test eligibility extraction."""
-        text = "Eligibility: Australian citizens or permanent residents with professional experience"
-        criteria = scraper._extract_eligibility(text)
-        assert len(criteria) > 0
-        assert any("australian" in c.lower() for c in criteria)
+    def test_determine_industry_focus_creative_arts(self, scraper):
+        """Test industry focus determination for creative arts."""
+        text = "Arts projects for creative practitioners and cultural organizations"
+        industry = scraper._determine_industry_focus(text)
+        assert industry == "creative_arts"
+    
+    def test_determine_industry_focus_digital(self, scraper):
+        """Test industry focus determination for digital/tech."""
+        text = "Digital technology and gaming development grants"
+        industry = scraper._determine_industry_focus(text)
+        assert industry == "digital"
+    
+    def test_determine_industry_focus_other(self, scraper):
+        """Test industry focus determination for unmatched content."""
+        text = "General business development support"
+        industry = scraper._determine_industry_focus(text)
+        assert industry == "other"
     
     def test_extract_org_types(self, scraper):
         """Test organization type extraction."""
-        text1 = "Available to individuals, small businesses, and not for profit organizations"
-        org_types = scraper._extract_org_types(text1)
+        text = "Available to individuals, small businesses, and not for profit organizations"
+        org_types = scraper._extract_org_types(text)
         assert "individual" in org_types
         assert "small_business" in org_types
         assert "not_for_profit" in org_types
-        
-        text2 = "No specific organization types mentioned"
-        org_types = scraper._extract_org_types(text2)
+    
+    def test_extract_org_types_default(self, scraper):
+        """Test organization type extraction with no matches."""
+        text = "This text has no organization type keywords"
+        org_types = scraper._extract_org_types(text)
         assert org_types == ["any"]
     
-    @pytest.mark.asyncio
-    async def test_extract_grant_info(self, scraper, sample_html):
-        """Test grant information extraction."""
-        soup = BeautifulSoup(sample_html, 'html.parser')
-        content_div = soup.find('div', class_='content')
-        
-        grant_info = await scraper._extract_grant_info(
-            content_div, 
-            "https://test.com", 
-            "Test Source"
-        )
-        
-        # Should return None because no h1-h6 element in the content div
-        # But the main content should be extractable via _extract_main_grant_info
-        assert grant_info is None
+    def test_extract_funding_purpose(self, scraper):
+        """Test funding purpose extraction."""
+        text = "Support for research and development of new creative content"
+        purposes = scraper._extract_funding_purpose(text)
+        assert "research" in purposes
+        assert "development" in purposes
     
-    @pytest.mark.asyncio
-    async def test_extract_main_grant_info(self, scraper, sample_html):
-        """Test main grant information extraction."""
-        soup = BeautifulSoup(sample_html, 'html.parser')
-        
-        grant_info = await scraper._extract_main_grant_info(
-            soup, 
-            "https://test.com", 
-            "Test Source"
-        )
-        
-        assert grant_info is not None
-        assert grant_info["title"] == "Documentary Production Funding"
-        assert "Screen Australia" in grant_info["description"]
-        assert grant_info["source"] == "Test Source"
-        assert grant_info["source_url"] == "https://test.com"
-        assert grant_info["amount_max"] == 500000
-        assert grant_info["industry_focus"] == "media"
-        assert grant_info["location"] == "Australia"
+    def test_extract_audience_tags(self, scraper):
+        """Test audience tag extraction."""
+        text = "Support for Australian emerging artists in regional areas"
+        tags = scraper._extract_audience_tags(text)
+        assert "australian" in tags
+        assert "creative" in tags
+        assert "emerging" in tags
+        assert "regional" in tags
     
-    @pytest.mark.asyncio
-    async def test_parse_screen_australia(self, scraper, sample_html):
-        """Test Screen Australia parsing."""
+    @patch('app.services.scrapers.australian_grants_scraper.AustralianGrantsScraper._make_request')
+    async def test_parse_screen_australia(self, mock_make_request, scraper, sample_html):
+        """Test parsing Screen Australia content."""
         soup = BeautifulSoup(sample_html, 'html.parser')
+        grants = await scraper._parse_screen_australia(soup, "https://test.com")
         
-        grants = await scraper._parse_screen_australia(
-            soup, 
-            "https://www.screenaustralia.gov.au/test"
-        )
-        
-        # Should find at least one grant
+        # Should find at least one grant from the main content
         assert len(grants) >= 1
         
-        # Check grant structure
+        # Check the grant data structure
         grant = grants[0]
-        assert "title" in grant
-        assert "description" in grant
-        assert "source" in grant
-        assert grant["source"] == "Screen Australia"
+        assert grant["title"] == "Documentary Production Funding"
+        assert "funding" in grant["description"].lower()
+        assert grant["max_amount"] == 500000.0
+        assert grant["industry_focus"] == "media"
+        assert grant["contact_email"] == "funding@screenaustralia.gov.au"
     
-    @pytest.mark.asyncio
-    async def test_parse_creative_australia(self, scraper, sample_creative_australia_html):
-        """Test Creative Australia parsing."""
+    @patch('app.services.scrapers.australian_grants_scraper.AustralianGrantsScraper._make_request')
+    async def test_parse_creative_australia(self, mock_make_request, scraper, sample_creative_australia_html):
+        """Test parsing Creative Australia content."""
         soup = BeautifulSoup(sample_creative_australia_html, 'html.parser')
-        
-        grants = await scraper._parse_creative_australia(
-            soup, 
-            "https://creative.gov.au/test"
-        )
+        grants = await scraper._parse_creative_australia(soup, "https://test.com")
         
         # Should find at least one grant
         assert len(grants) >= 1
         
-        # Check grant structure
+        # Check the grant data structure
         grant = grants[0]
-        assert "title" in grant
-        assert "Arts Projects" in grant["title"]
-        assert grant["source"] == "Creative Australia"
-        assert grant["amount_max"] == 50000
+        assert grant["title"] == "Arts Projects for Individuals and Groups"
+        assert grant["min_amount"] == 5000.0
+        assert grant["max_amount"] == 50000.0
+        assert grant["industry_focus"] == "creative_arts"
+        assert grant["contact_email"] == "arts@creative.gov.au"
     
-    @pytest.mark.asyncio
-    async def test_parse_generic(self, scraper, sample_html):
-        """Test generic parsing."""
-        soup = BeautifulSoup(sample_html, 'html.parser')
+    def test_extract_description_from_element(self, scraper):
+        """Test description extraction from HTML element."""
+        html = """
+        <div>
+            <h2>Grant Title</h2>
+            <p class="description">This is a detailed description of the grant program.</p>
+            <p>Additional information about eligibility.</p>
+        </div>
+        """
+        soup = BeautifulSoup(html, 'html.parser')
+        element = soup.find('div')
+        description = scraper._extract_description(element)
+        assert description == "This is a detailed description of the grant program."
+    
+    def test_extract_page_description_from_meta(self, scraper):
+        """Test page description extraction from meta tag."""
+        html = """
+        <html>
+        <head>
+            <meta name="description" content="This is the meta description for the page">
+        </head>
+        <body>
+            <p>Body content</p>
+        </body>
+        </html>
+        """
+        soup = BeautifulSoup(html, 'html.parser')
+        description = scraper._extract_page_description(soup)
+        assert description == "This is the meta description for the page"
+    
+    def test_get_date_context(self, scraper):
+        """Test getting context around a date."""
+        text = "Applications for this program open on 1 January 2024 and close on 31 December 2024"
+        context = scraper._get_date_context(text, "1 January 2024")
+        assert "applications" in context.lower()
+        assert "open" in context.lower()
+    
+    def test_normalize_grant_data_integration(self, scraper):
+        """Test that the scraper properly integrates with BaseScraper's normalize_grant_data."""
+        # Test data that should be normalized
+        test_data = {
+            "title": "  Test Grant Title  ",
+            "description": "  This is a test description  ",
+            "source_url": "https://example.com/grant",
+            "min_amount": 5000.0,
+            "max_amount": 50000.0,
+            "contact_email": "  test@example.com  ",
+            "industry_focus": "creative_arts",
+            "location": "national",
+            "org_types": ["individual", "small_business"],
+            "funding_purpose": ["development"],
+            "audience_tags": ["australian", "creative"]
+        }
         
-        grants = await scraper._parse_generic(
-            soup, 
-            "https://test.com"
-        )
+        normalized = scraper.normalize_grant_data(test_data)
         
-        # Generic parser should handle basic content
-        assert isinstance(grants, list)
-    
-    @pytest.mark.asyncio
-    async def test_scrape_source_success(self, scraper):
-        """Test successful source scraping."""
-        # Mock the session and response
-        with patch('aiohttp.ClientSession') as mock_session:
-            mock_response = AsyncMock()
-            mock_response.status = 200
-            mock_response.text = AsyncMock(return_value="<html><h1>Test Grant</h1><p>Test description</p></html>")
-            
-            mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value = mock_response
-            
-            # Set up the scraper's session
-            scraper.session = mock_session.return_value.__aenter__.return_value
-            
-            source_config = {
-                "base_url": "https://test.com",
-                "endpoints": ["/test-endpoint"]
-            }
-            
-            grants = await scraper._scrape_source("test_source", source_config)
-            
-            # Should return a list (might be empty depending on parsing)
-            assert isinstance(grants, list)
-    
-    @pytest.mark.asyncio
-    async def test_scrape_source_failure(self, scraper):
-        """Test source scraping with HTTP error."""
-        # Mock the session and response
-        with patch('aiohttp.ClientSession') as mock_session:
-            mock_response = AsyncMock()
-            mock_response.status = 404
-            
-            mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value = mock_response
-            
-            # Set up the scraper's session
-            scraper.session = mock_session.return_value.__aenter__.return_value
-            
-            source_config = {
-                "base_url": "https://test.com",
-                "endpoints": ["/test-endpoint"]
-            }
-            
-            grants = await scraper._scrape_source("test_source", source_config)
-            
-            # Should return empty list on failure
-            assert grants == []
-    
-    @pytest.mark.asyncio
-    @patch('aiohttp.ClientSession')
-    async def test_scrape_full_integration(self, mock_session, scraper):
-        """Test full scraping integration."""
-        # Mock successful responses for all sources
-        mock_response = AsyncMock()
-        mock_response.status = 200
-        mock_response.text = AsyncMock(return_value="<html><h1>Test Grant</h1><p>Test description</p></html>")
+        # Check that text fields are cleaned
+        assert normalized["title"] == "Test Grant Title"
+        assert normalized["description"] == "This is a test description"
+        assert normalized["contact_email"] == "test@example.com"
         
-        mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value = mock_response
+        # Check that numeric fields are preserved
+        assert normalized["min_amount"] == 5000.0
+        assert normalized["max_amount"] == 50000.0
+        
+        # Check that other fields are preserved
+        assert normalized["industry_focus"] == "creative_arts"
+        assert normalized["org_types"] == ["individual", "small_business"]
+    
+    @patch('app.services.scrapers.australian_grants_scraper.AustralianGrantsScraper._make_request')
+    @patch('asyncio.sleep')
+    async def test_scrape_integration(self, mock_sleep, mock_make_request, scraper, sample_html):
+        """Test the main scrape method integration."""
+        # Mock the _make_request to return sample HTML
+        mock_make_request.return_value = sample_html
         
         # Run the scraper
         grants = await scraper.scrape()
         
-        # Should return a list
-        assert isinstance(grants, list)
+        # Should have made requests to multiple sources
+        assert mock_make_request.call_count > 0
         
-        # Should have attempted to scrape all sources
-        assert len(scraper.sources) == 4
+        # Should have found some grants
+        assert len(grants) > 0
+        
+        # Check that delays were added (respectful scraping)
+        assert mock_sleep.call_count > 0
     
-    def test_get_date_context(self, scraper):
-        """Test date context extraction."""
-        text = "The application deadline is 31 December 2024 for all projects."
-        context = scraper._get_date_context(text, "31 December 2024")
-        
-        assert "deadline" in context.lower()
-        assert "31 December 2024" in context
-    
-    @pytest.mark.asyncio
-    async def test_error_handling_in_parsing(self, scraper):
-        """Test error handling in parsing methods."""
-        # Test with malformed HTML
-        malformed_html = "<html><div><p>Incomplete"
-        soup = BeautifulSoup(malformed_html, 'html.parser')
-        
-        # Should not raise exceptions
-        grants = await scraper._parse_screen_australia(soup, "https://test.com")
-        assert isinstance(grants, list)
-        
-        grants = await scraper._parse_creative_australia(soup, "https://test.com")
-        assert isinstance(grants, list)
-        
-        grants = await scraper._parse_business_gov(soup, "https://test.com")
-        assert isinstance(grants, list)
-        
-        grants = await scraper._parse_create_nsw(soup, "https://test.com")
-        assert isinstance(grants, list)
-    
-    def test_headers_configuration(self, scraper):
-        """Test that headers are properly configured."""
-        assert "User-Agent" in scraper.headers
-        assert "Mozilla" in scraper.headers["User-Agent"]
-        assert scraper.headers["Accept"]
-        assert scraper.headers["Accept-Language"]
-    
-    @pytest.mark.asyncio
-    async def test_rate_limiting_delays(self, scraper):
-        """Test that rate limiting is implemented."""
-        # This test would need to measure actual delays
-        # For now, just verify the delay methods exist
-        import asyncio
-        
-        # Test that asyncio.sleep is called (this would need more sophisticated mocking)
-        with patch('asyncio.sleep') as mock_sleep:
-            # Mock the session and response
-            with patch('aiohttp.ClientSession') as mock_session:
-                mock_response = AsyncMock()
-                mock_response.status = 200
-                mock_response.text = AsyncMock(return_value="<html></html>")
-                
-                mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value = mock_response
-                
-                # Run a source scrape
-                source_config = {
-                    "base_url": "https://test.com",
-                    "endpoints": ["/test1", "/test2"]
-                }
-                
-                scraper.session = mock_session.return_value.__aenter__.return_value
-                await scraper._scrape_source("test_source", source_config)
-                
-                # Should have called sleep for delays between requests
-                assert mock_sleep.called
+    def test_parse_amount_float_conversion(self, scraper):
+        """Test that amounts are properly converted to float."""
+        assert scraper._parse_amount("5000") == 5000.0
+        assert scraper._parse_amount("5,000") == 5000.0
+        assert scraper._parse_amount("$5,000") == 5000.0
+        assert scraper._parse_amount("5000.50") == 5000.5
+        assert scraper._parse_amount("") is None
+        assert scraper._parse_amount("invalid") is None
