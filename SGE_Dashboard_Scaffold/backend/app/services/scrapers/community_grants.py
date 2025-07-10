@@ -1,1 +1,0 @@
-// placeholder for community_grants.py

@@ -1,0 +1,21 @@
+PROJECT_NAME="SGE Dashboard"
+VERSION="0.1.0"
+DEBUG=true
+ENV="development"
+
+# Security
+SECRET_KEY="development-secret-key-please-change-in-production"
+JWT_SECRET_KEY="development-jwt-key-please-change-in-production"
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# Database
+DATABASE_URL="sqlite:///./dev.db"
+
+# CORS
+CORS_ORIGINS='["*"]'
+CORS_ALLOW_CREDENTIALS=true
+CORS_ALLOW_METHODS='["*"]'
+CORS_ALLOW_HEADERS='["*"]'
+
+# Logging
+LOG_LEVEL="INFO" 

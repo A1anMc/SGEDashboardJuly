@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
     
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/sge_dashboard")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./dev.db")
     TEST_DATABASE_URL: str = "sqlite:///./test.db"
     DATABASE_MAX_RETRIES: int = 5
     DATABASE_RETRY_DELAY: int = 1
@@ -95,6 +95,11 @@ class Settings(BaseSettings):
             "base_url": "https://www.screenaustralia.gov.au",
             "grants_path": "/funding-and-support",
             "description": "Screen Australia Funding"
+        },
+        "australian_grants": {
+            "base_url": "https://www.screenaustralia.gov.au",  # Default to Screen Australia as primary source
+            "grants_path": "/funding-and-support",
+            "description": "Australian Grants Aggregator"
         }
     }
     
@@ -104,7 +109,8 @@ class Settings(BaseSettings):
         "grants.gov.au",
         "arts.gov.au",
         "screenaustralia.gov.au",
-        "supabase.co"  # Required for Supabase
+        "supabase.co",  # Required for Supabase
+        "create.nsw.gov.au"  # Added for NSW state grants
     ]
     
     @field_validator("DATABASE_URL")

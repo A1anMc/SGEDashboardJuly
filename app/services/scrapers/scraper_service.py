@@ -7,6 +7,7 @@ from app.services.scrapers.base_scraper import BaseScraper
 from app.services.scrapers.business_gov import BusinessGovScraper
 from app.services.scrapers.grantconnect import GrantConnectScraper
 from app.services.scrapers.dummy_scraper import DummyScraper
+from app.services.scrapers.australian_grants_scraper import AustralianGrantsScraper
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,8 @@ class ScraperService:
         self.scrapers: Dict[str, Type[BaseScraper]] = {
             "business.gov.au": BusinessGovScraper,
             "grantconnect": GrantConnectScraper,
-            "dummy": DummyScraper
+            "dummy": DummyScraper,
+            "australian_grants": AustralianGrantsScraper
         }
     
     def get_available_sources(self) -> List[str]:
