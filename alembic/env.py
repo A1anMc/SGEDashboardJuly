@@ -10,6 +10,10 @@ from alembic import context
 
 # Import all models here for Alembic to discover
 from app.db.base import Base
+from app.core.config import settings
+
+# Load environment variables
+load_dotenv(".envV2")
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -26,7 +30,7 @@ target_metadata = Base.metadata
 
 def get_url():
     """Get database URL."""
-    return "postgresql://alanmccarthy@localhost:5432/sge_dashboard"
+    return settings.DATABASE_URL
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""

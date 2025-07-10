@@ -5,7 +5,7 @@ from pydantic import field_validator, ConfigDict
 from dotenv import load_dotenv
 
 # Load environment variables before creating settings
-load_dotenv(".envV2")
+load_dotenv(dotenv_path=".envV2", override=True)
 
 class Settings(BaseSettings):
     # Core
@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
     
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./dev.db")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://alanmccarthy@localhost:5432/sge_dashboard")
     TEST_DATABASE_URL: str = "sqlite:///./test.db"
     DATABASE_MAX_RETRIES: int = 5
     DATABASE_RETRY_DELAY: int = 1
@@ -136,7 +136,7 @@ class Settings(BaseSettings):
     def validate_supabase_url(cls, v: str, info) -> str:
         """Validate Supabase URL."""
         if not v and not info.data.get("TESTING", False):
-            raise ValueError("SUPABASE_URL is required in non-test environment")
+            return ""  # Allow empty Supabase URL in development
         return v
     
     model_config = ConfigDict(

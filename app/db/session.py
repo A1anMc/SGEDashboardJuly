@@ -1,31 +1,24 @@
 import os
-from sqlalchemy import create_engine, event, text
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, scoped_session
-from sqlalchemy.engine import Engine
-from sqlalchemy.pool import StaticPool
 from sqlalchemy.exc import SQLAlchemyError
 import logging
+from app.core.config import settings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Use SQLite by default
-SQLALCHEMY_DATABASE_URL = "sqlite:///./dev.db"
+# Get database URL from settings
+SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
 
-# Configure engine for SQLite
+# Configure engine
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool
+    pool_pre_ping=True,  # Enable connection health checks
+    pool_size=5,  # Set connection pool size
+    max_overflow=10  # Allow up to 10 connections beyond pool_size
 )
-
-# Enable SQLite foreign key support
-@event.listens_for(Engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
-    cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.close()
 
 # Create session factory
 SessionLocal = scoped_session(
