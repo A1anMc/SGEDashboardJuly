@@ -512,19 +512,13 @@ class AustralianGrantsScraper(BaseScraper):
         industry_keywords = {
             "media": ["screen", "film", "television", "tv", "media", "video", "documentary", "production"],
             "creative_arts": ["arts", "creative", "culture", "music", "visual", "performing", "theatre", "dance"],
-            "digital": ["digital", "technology", "tech", "software", "app", "website", "online", "gaming", "games"]
+            "digital": ["digital", "technology", "tech", "software", "app", "website", "online", "gaming", "games"],
+            "business": ["business", "enterprise", "startup", "commercial", "industry", "market", "trade"]
         }
         
         for industry, keywords in industry_keywords.items():
             if any(keyword in text_lower for keyword in keywords):
                 return industry
-        
-        # Check for business keywords last, as they might be too generic
-        business_keywords = ["business", "entrepreneurship", "startup", "commercial", "export", "trade"]
-        if any(keyword in text_lower for keyword in business_keywords) and not any(
-            keyword in text_lower for keywords in industry_keywords.values() for keyword in keywords
-        ):
-            return "business"
         
         return "other"
     

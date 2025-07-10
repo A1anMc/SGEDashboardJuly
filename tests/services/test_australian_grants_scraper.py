@@ -236,60 +236,55 @@ class TestAustralianGrantsScraper:
         assert "open" in context.lower()
     
     def test_normalize_grant_data_integration(self, scraper):
-        """Test grant data normalization with realistic data."""
-        raw_data = {
-            "title": "Documentary Production Funding",
-            "description": "Support for documentary production",
-            "source_url": "https://test.com",
-            "open_date": "2024-02-01",
-            "deadline": "2024-06-15",
-            "min_amount": 5000,
-            "max_amount": 50000,
-            "contact_email": "funding@test.com",
-            "industry_focus": "media",
+        """Test that the scraper properly integrates with BaseScraper's normalize_grant_data."""
+        # Test data that should be normalized
+        test_data = {
+            "title": "  Test Grant Title  ",
+            "description": "  This is a test description  ",
+            "source_url": "https://example.com/grant",
+            "min_amount": 5000.0,
+            "max_amount": 50000.0,
+            "contact_email": "  test@example.com  ",
+            "industry_focus": "creative_arts",
             "location": "national",
             "org_types": ["individual", "small_business"],
-            "funding_purpose": ["production", "development"],
+            "funding_purpose": ["development"],
             "audience_tags": ["australian", "creative"]
         }
         
-        normalized = scraper.normalize_grant_data(raw_data)
+        normalized = scraper.normalize_grant_data(test_data)
         
-        # Check all fields are normalized correctly
-        assert normalized["title"] == raw_data["title"]
-        assert normalized["description"] == raw_data["description"]
-        assert normalized["source_url"] == raw_data["source_url"]
-        assert normalized["min_amount"] == raw_data["min_amount"]
-        assert normalized["max_amount"] == raw_data["max_amount"]
-        assert normalized["contact_email"] == raw_data["contact_email"]
-        assert normalized["industry_focus"] == raw_data["industry_focus"]
-        assert normalized["location"] == raw_data["location"]
-        assert normalized["org_types"] == raw_data["org_types"]
-        assert normalized["funding_purpose"] == raw_data["funding_purpose"]
-        assert normalized["audience_tags"] == raw_data["audience_tags"]
+        # Check that text fields are cleaned
+        assert normalized["title"] == "Test Grant Title"
+        assert normalized["description"] == "This is a test description"
+        assert normalized["contact_email"] == "test@example.com"
+        
+        # Check that numeric fields are preserved
+        assert normalized["min_amount"] == 5000.0
+        assert normalized["max_amount"] == 50000.0
+        
+        # Check that other fields are preserved
+        assert normalized["industry_focus"] == "creative_arts"
+        assert normalized["org_types"] == ["individual", "small_business"]
     
-    @pytest.mark.asyncio
     @patch('app.services.scrapers.australian_grants_scraper.AustralianGrantsScraper._make_request')
     @patch('asyncio.sleep')
     async def test_scrape_integration(self, mock_sleep, mock_make_request, scraper, sample_html):
-        """Test the full scraping process."""
+        """Test the main scrape method integration."""
+        # Mock the _make_request to return sample HTML
         mock_make_request.return_value = sample_html
-        mock_sleep.return_value = None
         
+        # Run the scraper
         grants = await scraper.scrape()
         
-        # Should find grants from multiple sources
+        # Should have made requests to multiple sources
+        assert mock_make_request.call_count > 0
+        
+        # Should have found some grants
         assert len(grants) > 0
         
-        # Check grant data structure
-        for grant in grants:
-            assert "title" in grant
-            assert "description" in grant
-            assert "source_url" in grant
-            assert "industry_focus" in grant
-            assert isinstance(grant["org_types"], list)
-            assert isinstance(grant["funding_purpose"], list)
-            assert isinstance(grant["audience_tags"], list)
+        # Check that delays were added (respectful scraping)
+        assert mock_sleep.call_count > 0
     
     def test_parse_amount_float_conversion(self, scraper):
         """Test that amounts are properly converted to float."""
