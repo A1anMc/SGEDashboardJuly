@@ -18,4 +18,15 @@ CORS_ALLOW_METHODS='["*"]'
 CORS_ALLOW_HEADERS='["*"]'
 
 # Logging
-LOG_LEVEL="INFO" 
+LOG_LEVEL="INFO"
+
+# Email Configuration
+MAIL_USERNAME="development@example.com"
+MAIL_PASSWORD="development-password"
+MAIL_FROM="development@example.com"
+MAIL_PORT=587
+MAIL_SERVER="smtp.example.com"
+MAIL_FROM_NAME="SGE Dashboard"
+MAIL_TLS=true
+MAIL_SSL=false
+USE_CREDENTIALS=true 
