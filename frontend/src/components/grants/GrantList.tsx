@@ -31,10 +31,8 @@ export const GrantList: FC<GrantListProps> = ({ filters, onGrantClick }) => {
       <ErrorAlert
         title="Failed to load grants"
         message={getErrorMessage(error)}
-        action={{
-          label: 'Try Again',
-          onClick: () => refetch(),
-        }}
+        retryable={true}
+        onRetry={() => refetch()}
       />
     );
   }
