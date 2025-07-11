@@ -194,7 +194,7 @@ def create_app() -> FastAPI:
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         same_site="lax",
         https_only=settings.ENV == 'production',
-        httponly=True,  # Prevent XSS attacks
+        http_only=True,  # Prevent XSS attacks
     )
     
     # 3. CORS Middleware (configured from environment)
