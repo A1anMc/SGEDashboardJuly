@@ -1,5 +1,9 @@
-"""Main application module."""
+"""
+Shadow Goose Entertainment API - Production Hardened
+Enhanced with comprehensive security measures for production deployment.
+"""
 
+from datetime import datetime
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
@@ -10,20 +14,27 @@ import logging
 import time
 import os
 
+# Import Base and models
+from app.db.base import Base  # noqa: F401
+from app.models.user import User  # noqa: F401
+from app.models.team_member import TeamMember  # noqa: F401
+from app.models.project import Project  # noqa: F401
+from app.models.metric import Metric  # noqa: F401
+from app.models.program_logic import ProgramLogic  # noqa: F401
+from app.models.grant import Grant  # noqa: F401
+from app.models.task import Task, TaskComment, TimeEntry  # noqa: F401
+
+from app.api.v1.api import api_router
+from app.db.session import get_engine_instance, close_database
 from app.core.config import settings
 from app.core.error_handlers import setup_error_handlers
-from app.db.init_db import init_db, check_db_health, get_db_info
-from app.api.v1.api import api_router
+from app.db.init_db import init_db, check_db_health, get_db_info, validate_database_config
 
 # Configure logging with production-safe format
 logging.basicConfig(
     level=settings.LOG_LEVEL,
     format=settings.LOG_FORMAT,
-    handlers=[
-        logging.StreamHandler(),
-        # Add file handler in production if needed
-        # logging.FileHandler('app.log') if settings.ENV == 'production' else logging.StreamHandler()
-    ]
+    handlers=[logging.StreamHandler()]
 )
 logger = logging.getLogger(__name__)
 
@@ -42,43 +53,44 @@ if settings.SENTRY_DSN and settings.ENV == 'production':
             ],
             traces_sample_rate=settings.SENTRY_TRACES_SAMPLE_RATE,
             environment=settings.SENTRY_ENVIRONMENT,
-            # Don't send PII in production
-            send_default_pii=False,
-            # Capture 100% of transactions for performance monitoring
+            send_default_pii=False,  # Don't send PII in production
             profiles_sample_rate=1.0 if settings.ENV == 'production' else 0.0,
         )
         logger.info("Sentry initialized for error tracking")
     except ImportError:
         logger.warning("Sentry SDK not installed, skipping error tracking setup")
 
-# Rate limiting setup (optional SlowAPI middleware)
+# Rate limiting setup (enhanced SlowAPI configuration)
 rate_limiter = None
-if settings.ENV == 'production':
+if settings.ENV == 'production' and settings.RATE_LIMIT_ENABLED:
     try:
         from slowapi import Limiter, _rate_limit_exceeded_handler
         from slowapi.util import get_remote_address
         from slowapi.errors import RateLimitExceeded
+        from slowapi.middleware import SlowAPIMiddleware
         
-        # Create rate limiter with Redis backend if available, otherwise in-memory
+        # Create rate limiter with configurable limits
         limiter = Limiter(
             key_func=get_remote_address,
-            default_limits=["60/minute", "1000/hour"],  # Basic rate limiting
-            storage_uri=os.getenv("REDIS_URL", "memory://"),  # Use Redis if available
+            default_limits=[
+                f"{settings.RATE_LIMIT_REQUESTS_PER_MINUTE}/minute",
+                f"{settings.RATE_LIMIT_REQUESTS_PER_HOUR}/hour"
+            ],
+            storage_uri=settings.REDIS_URL or "memory://",
         )
         rate_limiter = limiter
-        logger.info("Rate limiting enabled for production")
+        logger.info(f"Rate limiting enabled: {settings.RATE_LIMIT_REQUESTS_PER_MINUTE}/min, {settings.RATE_LIMIT_REQUESTS_PER_HOUR}/hour")
     except ImportError:
         logger.warning("SlowAPI not installed, rate limiting disabled")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Handle startup and shutdown events.
-    This replaces the @app.on_event("startup") and @app.on_event("shutdown") handlers.
+    Handle startup and shutdown events with enhanced error handling.
     """
-    # Startup: Initialize database with retry logic
+    # Startup: Initialize database and security checks
     try:
-        logger.info(f"Starting application in {settings.ENV} environment")
+        logger.info(f"Starting Shadow Goose Entertainment API in {settings.ENV} environment")
         logger.info(f"Debug mode: {settings.DEBUG}")
         
         # Security check: Ensure we're not in debug mode in production
@@ -86,19 +98,47 @@ async def lifespan(app: FastAPI):
             logger.error("DEBUG mode is enabled in production! This is a security risk.")
             raise RuntimeError("DEBUG mode must be disabled in production")
         
-        logger.info("Initializing database...")
-        init_db()
-        logger.info("Database initialization completed")
+        # Validate database configuration first
+        logger.info("Validating database configuration...")
+        if not validate_database_config():
+            error_msg = "Database configuration validation failed. Please check your DATABASE_URL environment variable."
+            logger.error(error_msg)
+            if settings.ENV == 'production':
+                raise RuntimeError(error_msg)
+            else:
+                logger.warning("Continuing in development mode with database issues")
         
-        # Log database info (excluding sensitive data)
-        if settings.DEBUG:
-            db_info = get_db_info()
-            logger.info(f"Connected to database: {db_info}")
-        else:
-            logger.info("Database connection established")
+        # Initialize database
+        logger.info("Initializing database...")
+        try:
+            init_db()
+            
+            # Create tables if they don't exist
+            engine = get_engine_instance()
+            Base.metadata.create_all(bind=engine)
+            logger.info("Database initialization completed")
+            
+        except Exception as db_error:
+            logger.error(f"Database initialization failed: {str(db_error)}")
+            if settings.ENV == 'production':
+                # In production, we must have a working database
+                raise RuntimeError(f"Database initialization failed: {str(db_error)}")
+            else:
+                # In development, we can continue with warnings
+                logger.warning("Continuing in development mode with database issues")
+        
+        # Log database info (excluding sensitive data in production)
+        try:
+            if settings.DEBUG:
+                db_info = get_db_info()
+                logger.info(f"Connected to database: {db_info}")
+            else:
+                logger.info("Database connection established")
+        except Exception as info_error:
+            logger.warning(f"Could not retrieve database info: {str(info_error)}")
         
     except Exception as e:
-        logger.error(f"Failed to initialize database: {str(e)}")
+        logger.error(f"Failed to initialize application: {str(e)}")
         # Report to Sentry if available
         if settings.SENTRY_DSN:
             try:
@@ -111,37 +151,37 @@ async def lifespan(app: FastAPI):
     yield
     
     # Shutdown: Clean up resources
-    logger.info("Shutting down application...")
+    logger.info("Shutting down Shadow Goose Entertainment API...")
+    try:
+        close_database()
+    except Exception as e:
+        logger.error(f"Error during shutdown: {str(e)}")
 
 def create_app() -> FastAPI:
-    """Create and configure the FastAPI application."""
+    """Create and configure the FastAPI application with comprehensive security."""
     
     # Disable docs in production for security
     docs_url = "/api/docs" if settings.DEBUG else None
     openapi_url = "/api/openapi.json" if settings.DEBUG else None
     
     app = FastAPI(
-        title=settings.PROJECT_NAME,
-        version=settings.VERSION,
+        title="Shadow Goose Entertainment API",
+        description="API for managing Shadow Goose Entertainment projects and resources - Production Hardened",
+        version="1.0.0",
         lifespan=lifespan,
         docs_url=docs_url,
         openapi_url=openapi_url,
         # Security: Don't expose server info in production
-        servers=[{"url": "/", "description": "Current server"}] if settings.ENV == 'production' else None,
+        servers=[{"url": "/", "description": "SGE API Server"}] if settings.ENV == 'production' else None,
     )
     
-    # Security Middleware - Order matters!
+    # === SECURITY MIDDLEWARE STACK (Order matters!) ===
     
     # 1. Trusted Host Middleware (prevent host header attacks)
     if settings.ENV == 'production':
-        trusted_hosts = [
-            "sge-dashboard-api.onrender.com",
-            "localhost",  # For health checks
-            "127.0.0.1",  # For health checks
-        ]
         app.add_middleware(
             TrustedHostMiddleware,
-            allowed_hosts=trusted_hosts
+            allowed_hosts=settings.TRUSTED_HOSTS
         )
     
     # 2. Session Middleware with secure settings
@@ -149,9 +189,8 @@ def create_app() -> FastAPI:
         SessionMiddleware,
         secret_key=settings.SECRET_KEY,
         session_cookie="sge_session",
-        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # Match JWT expiry
-        # Security: Secure session cookies in production
-        same_site="lax" if settings.ENV == 'production' else "lax",
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        same_site="lax",
         https_only=settings.ENV == 'production',
         httponly=True,  # Prevent XSS attacks
     )
@@ -165,29 +204,37 @@ def create_app() -> FastAPI:
         allow_headers=settings.CORS_ALLOW_HEADERS,
     )
     
-    # 4. Security Headers Middleware
+    # 4. Rate Limiting Middleware
+    if rate_limiter:
+        app.state.limiter = rate_limiter
+        app.add_middleware(SlowAPIMiddleware)
+        app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    
+    # 5. Security Headers Middleware
     @app.middleware("http")
     async def security_headers_middleware(request: Request, call_next):
-        """Add security headers to all responses."""
+        """Add comprehensive security headers to all responses."""
         response = await call_next(request)
         
-        # Security headers for production
+        # Security headers for all environments
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        
+        # Additional security headers for production
         if settings.ENV == 'production':
-            response.headers["X-Frame-Options"] = "DENY"
-            response.headers["X-Content-Type-Options"] = "nosniff"
-            response.headers["X-XSS-Protection"] = "1; mode=block"
-            response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
             response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()"
             
-            # Content Security Policy
+            # Enhanced Content Security Policy
             csp_policy = [
                 "default-src 'self'",
                 "script-src 'self'",
-                "style-src 'self' 'unsafe-inline'",  # Allow inline styles for FastAPI docs
+                "style-src 'self' 'unsafe-inline'",
                 "img-src 'self' data: https:",
                 "font-src 'self' data:",
-                "connect-src 'self' https://sge-dashboard-web.onrender.com",
+                f"connect-src 'self' {settings.FRONTEND_URL}",
                 "frame-ancestors 'none'",
                 "base-uri 'self'",
                 "form-action 'self'",
@@ -201,23 +248,27 @@ def create_app() -> FastAPI:
         
         return response
     
-    # 5. Rate Limiting Middleware (if available)
-    if rate_limiter:
-        app.state.limiter = rate_limiter
-        app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-    
     # 6. Database Health Check Middleware
     @app.middleware("http")
-    async def db_session_middleware(request: Request, call_next):
+    async def db_health_middleware(request: Request, call_next):
         """Ensure database is healthy before processing requests."""
         # Skip health checks to avoid circular dependency
         if not request.url.path.startswith(("/health", "/metrics")):
-            if not check_db_health():
-                logger.error("Database health check failed")
-                return JSONResponse(
-                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    content={"status": "error", "message": "Database connection lost"}
-                )
+            try:
+                if not check_db_health():
+                    logger.error("Database health check failed")
+                    return JSONResponse(
+                        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                        content={"status": "error", "message": "Database connection lost"}
+                    )
+            except Exception as e:
+                logger.error(f"Database health check error: {str(e)}")
+                # In development, continue; in production, fail
+                if settings.ENV == 'production':
+                    return JSONResponse(
+                        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                        content={"status": "error", "message": "Database health check failed"}
+                    )
         
         # Add request timing for monitoring
         start_time = time.time()
@@ -231,38 +282,58 @@ def create_app() -> FastAPI:
     setup_error_handlers(app)
     
     # Include API router
-    app.include_router(api_router, prefix=settings.API_V1_STR)
+    app.include_router(api_router, prefix="/api/v1")
     
-    # Health check endpoint with rate limiting
+    # === ENHANCED ENDPOINTS ===
+    
+    @app.get("/")
+    async def read_root():
+        """Root endpoint with rate limiting."""
+        if rate_limiter:
+            # Rate limiting will be handled by middleware
+            pass
+        return {
+            "message": "Welcome to the Shadow Goose Entertainment API!",
+            "version": "1.0.0",
+            "environment": settings.ENV,
+            "status": "operational"
+        }
+    
     @app.get("/health")
     async def health_check():
-        """Check application and database health."""
-        # Apply rate limiting in production
-        if rate_limiter:
-            # This will be handled by the rate limiter middleware
-            pass
-        
-        is_healthy = check_db_health()
-        if not is_healthy:
-            logger.warning("Health check failed: Database connection issue")
+        """Enhanced health check endpoint."""
+        try:
+            is_healthy = check_db_health()
+            if not is_healthy:
+                logger.warning("Health check failed: Database connection issue")
+                return JSONResponse(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    content={
+                        "status": "error",
+                        "message": "Database connection failed",
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                )
+            
+            return {
+                "status": "healthy",
+                "database": "connected",
+                "environment": settings.ENV,
+                "version": "1.0.0",
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        except Exception as e:
+            logger.error(f"Health check error: {str(e)}")
             return JSONResponse(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 content={
-                    "status": "error", 
-                    "message": "Database connection failed",
-                    "timestamp": time.time()
+                    "status": "error",
+                    "message": "Health check failed",
+                    "timestamp": datetime.utcnow().isoformat()
                 }
             )
-        
-        return {
-            "status": "healthy", 
-            "database": "connected",
-            "environment": settings.ENV,
-            "version": settings.VERSION,
-            "timestamp": time.time()
-        }
     
-    # Database info endpoint (protected, for debugging)
+    # Debug endpoints (only available in debug mode)
     @app.get("/api/debug/db", include_in_schema=False)
     async def db_info():
         """Get database connection information (excluding sensitive data)."""
@@ -273,7 +344,6 @@ def create_app() -> FastAPI:
             )
         return get_db_info()
     
-    # Security info endpoint (for security verification)
     @app.get("/api/security/info", include_in_schema=False)
     async def security_info():
         """Get security configuration info (non-sensitive)."""
@@ -293,7 +363,23 @@ def create_app() -> FastAPI:
             "secure_cookies": settings.ENV == 'production',
         }
     
-    logger.info(f"Application created successfully in {settings.ENV} mode")
+    # Custom rate limit exception handler
+    if rate_limiter:
+        @app.exception_handler(RateLimitExceeded)
+        async def ratelimit_handler(request: Request, exc: RateLimitExceeded):
+            """Enhanced rate limit exception handler."""
+            logger.warning(f"Rate limit exceeded for {request.client.host}: {exc}")
+            return JSONResponse(
+                status_code=429,
+                content={
+                    "error": "Rate limit exceeded",
+                    "message": "Too many requests. Please try again later.",
+                    "retry_after": str(exc.retry_after) if hasattr(exc, 'retry_after') else "60"
+                }
+            )
+    
+    logger.info(f"Shadow Goose Entertainment API created successfully in {settings.ENV} mode")
     return app
 
+# Create the application instance
 app = create_app() 
