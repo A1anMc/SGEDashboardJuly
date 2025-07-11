@@ -260,7 +260,7 @@ export function shouldRetry(error: unknown, retryCount: number): boolean {
       !error.response || // Network error
       status === 408 || // Request timeout
       status === 429 || // Too many requests
-      (status >= 500 && status <= 599) // Server errors
+      (status !== undefined && status >= 500 && status <= 599) // Server errors
     );
   }
   

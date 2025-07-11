@@ -15,6 +15,37 @@
 
 import axios from 'axios';
 import { handleApiError, shouldRetry, getRetryDelay } from '../utils/error-handling';
+import { 
+  ApiResponse, 
+  Task, 
+  User, 
+  Project, 
+  CreateTaskRequest, 
+  UpdateTaskRequest
+} from '../types/models';
+
+// Define missing request types locally
+interface CreateUserRequest {
+  email: string;
+  full_name: string;
+  role: 'admin' | 'user';
+}
+
+interface UpdateUserRequest extends Partial<CreateUserRequest> {
+  id: string;
+}
+
+interface CreateProjectRequest {
+  title: string;
+  description: string;
+  owner_id: string;
+  start_date: Date;
+  end_date?: Date;
+}
+
+interface UpdateProjectRequest extends Partial<CreateProjectRequest> {
+  id: string;
+}
 
 // Get the API URL from environment variables with a production fallback
 const baseURL = process.env.NEXT_PUBLIC_API_URL || (

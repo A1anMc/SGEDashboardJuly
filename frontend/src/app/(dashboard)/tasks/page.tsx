@@ -18,7 +18,7 @@ export default function TasksPage() {
     queryKey: ['tasks'],
     queryFn: async () => {
       const response = await tasksApi.getAll();
-      return response.data as Task[];
+      return response.data.data; // First .data is axios response, second .data is ApiResponse
     },
   });
 
@@ -27,7 +27,7 @@ export default function TasksPage() {
     queryKey: ['users'],
     queryFn: async () => {
       const response = await usersApi.getAll();
-      return response.data as User[];
+      return response.data.data; // First .data is axios response, second .data is ApiResponse
     },
   });
 
@@ -36,7 +36,7 @@ export default function TasksPage() {
     queryKey: ['projects'],
     queryFn: async () => {
       const response = await projectsApi.getAll();
-      return response.data as Project[];
+      return response.data.data; // First .data is axios response, second .data is ApiResponse
     },
   });
 
