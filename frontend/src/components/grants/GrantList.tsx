@@ -6,6 +6,8 @@ import { GrantCard } from './GrantCard';
 import { ErrorAlert } from '../ui/error-alert';
 import { ErrorBoundary } from '../ui/error-boundary';
 import { getErrorMessage } from '../../utils/error-handling';
+import React from 'react';
+import toast from 'react-hot-toast';
 
 interface GrantListProps {
   filters: GrantFilters;
@@ -17,6 +19,13 @@ export const GrantList: FC<GrantListProps> = ({ filters, onGrantClick }) => {
     queryKey: ['grants', filters],
     queryFn: () => grantsApi.getGrants(filters),
   });
+
+  React.useEffect(() => {
+    if (error) {
+      console.error('Failed to fetch grants:', error);
+      toast.error('Failed to load grants. Please try again later.');
+    }
+  }, [error]);
 
   if (isLoading) {
     return (
@@ -31,10 +40,8 @@ export const GrantList: FC<GrantListProps> = ({ filters, onGrantClick }) => {
       <ErrorAlert
         title="Failed to load grants"
         message={getErrorMessage(error)}
-        action={{
-          label: 'Try Again',
-          onClick: () => refetch(),
-        }}
+        retryable={true}
+        onRetry={() => refetch()}
       />
     );
   }

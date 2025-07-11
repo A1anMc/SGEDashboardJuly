@@ -91,10 +91,8 @@ export const ScraperManager: React.FC = () => {
       <ErrorAlert
         title="Failed to load scraper status"
         message={getErrorMessage(statusError)}
-        action={{
-          label: 'Try Again',
-          onClick: () => refetchStatus(),
-        }}
+        retryable={true}
+        onRetry={() => refetchStatus()}
       />
     );
   }

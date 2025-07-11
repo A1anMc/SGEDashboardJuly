@@ -17,11 +17,7 @@ export const useGrants = (filters: GrantFilters = { page: 1, size: 10 }) => {
     queryFn: () => grantsApi.getGrants(filters),
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     retry: 3, // Retry failed requests 3 times
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    onError: (error) => {
-      console.error('Failed to fetch grants:', error);
-      toast.error('Failed to load grants. Please try again later.');
-    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000)
   });
 
   // Create grant mutation with improved error handling
@@ -29,7 +25,8 @@ export const useGrants = (filters: GrantFilters = { page: 1, size: 10 }) => {
     mutationFn: (grant: CreateGrantRequest) => {
       const grantInput: CreateGrantInput = {
         ...grant,
-        due_date: grant.deadline.toISOString(),
+        deadline: grant.deadline?.toISOString(),
+        open_date: grant.open_date?.toISOString(),
         status: grant.status,
         tags: grant.tags || [],
       };
@@ -52,12 +49,24 @@ export const useGrants = (filters: GrantFilters = { page: 1, size: 10 }) => {
       const grantInput: CreateGrantInput = {
         title: grant.title || '',
         description: grant.description || '',
-        amount: grant.amount || 0,
-        due_date: grant.deadline ? grant.deadline.toISOString() : undefined,
+        source: grant.source || '',
+        source_url: grant.source_url,
+        application_url: grant.application_url,
+        contact_email: grant.contact_email,
+        min_amount: grant.min_amount,
+        max_amount: grant.max_amount,
+        open_date: grant.open_date?.toISOString(),
+        deadline: grant.deadline?.toISOString(),
+        industry_focus: grant.industry_focus,
+        location_eligibility: grant.location_eligibility,
+        org_type_eligible: grant.org_type_eligible,
+        funding_purpose: grant.funding_purpose,
+        audience_tags: grant.audience_tags,
         status: grant.status || 'draft',
+        notes: grant.notes,
         tags: grant.tags || [],
       };
-      return grantsApi.updateGrant(id, grantInput);
+      return grantsApi.updateGrant(Number(id), grantInput);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['grants'] });
@@ -72,7 +81,7 @@ export const useGrants = (filters: GrantFilters = { page: 1, size: 10 }) => {
 
   // Delete grant mutation with improved error handling
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => grantsApi.deleteGrant(id),
+    mutationFn: (id: string) => grantsApi.deleteGrant(Number(id)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['grants'] });
       queryClient.invalidateQueries({ queryKey: ['grants', 'dashboard'] });
