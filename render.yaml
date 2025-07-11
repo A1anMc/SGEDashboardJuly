@@ -9,16 +9,15 @@ services:
     startCommand: |
       alembic upgrade head
       gunicorn app.main:app \
-        --workers 2 \
+        --workers 1 \
         --worker-class uvicorn.workers.UvicornWorker \
         --bind 0.0.0.0:$PORT \
-        --timeout 180 \
+        --timeout 120 \
         --keep-alive 65 \
-        --log-level debug \
+        --log-level info \
         --error-logfile - \
         --access-logfile - \
-        --capture-output \
-        --preload
+        --capture-output
     envVars:
       - key: DATABASE_URL
         sync: false  # Will be set manually to Supabase URL
@@ -35,34 +34,36 @@ services:
       - key: SUPABASE_JWT_SECRET
         sync: false
       - key: DEBUG
-        value: "true"  # Temporarily enable debug mode
+        value: "false"  # Disable debug in production
       - key: LOG_LEVEL
-        value: "DEBUG"  # Set to debug for more detailed logs
+        value: "INFO"  # Use INFO level for production
       - key: PYTHONUNBUFFERED
         value: "1"  # Ensure Python output is not buffered
       - key: ENVIRONMENT
         value: production
       - key: DATABASE_POOL_SIZE
-        value: "2"  # Reduced to match worker count
+        value: "1"  # Match worker count
       - key: DATABASE_MAX_OVERFLOW
-        value: "4"  # Reduced to avoid connection exhaustion
+        value: "2"  # Keep low for stability
       - key: DATABASE_POOL_TIMEOUT
         value: "30"
       - key: DATABASE_POOL_RECYCLE
-        value: "1800"  # Reduced to 30 minutes
+        value: "1800"  # 30 minutes
       - key: DATABASE_MAX_RETRIES
-        value: "5"
+        value: "3"
       - key: DATABASE_RETRY_DELAY
-        value: "1"
+        value: "2"
       - key: DATABASE_ECHO
-        value: "true"  # Enable SQL logging temporarily
+        value: "false"  # Disable SQL logging in production
+      - key: CORS_ORIGINS
+        value: '["https://sge-dashboard-web.onrender.com"]'
     healthCheckPath: /health
     autoDeploy: false  # Require manual deployment approval
     scaling:
       minInstances: 1
       maxInstances: 1
-      targetMemoryPercent: 80
-      targetCPUPercent: 80
+      targetMemoryPercent: 70
+      targetCPUPercent: 70
     
   # Frontend Service
   - type: web
@@ -86,7 +87,7 @@ services:
     headers:
       - path: /*
         name: Content-Security-Policy
-        value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://sge-dashboard-web.onrender.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://sge-dashboard-api.onrender.com https://*.onrender.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; worker-src 'self' blob:;"
+        value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.onrender.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://sge-dashboard-api.onrender.com https://*.onrender.com wss://*.onrender.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; worker-src 'self' blob:;"
 
 # Global environment restrictions
 envVarGroups:
@@ -95,6 +96,6 @@ envVarGroups:
       - key: NODE_ENV
         value: production
       - key: DATABASE_ECHO
-        value: false
+        value: "false"
       - key: DEBUG
-        value: false 
+        value: "false" 

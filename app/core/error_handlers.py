@@ -258,3 +258,10 @@ def register_exception_handlers(app: FastAPI) -> None:
         request.state.request_id = str(time.time_ns())
         response = await call_next(request)
         return response 
+
+def setup_error_handlers(app: FastAPI) -> None:
+    """
+    Backward compatibility wrapper for register_exception_handlers.
+    This function maintains compatibility with existing code that uses setup_error_handlers.
+    """
+    register_exception_handlers(app) 
