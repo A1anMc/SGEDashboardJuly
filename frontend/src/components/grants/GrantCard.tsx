@@ -89,7 +89,7 @@ export function GrantCard({ grant, onClick }: GrantCardProps) {
             key={index}
             className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
           >
-            {tag}
+            {tag.name}
           </span>
         ))}
         {grant.org_type_eligible?.map((type, index) => (
