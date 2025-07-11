@@ -32,21 +32,31 @@ class Settings(BaseSettings):
     TESTING: bool = os.getenv("TESTING", "false").lower() == "true"
     
     # Database Pool Settings
-    DATABASE_POOL_SIZE: int = 10
-    DATABASE_MAX_OVERFLOW: int = 20
+    DATABASE_POOL_SIZE: int = int(os.getenv("DATABASE_POOL_SIZE", "5"))
+    DATABASE_MAX_OVERFLOW: int = int(os.getenv("DATABASE_MAX_OVERFLOW", "10"))
     DATABASE_POOL_TIMEOUT: int = 30
-    DATABASE_POOL_RECYCLE: int = 3600
-    DATABASE_CONNECT_TIMEOUT: int = 10
-    DATABASE_KEEPALIVES: bool = True
-    DATABASE_KEEPALIVES_IDLE: int = 60
-    DATABASE_KEEPALIVES_INTERVAL: int = 10
-    DATABASE_KEEPALIVES_COUNT: int = 5
+    DATABASE_POOL_RECYCLE: int = 1800  # 30 minutes
     
-    # CORS
-    CORS_ORIGINS: List[str] = ["*"]
+    # CORS Settings
+    CORS_ORIGINS: List[str] = [
+        "http://localhost:3000",
+        "https://sge-dashboard-web.onrender.com",
+        "https://sge-dashboard-api.onrender.com"
+    ]
     CORS_ALLOW_CREDENTIALS: bool = True
-    CORS_ALLOW_METHODS: List[str] = ["*"]
-    CORS_ALLOW_HEADERS: List[str] = ["*"]
+    CORS_ALLOW_METHODS: List[str] = [
+        "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"
+    ]
+    CORS_ALLOW_HEADERS: List[str] = [
+        "Content-Type",
+        "Authorization",
+        "X-Requested-With",
+        "Accept",
+        "Origin",
+        "Access-Control-Request-Method",
+        "Access-Control-Request-Headers",
+        "X-CSRF-Token"
+    ]
     
     # Supabase
     SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
@@ -66,7 +76,7 @@ class Settings(BaseSettings):
     EMAIL_TEMPLATES_DIR: str = "app/email-templates"
     
     # Logging
-    LOG_LEVEL: str = "INFO"
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     
     # Sentry
@@ -128,6 +138,15 @@ class Settings(BaseSettings):
         # For PostgreSQL URLs, basic validation
         if not v.startswith("postgresql://"):
             raise ValueError("DATABASE_URL must start with postgresql:// or sqlite:///")
+        
+        # For Supabase URLs, ensure proper format
+        if "supabase.co" in v:
+            # Add application name for better monitoring
+            if "application_name" not in v:
+                v = f"{v}?application_name=sge-dashboard-api"
+            # Add SSL mode if not specified
+            if "sslmode" not in v:
+                v = f"{v}&sslmode=require"
         
         return v
     

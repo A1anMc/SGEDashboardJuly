@@ -9,12 +9,12 @@ const nextConfig = {
     domains: ['localhost', 'sge-dashboard-web.onrender.com'],
   },
   env: {
-    BACKEND_URL: process.env.BACKEND_URL || 'http://localhost:8000'
+    BACKEND_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
   },
 
   // Add API rewrites
   rewrites: async () => {
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
     return [
       {
         source: '/api/:path*',
@@ -25,7 +25,7 @@ const nextConfig = {
 
   headers: async () => {
     const isProd = process.env.NODE_ENV === 'production';
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
     
     return [
       {
@@ -35,17 +35,20 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              // Allow necessary script sources
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+              // Allow necessary script sources including eval for Next.js
+              isProd 
+                ? "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.onrender.com"
+                : "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob:",
+              "img-src 'self' data: blob: https:",
               "font-src 'self' data:",
-              // Dynamic backend URL in CSP
-              `connect-src 'self' ${backendUrl} ${isProd ? 'https://*.onrender.com' : 'ws://localhost:*'}`,
+              // Dynamic backend URL in CSP with Render domains
+              `connect-src 'self' ${backendUrl} https://*.onrender.com wss://*.onrender.com ${isProd ? '' : 'ws://localhost:* http://localhost:*'}`,
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
               "object-src 'none'",
+              "worker-src 'self' blob:",
               ...(isProd ? ["upgrade-insecure-requests"] : []),
             ].join('; '),
           },

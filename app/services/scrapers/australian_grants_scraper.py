@@ -59,67 +59,106 @@ class AustralianGrantsScraper(BaseScraper):
             }
         }
     
-    async def scrape(self) -> List[Dict[str, Any]]:
+    def scrape(self) -> List[Dict[str, Any]]:
         """Main scraping method that coordinates all source scraping."""
         logger.info("Starting Australian grants scraper")
         
-        # Scrape each source
-        for source_name, source_config in self.sources.items():
-            try:
-                logger.info(f"Scraping {source_name}")
-                grants = await self._scrape_source(source_name, source_config)
-                self.scraped_grants.extend(grants)
-                logger.info(f"Found {len(grants)} grants from {source_name}")
-                
-                # Be respectful - add delay between sources
-                await asyncio.sleep(random.uniform(2, 4))
-                
-            except Exception as e:
-                logger.error(f"Error scraping {source_name}: {str(e)}")
-                continue
+        try:
+            # Create event loop for async operations
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
+            # Run the async scraping
+            self.scraped_grants = loop.run_until_complete(self._scrape_all_sources())
+            
+            # Close the loop
+            loop.close()
+            
+            logger.info(f"Total grants scraped: {len(self.scraped_grants)}")
+            return self.scraped_grants
+            
+        except Exception as e:
+            logger.error(f"Error in main scrape method: {str(e)}")
+            return []
+    
+    async def _scrape_all_sources(self) -> List[Dict[str, Any]]:
+        """Scrape all sources concurrently."""
+        all_grants = []
         
-        logger.info(f"Total grants scraped: {len(self.scraped_grants)}")
-        return self.scraped_grants
+        # Create tasks for each source
+        tasks = []
+        for source_name, source_config in self.sources.items():
+            task = asyncio.create_task(self._scrape_source(source_name, source_config))
+            tasks.append(task)
+        
+        # Wait for all tasks to complete
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Process results
+        for result in results:
+            if isinstance(result, Exception):
+                logger.error(f"Error in source scraping: {str(result)}")
+            else:
+                all_grants.extend(result)
+        
+        return all_grants
     
     async def _scrape_source(self, source_name: str, source_config: Dict) -> List[Dict[str, Any]]:
         """Scrape a specific source using the BaseScraper _make_request method."""
         grants = []
         base_url = source_config["base_url"]
         
+        # Create tasks for each endpoint
+        tasks = []
         for endpoint in source_config["endpoints"]:
-            try:
-                url = urljoin(base_url, endpoint)
-                
-                # Add random delay between requests
-                await asyncio.sleep(random.uniform(1, 2))
-                
-                # Use BaseScraper's _make_request method
-                html = await self._make_request(url)
-                if not html:
-                    logger.warning(f"Failed to fetch {url}")
-                    continue
-                
-                soup = self._parse_html(html)
-                
-                # Use source-specific parsing logic
-                if source_name == "screen_australia":
-                    page_grants = await self._parse_screen_australia(soup, url)
-                elif source_name == "creative_australia":
-                    page_grants = await self._parse_creative_australia(soup, url)
-                elif source_name == "business_gov":
-                    page_grants = await self._parse_business_gov(soup, url)
-                elif source_name == "create_nsw":
-                    page_grants = await self._parse_create_nsw(soup, url)
-                else:
-                    page_grants = await self._parse_generic(soup, url)
-                
-                grants.extend(page_grants)
-                
-            except Exception as e:
-                logger.error(f"Error scraping {url}: {str(e)}")
-                continue
+            url = urljoin(base_url, endpoint)
+            task = asyncio.create_task(self._scrape_endpoint(source_name, url))
+            tasks.append(task)
+            
+            # Add small delay between task creation
+            await asyncio.sleep(0.5)
+        
+        # Wait for all endpoint tasks to complete
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Process results
+        for result in results:
+            if isinstance(result, Exception):
+                logger.error(f"Error scraping endpoint: {str(result)}")
+            elif result:
+                grants.extend(result)
         
         return grants
+    
+    async def _scrape_endpoint(self, source_name: str, url: str) -> List[Dict[str, Any]]:
+        """Scrape a specific endpoint."""
+        try:
+            # Add random delay between requests
+            await asyncio.sleep(random.uniform(1, 2))
+            
+            # Use BaseScraper's _make_request method
+            html = await self._make_request(url)
+            if not html:
+                logger.warning(f"Failed to fetch {url}")
+                return []
+            
+            soup = self._parse_html(html)
+            
+            # Use source-specific parsing logic
+            if source_name == "screen_australia":
+                return await self._parse_screen_australia(soup, url)
+            elif source_name == "creative_australia":
+                return await self._parse_creative_australia(soup, url)
+            elif source_name == "business_gov":
+                return await self._parse_business_gov(soup, url)
+            elif source_name == "create_nsw":
+                return await self._parse_create_nsw(soup, url)
+            else:
+                return await self._parse_generic(soup, url)
+                
+        except Exception as e:
+            logger.error(f"Error scraping {url}: {str(e)}")
+            return []
     
     async def _parse_screen_australia(self, soup: BeautifulSoup, url: str) -> List[Dict[str, Any]]:
         """Parse grants from Screen Australia pages."""

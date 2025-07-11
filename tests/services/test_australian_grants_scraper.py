@@ -267,6 +267,7 @@ class TestAustralianGrantsScraper:
         assert normalized["industry_focus"] == "creative_arts"
         assert normalized["org_types"] == ["individual", "small_business"]
     
+    @pytest.mark.asyncio
     @patch('app.services.scrapers.australian_grants_scraper.AustralianGrantsScraper._make_request')
     @patch('asyncio.sleep')
     async def test_scrape_integration(self, mock_sleep, mock_make_request, scraper, sample_html):

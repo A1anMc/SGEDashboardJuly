@@ -3,102 +3,87 @@ import logging
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from app.core.config import settings
-from app.db.session import get_db_session
+from app.db.session import engine, get_db
 from app.db.base import Base
+import time
 
 logger = logging.getLogger(__name__)
 
-def wait_for_db() -> bool:
-    """Wait for database to be ready."""
-    try:
-        db = next(get_db_session())
+def init_db() -> None:
+    """Initialize database with retry logic."""
+    retries = settings.DATABASE_MAX_RETRIES
+    retry_delay = settings.DATABASE_RETRY_DELAY
+    
+    for attempt in range(retries):
         try:
-            # Test database connection
-            if settings.DATABASE_URL.startswith("postgresql"):
-                result = db.execute(text("SELECT version();"))
-                version = result.scalar()
-                logger.info(f"Connected to PostgreSQL version: {version}")
+            # Try to connect and create tables
+            with engine.connect() as conn:
+                # Check if we can connect
+                conn.execute(text("SELECT 1"))
                 
-                # Get current connection count
-                result = db.execute(text("SELECT count(*) FROM pg_stat_activity;"))
-                connections = result.scalar()
-                logger.info(f"Current database connections: {connections}")
-            else:
-                # For SQLite, just check if we can execute a simple query
-                db.execute(text("SELECT 1"))
-                logger.info("Connected to SQLite database")
-            
-            return True
-        finally:
-            db.close()
-    except Exception as e:
-        logger.error(f"Database connection test failed: {str(e)}")
-        return False
-
-def init_db() -> bool:
-    """Initialize database with required tables."""
-    try:
-        # Wait for database to be ready
-        if not wait_for_db():
-            logger.error("Database not available after timeout")
-            return False
-
-        db = next(get_db_session())
-        try:
-            if settings.DATABASE_URL.startswith("postgresql"):
-                # Enable PostgreSQL extensions
-                extensions = [
-                    "uuid-ossp",  # For UUID generation
-                    "pg_trgm",    # For text search
-                    "hstore",     # For key-value storage
-                    "btree_gin",  # For faster indexing
-                    "btree_gist"  # For range types
-                ]
-                
-                for ext in extensions:
-                    try:
-                        db.execute(text(f'CREATE EXTENSION IF NOT EXISTS "{ext}";'))
-                        logger.info(f"Extension {ext} initialized successfully")
-                    except SQLAlchemyError as e:
-                        logger.warning(f"Failed to create extension {ext}: {str(e)}")
-                
-                logger.info("Database extensions initialized successfully")
-            elif settings.DATABASE_URL.startswith("sqlite"):
-                # Enable SQLite foreign key support
-                db.execute(text("PRAGMA foreign_keys=ON"))
-                logger.info("SQLite foreign key support enabled")
+                # For Supabase, we don't need to create extensions as they're pre-installed
+                if "supabase.co" not in settings.DATABASE_URL:
+                    # Create extensions for PostgreSQL if they don't exist
+                    conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_stat_statements"))
+                    conn.execute(text("CREATE EXTENSION IF NOT EXISTS pgcrypto"))
+                    conn.execute(text("CREATE EXTENSION IF NOT EXISTS uuid-ossp"))
+                    conn.commit()
             
             # Create all tables
-            Base.metadata.create_all(bind=db.get_bind())
-            logger.info("Database tables created successfully")
+            Base.metadata.create_all(bind=engine)
+            logger.info("Database initialized successfully")
+            return
             
-            return True
-        finally:
-            db.close()
+        except Exception as e:
+            if attempt == retries - 1:  # Last attempt
+                logger.error(f"Failed to initialize database after {retries} attempts: {str(e)}")
+                raise
+            logger.warning(f"Database initialization attempt {attempt + 1} failed: {str(e)}")
+            time.sleep(retry_delay * (2 ** attempt))  # Exponential backoff
+
+def get_db_info() -> dict:
+    """Get database information."""
+    try:
+        with get_db() as db:
+            # Get PostgreSQL version
+            version = db.execute(text("SHOW server_version")).scalar()
             
-    except SQLAlchemyError as e:
-        logger.error(f"Error initializing database: {str(e)}")
-        return False
+            # Get connection info
+            info = db.execute(text("""
+                SELECT 
+                    current_database() as db_name,
+                    current_user as user,
+                    inet_server_addr() as server_ip,
+                    inet_server_port() as server_port
+            """)).fetchone()
+            
+            return {
+                "version": version,
+                "database": info.db_name,
+                "user": info.user,
+                "server_ip": str(info.server_ip),
+                "server_port": info.server_port,
+                "url": settings.DATABASE_URL.split("@")[1].split("/")[0]  # Safe part of the URL
+            }
+    except Exception as e:
+        logger.error(f"Failed to get database info: {str(e)}")
+        return {
+            "error": str(e),
+            "url": settings.DATABASE_URL.split("@")[1].split("/")[0]  # Safe part of the URL
+        }
 
 def check_db_health() -> bool:
     """Check database health."""
     try:
-        db = next(get_db_session())
-        try:
+        with get_db() as db:
             # Test database connection
-            if settings.DATABASE_URL.startswith("postgresql"):
-                result = db.execute(text("SELECT 1"))
-            else:
-                result = db.execute(text("SELECT 1"))
-            
+            result = db.execute(text("SELECT 1"))
             if result.scalar() == 1:
                 logger.info("Database health check passed")
                 return True
             else:
                 logger.error("Database health check failed: unexpected result")
                 return False
-        finally:
-            db.close()
     except Exception as e:
         logger.error(f"Database health check failed: {str(e)}")
         return False 

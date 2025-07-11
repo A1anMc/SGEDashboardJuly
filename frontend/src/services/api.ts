@@ -16,7 +16,17 @@
 import axios from 'axios';
 import { handleApiError, shouldRetry, getRetryDelay } from '../utils/error-handling';
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+// Get the API URL from environment variables with a production fallback
+const baseURL = process.env.NEXT_PUBLIC_API_URL || (
+  process.env.NODE_ENV === 'production' 
+    ? 'https://sge-dashboard-api.onrender.com'
+    : 'http://localhost:8000'
+);
+
+// Ensure we have the correct API version path
+const normalizedBaseURL = baseURL.includes('/api/v1') 
+  ? baseURL 
+  : `${baseURL}/api/v1`;
 
 /**
  * Configured Axios instance for API requests
@@ -26,11 +36,13 @@ const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
  * - Provides automatic retry for failed requests
  */
 const api = axios.create({
-  baseURL: `${baseURL}/api/v1`,  // Add API version prefix
+  baseURL: normalizedBaseURL,
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
   withCredentials: true, // Important for cookies/auth
+  timeout: 30000, // 30 second timeout
 });
 
 /**
@@ -46,9 +58,16 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Log request in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, config);
+    }
+    
     return config;
   },
   (error) => {
+    console.error('[API Request Error]', error);
     return Promise.reject(error);
   }
 );
@@ -69,9 +88,26 @@ api.interceptors.request.use(
  * - Other errors: Processed by handleApiError
  */
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Log response in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[API Response] ${response.config.method?.toUpperCase()} ${response.config.url}`, response.data);
+    }
+    return response;
+  },
   async (error) => {
     const config = error.config;
+
+    // Log error details in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[API Error]', {
+        url: config?.url,
+        method: config?.method,
+        status: error.response?.status,
+        data: error.response?.data,
+        error: error.message
+      });
+    }
 
     // Check if we should retry the request
     if (!config._retry && shouldRetry(error, config._retryCount || 0)) {

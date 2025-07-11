@@ -47,15 +47,33 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
-    # Create engine directly
-    connectable = create_engine(get_url())
+    # Handle Supabase PostgreSQL connection
+    url = get_url()
+    connectable = create_engine(
+        url,
+        pool_pre_ping=True,
+        pool_size=5,
+        max_overflow=10,
+        pool_recycle=3600,
+        connect_args={
+            "application_name": "sge-dashboard-migrations",
+            "keepalives": 1,
+            "keepalives_idle": 30,
+            "keepalives_interval": 10,
+            "keepalives_count": 5
+        }
+    )
 
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
             compare_type=True,
-            compare_server_default=True
+            compare_server_default=True,
+            # Supabase-specific settings
+            include_schemas=True,
+            include_name=True,
+            render_as_batch=False  # PostgreSQL doesn't need batch mode
         )
 
         with context.begin_transaction():

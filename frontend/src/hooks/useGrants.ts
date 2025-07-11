@@ -6,7 +6,7 @@ import { toast } from 'react-hot-toast';
 export const useGrants = (filters: GrantFilters = { page: 1, size: 10 }) => {
   const queryClient = useQueryClient();
 
-  // Query for grants list
+  // Query for grants list with retry and error handling
   const {
     data,
     isLoading,
@@ -16,9 +16,15 @@ export const useGrants = (filters: GrantFilters = { page: 1, size: 10 }) => {
     queryKey: ['grants', filters],
     queryFn: () => grantsApi.getGrants(filters),
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    retry: 3, // Retry failed requests 3 times
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    onError: (error) => {
+      console.error('Failed to fetch grants:', error);
+      toast.error('Failed to load grants. Please try again later.');
+    },
   });
 
-  // Create grant mutation
+  // Create grant mutation with improved error handling
   const createMutation = useMutation({
     mutationFn: (grant: CreateGrantRequest) => {
       const grantInput: CreateGrantInput = {
@@ -32,10 +38,15 @@ export const useGrants = (filters: GrantFilters = { page: 1, size: 10 }) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['grants'] });
       queryClient.invalidateQueries({ queryKey: ['grants', 'dashboard'] });
+      toast.success('Grant created successfully');
+    },
+    onError: (error) => {
+      console.error('Failed to create grant:', error);
+      toast.error('Failed to create grant. Please try again.');
     },
   });
 
-  // Update grant mutation
+  // Update grant mutation with improved error handling
   const updateMutation = useMutation({
     mutationFn: ({ id, grant }: { id: string; grant: UpdateGrantRequest }) => {
       const grantInput: CreateGrantInput = {
@@ -51,30 +62,45 @@ export const useGrants = (filters: GrantFilters = { page: 1, size: 10 }) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['grants'] });
       queryClient.invalidateQueries({ queryKey: ['grants', 'dashboard'] });
+      toast.success('Grant updated successfully');
+    },
+    onError: (error) => {
+      console.error('Failed to update grant:', error);
+      toast.error('Failed to update grant. Please try again.');
     },
   });
 
-  // Delete grant mutation
+  // Delete grant mutation with improved error handling
   const deleteMutation = useMutation({
     mutationFn: (id: string) => grantsApi.deleteGrant(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['grants'] });
       queryClient.invalidateQueries({ queryKey: ['grants', 'dashboard'] });
+      toast.success('Grant deleted successfully');
+    },
+    onError: (error) => {
+      console.error('Failed to delete grant:', error);
+      toast.error('Failed to delete grant. Please try again.');
     },
   });
 
-  // Run scraper mutation
+  // Run scraper mutation with improved error handling
   const runScraperMutation = useMutation({
     mutationFn: (request?: ScraperRunRequest) => {
       const scraperRequest: ScraperRunRequest = request || {};
       return grantsApi.runScrapers(scraperRequest);
     },
     onSuccess: () => {
+      toast.success('Scraper started successfully');
       // Refetch grants after a delay to allow scraper to complete
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ['grants'] });
         queryClient.invalidateQueries({ queryKey: ['grants', 'dashboard'] });
       }, 5000);
+    },
+    onError: (error) => {
+      console.error('Failed to run scraper:', error);
+      toast.error('Failed to start scraper. Please try again.');
     },
   });
 
