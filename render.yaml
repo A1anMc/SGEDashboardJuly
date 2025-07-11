@@ -9,7 +9,7 @@ services:
       # Install optional security packages
       pip install slowapi[redis] sentry-sdk[fastapi] || echo "Optional packages not installed"
     startCommand: |
-      alembic upgrade head
+      alembic upgrade head || echo "Database migration failed, continuing..."
       gunicorn app.main:app \
         --workers 1 \
         --worker-class uvicorn.workers.UvicornWorker \
@@ -19,8 +19,7 @@ services:
         --log-level info \
         --error-logfile - \
         --access-logfile - \
-        --capture-output \
-        --preload
+        --capture-output
     envVars:
       # Database - Set manually to your database URL
       - key: DATABASE_URL

@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
     
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://alanmccarthy@localhost:5432/sge_dashboard")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
     TEST_DATABASE_URL: str = "sqlite:///./test.db"
     DATABASE_MAX_RETRIES: int = int(os.getenv("DATABASE_MAX_RETRIES", "5"))
     DATABASE_RETRY_DELAY: int = int(os.getenv("DATABASE_RETRY_DELAY", "1"))
@@ -187,6 +187,15 @@ class Settings(BaseSettings):
         if info.data.get("TESTING", False):
             return info.data.get("TEST_DATABASE_URL", "sqlite:///./test.db")
         
+        # DATABASE_URL is required in production
+        env = info.data.get("ENV", "development")
+        if env == "production" and not v:
+            raise ValueError("DATABASE_URL environment variable is required in production")
+        
+        # If no DATABASE_URL provided in development, allow empty (will be handled by session.py)
+        if not v:
+            return v
+        
         # For SQLite URLs, no further validation needed
         if v.startswith("sqlite:///"):
             return v
@@ -195,14 +204,25 @@ class Settings(BaseSettings):
         if not v.startswith("postgresql://"):
             raise ValueError("DATABASE_URL must start with postgresql:// or sqlite:///")
         
+        # Prevent localhost in production
+        if env == "production" and ("localhost" in v or "127.0.0.1" in v):
+            raise ValueError("DATABASE_URL cannot use localhost in production environment")
+        
         # For Supabase URLs, ensure proper format
         if "supabase.co" in v:
             # Add application name for better monitoring
             if "application_name" not in v:
-                v = f"{v}?application_name=sge-dashboard-api"
+                separator = "&" if "?" in v else "?"
+                v = f"{v}{separator}application_name=sge-dashboard-api"
             # Add SSL mode if not specified
             if "sslmode" not in v:
-                v = f"{v}&sslmode=require"
+                separator = "&" if "?" in v else "?"
+                v = f"{v}{separator}sslmode=require"
+        
+        # For Render PostgreSQL URLs, ensure SSL
+        if "render.com" in v and "sslmode" not in v:
+            separator = "&" if "?" in v else "?"
+            v = f"{v}{separator}sslmode=require"
         
         return v
     

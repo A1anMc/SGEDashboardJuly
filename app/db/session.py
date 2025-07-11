@@ -20,12 +20,25 @@ def get_engine(url=None, **kwargs):
     """Create SQLAlchemy engine with retry logic and proper configuration."""
     final_url = url or settings.DATABASE_URL
     
-    # Validate database URL
-    if not final_url or final_url == "postgresql://alanmccarthy@localhost:5432/sge_dashboard":
-        logger.error("DATABASE_URL is not properly configured for production")
-        raise ValueError("DATABASE_URL environment variable must be set to a valid database URL")
+    # Validate database URL - no localhost fallbacks in production
+    if not final_url:
+        error_msg = "DATABASE_URL environment variable is required"
+        logger.error(error_msg)
+        raise RuntimeError(error_msg)
     
-    logger.info(f"Attempting to connect to database: {final_url.split('@')[0]}@***")
+    # Check for localhost in production
+    if settings.ENV == "production" and ("localhost" in final_url or "127.0.0.1" in final_url):
+        error_msg = "DATABASE_URL cannot use localhost in production environment"
+        logger.error(error_msg)
+        raise RuntimeError(error_msg)
+    
+    # Validate PostgreSQL URL format
+    if not final_url.startswith(("postgresql://", "sqlite:///")):
+        error_msg = f"DATABASE_URL must start with postgresql:// or sqlite:/// (got: {final_url[:20]}...)"
+        logger.error(error_msg)
+        raise RuntimeError(error_msg)
+    
+    logger.info(f"Connecting to database: {final_url.split('@')[0] if '@' in final_url else final_url.split('://')[0]}://***")
     
     # Default engine arguments
     engine_args = {
@@ -51,7 +64,7 @@ def get_engine(url=None, **kwargs):
         })
         
         # Add SSL settings for production databases
-        if settings.ENV == "production" or "supabase.co" in final_url:
+        if settings.ENV == "production" or "supabase.co" in final_url or "render.com" in final_url:
             engine_args["connect_args"]["sslmode"] = "require"
     
     # Update with any additional arguments
@@ -73,7 +86,13 @@ def get_engine(url=None, **kwargs):
         except Exception as e:
             if attempt == retries - 1:  # Last attempt
                 logger.error(f"Failed to connect to database after {retries} attempts: {str(e)}")
-                raise
+                # Provide helpful error message for common issues
+                if "Connection refused" in str(e):
+                    logger.error("Database connection refused. Please check:")
+                    logger.error("1. DATABASE_URL environment variable is set correctly")
+                    logger.error("2. Database server is running and accessible")
+                    logger.error("3. Network connectivity to database host")
+                raise RuntimeError(f"Database connection failed: {str(e)}")
             logger.warning(f"Database connection attempt {attempt + 1} failed: {str(e)}")
             time.sleep(retry_delay * (2 ** attempt))  # Exponential backoff
 
@@ -128,7 +147,7 @@ def check_db_health() -> bool:
         SessionLocal = get_session_local()
         db = SessionLocal()
         try:
-            db.execute("SELECT 1")
+            result = db.execute("SELECT 1")
             return True
         finally:
             db.close()

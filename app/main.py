@@ -22,7 +22,9 @@ from app.models.project import Project  # noqa: F401
 from app.models.metric import Metric  # noqa: F401
 from app.models.program_logic import ProgramLogic  # noqa: F401
 from app.models.grant import Grant  # noqa: F401
-from app.models.task import Task, TaskComment, TimeEntry  # noqa: F401
+from app.models.task import Task  # noqa: F401
+from app.models.task_comment import TaskComment  # noqa: F401
+from app.models.time_entry import TimeEntry  # noqa: F401
 
 from app.api.v1.api import api_router
 from app.db.session import get_engine_instance, close_database

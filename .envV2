@@ -9,7 +9,10 @@ JWT_SECRET_KEY="development-jwt-key-please-change-in-production"
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 
 # Database
-DATABASE_URL="postgresql://alanmccarthy@localhost:5432/sge_dashboard"
+# IMPORTANT: Set your actual database URL here
+# For Render PostgreSQL: Use the Internal Database URL from your Render dashboard
+# For local development: postgresql://username:password@localhost:5432/database_name
+DATABASE_URL=""
 
 # CORS
 CORS_ORIGINS='["*"]'
