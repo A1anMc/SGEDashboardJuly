@@ -57,12 +57,19 @@ def get_grants(
         total = query.count()
         grants = query.offset(skip).limit(limit).all()
         
-        return {
-            "items": grants,
-            "total": total,
-            "page": skip // limit + 1,
-            "size": limit
-        }
+        # Calculate pagination
+        page = skip // limit + 1
+        has_next = skip + limit < total
+        has_prev = page > 1
+        
+        return GrantList(
+            items=grants,
+            total=total,
+            page=page,
+            size=limit,
+            has_next=has_next,
+            has_prev=has_prev
+        )
     except Exception as e:
         raise HTTPException(
             status_code=500,

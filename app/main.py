@@ -231,16 +231,15 @@ def create_app() -> FastAPI:
             # Enhanced Content Security Policy
             csp_policy = [
                 "default-src 'self'",
-                "script-src 'self'",
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
                 "style-src 'self' 'unsafe-inline'",
                 "img-src 'self' data: https:",
                 "font-src 'self' data:",
-                f"connect-src 'self' {settings.FRONTEND_URL}",
+                f"connect-src 'self' {settings.FRONTEND_URL} https://sge-dashboard-web.onrender.com https://sge-dashboard-api.onrender.com",
                 "frame-ancestors 'none'",
                 "base-uri 'self'",
                 "form-action 'self'",
-                "object-src 'none'",
-                "upgrade-insecure-requests"
+                "object-src 'none'"
             ]
             response.headers["Content-Security-Policy"] = "; ".join(csp_policy)
         
