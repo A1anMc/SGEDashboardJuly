@@ -133,7 +133,7 @@ export const ScraperManager: React.FC = () => {
         <div className="bg-white shadow rounded-lg p-4">
           <h3 className="text-lg font-medium mb-4">Available Sources</h3>
           <div className="space-y-2">
-            {availableSources.map((source) => (
+            {availableSources.map((source: string) => (
               <label key={source} className="flex items-center space-x-3">
                 <input
                   type="checkbox"

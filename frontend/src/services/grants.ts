@@ -81,7 +81,7 @@ export const grantsApi = {
     await api.post(ENDPOINTS.SCRAPER_RUN);
   },
 
-  getScraperStatus: async () => {
+  getScraperStatus: async (): Promise<ScraperStatus> => {
     const response = await api.get(ENDPOINTS.SCRAPER_STATUS);
     // Transform the array response to match the expected format
     const sources = response.data || [];
@@ -94,6 +94,7 @@ export const grantsApi = {
       available_sources: sources.map((s: any) => s.source_name),
       active_sources: sources.filter((s: any) => s.status === 'success').map((s: any) => s.source_name),
       last_run: sources.length > 0 ? sources[0].last_run : null,
+      next_scheduled: sources.length > 0 ? sources[0].next_scheduled : undefined,
       success_count: successfulSources,
       error_count: errorSources
     };
