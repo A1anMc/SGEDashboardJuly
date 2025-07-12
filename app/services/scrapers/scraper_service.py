@@ -10,6 +10,9 @@ from app.services.scrapers.grantconnect import GrantConnectScraper
 from app.services.scrapers.dummy_scraper import DummyScraper
 from app.services.scrapers.australian_grants_scraper import AustralianGrantsScraper
 from app.services.scrapers.current_grants_scraper import CurrentGrantsScraper
+from app.services.scrapers.philanthropic_scraper import PhilanthropicScraper
+from app.services.scrapers.council_scraper import CouncilScraper
+from app.services.scrapers.media_investment_scraper import MediaInvestmentScraper
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +26,10 @@ class ScraperService:
             "grantconnect": GrantConnectScraper,
             "dummy": DummyScraper,
             "australian_grants": AustralianGrantsScraper,
-            "current_grants": CurrentGrantsScraper
+            "current_grants": CurrentGrantsScraper,
+            "philanthropic": PhilanthropicScraper,
+            "councils": CouncilScraper,
+            "media_investment": MediaInvestmentScraper
         }
     
     def get_available_sources(self) -> List[str]:

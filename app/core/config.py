@@ -129,6 +129,21 @@ class Settings(BaseSettings):
             "grants_path": "/grants-and-programs",
             "description": "Current Verified Australian Grants"
         },
+        "philanthropic": {
+            "base_url": "https://www.lmcf.org.au",
+            "grants_path": "/grants",
+            "description": "Philanthropic Foundations and Trusts"
+        },
+        "councils": {
+            "base_url": "https://www.melbourne.vic.gov.au",
+            "grants_path": "/community/grants-and-funding",
+            "description": "Local Council Grants"
+        },
+        "media_investment": {
+            "base_url": "https://www.abc.net.au",
+            "grants_path": "/innovation",
+            "description": "Media Company Investment Opportunities"
+        },
         "dummy": {
             "base_url": "https://example.com",
             "grants_path": "/dummy",
@@ -144,7 +159,33 @@ class Settings(BaseSettings):
         "screenaustralia.gov.au",
         "creative.gov.au",  # Added for Creative Australia
         "supabase.co",  # Required for Supabase
-        "create.nsw.gov.au"  # Added for NSW state grants
+        "create.nsw.gov.au",  # Added for NSW state grants
+        # Philanthropic foundations
+        "lmcf.org.au",  # Lord Mayor's Charitable Foundation
+        "myerfoundation.org.au",  # Myer Foundation
+        "hmstrust.org.au",  # Helen Macpherson Smith Trust
+        "perpetual.com.au",  # Susan Green Fund
+        "australiacouncil.gov.au",  # Australia Council for the Arts
+        "ianpotter.org.au",  # Ian Potter Foundation
+        # Local councils
+        "melbourne.vic.gov.au",  # City of Melbourne
+        "cityofsydney.nsw.gov.au",  # City of Sydney
+        "brisbane.qld.gov.au",  # Brisbane City Council
+        "cityofadelaide.com.au",  # City of Adelaide
+        "perth.wa.gov.au",  # City of Perth
+        "yarracity.vic.gov.au",  # City of Yarra
+        "innerwest.nsw.gov.au",  # Inner West Council
+        "moreland.vic.gov.au",  # Moreland City Council
+        # Media companies
+        "abc.net.au",  # ABC
+        "sbs.com.au",  # SBS
+        "nineentertainment.com.au",  # Nine Entertainment
+        "sevenwestmedia.com.au",  # Seven West Media
+        "10play.com.au",  # Network 10
+        "foxtel.com.au",  # Foxtel
+        "newscorpaustralia.com",  # News Corp Australia
+        "southerncrossaustereo.com.au",  # Southern Cross Austereo
+        "stan.com.au"  # Stan Entertainment
     ]
     
     @field_validator("CORS_ORIGINS", mode="before")
