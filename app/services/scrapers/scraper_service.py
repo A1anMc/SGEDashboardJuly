@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from typing import Dict, List, Type
 from sqlalchemy.orm import Session
 
@@ -27,7 +28,7 @@ class ScraperService:
         """Get list of available scraper sources."""
         return list(self.scrapers.keys())
     
-    def scrape_source(self, source_name: str) -> Dict:
+    async def scrape_source(self, source_name: str) -> Dict:
         """Scrape grants from a specific source with logging."""
         if source_name not in self.scrapers:
             raise ValueError(f"Unknown source: {source_name}")
@@ -40,7 +41,12 @@ class ScraperService:
         try:
             # Initialize and run scraper
             scraper = self.scrapers[source_name](self.db)
-            grants_found = scraper.scrape()
+            
+            # Handle both sync and async scrapers
+            if asyncio.iscoroutinefunction(scraper.scrape):
+                grants_found = await scraper.scrape()
+            else:
+                grants_found = scraper.scrape()
             
             # Count new and updated grants
             grants_added = len([g for g in grants_found if not g.id])
@@ -77,12 +83,12 @@ class ScraperService:
         finally:
             self.db.commit()
     
-    def scrape_all(self) -> Dict[str, Dict]:
+    async def scrape_all(self) -> Dict[str, Dict]:
         """Scrape all available sources."""
         results = {}
         for source in self.get_available_sources():
             try:
-                results[source] = self.scrape_source(source)
+                results[source] = await self.scrape_source(source)
             except Exception as e:
                 results[source] = {
                     "status": "error",

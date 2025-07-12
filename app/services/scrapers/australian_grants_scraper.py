@@ -59,20 +59,13 @@ class AustralianGrantsScraper(BaseScraper):
             }
         }
     
-    def scrape(self) -> List[Dict[str, Any]]:
+    async def scrape(self) -> List[Dict[str, Any]]:
         """Main scraping method that coordinates all source scraping."""
         logger.info("Starting Australian grants scraper")
         
         try:
-            # Create event loop for async operations
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            
             # Run the async scraping
-            self.scraped_grants = loop.run_until_complete(self._scrape_all_sources())
-            
-            # Close the loop
-            loop.close()
+            self.scraped_grants = await self._scrape_all_sources()
             
             logger.info(f"Total grants scraped: {len(self.scraped_grants)}")
             return self.scraped_grants
