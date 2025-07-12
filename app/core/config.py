@@ -150,23 +150,30 @@ class Settings(BaseSettings):
                 # Handle comma-separated string
                 return [origin.strip() for origin in v.split(",") if origin.strip()]
         
-        # Default CORS origins based on environment
+        # Get environment and frontend URL
         env = os.getenv("ENVIRONMENT", "development")
         frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
         
+        # Always include production domains for robustness
+        origins = [
+            "https://sge-dashboard-web.onrender.com",
+            "https://sge-dashboard-api.onrender.com"
+        ]
+        
+        # Add environment-specific origins
         if env == "production":
-            return [
-                frontend_url,
-                "https://sge-dashboard-web.onrender.com",
-                "https://sge-dashboard-api.onrender.com"
-            ]
+            origins.append(frontend_url)
         else:
-            return [
+            # Development origins
+            origins.extend([
                 "http://localhost:3000",
                 "http://localhost:8000",
                 "http://127.0.0.1:3000",
                 "http://127.0.0.1:8000"
-            ]
+            ])
+        
+        # Remove duplicates while preserving order
+        return list(dict.fromkeys(origins))
     
     @field_validator("SECRET_KEY")
     @classmethod

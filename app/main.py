@@ -344,6 +344,19 @@ def create_app() -> FastAPI:
             )
         return get_db_info()
     
+    @app.get("/api/debug/cors", include_in_schema=False)
+    async def cors_info():
+        """Get CORS configuration info for debugging."""
+        return {
+            "cors_origins": settings.CORS_ORIGINS,
+            "cors_allow_credentials": settings.CORS_ALLOW_CREDENTIALS,
+            "cors_allow_methods": settings.CORS_ALLOW_METHODS,
+            "cors_allow_headers": settings.CORS_ALLOW_HEADERS,
+            "environment": settings.ENV,
+            "frontend_url": settings.FRONTEND_URL,
+            "debug": settings.DEBUG
+        }
+    
     @app.get("/api/security/info", include_in_schema=False)
     async def security_info():
         """Get security configuration info (non-sensitive)."""
