@@ -193,7 +193,6 @@ def create_app() -> FastAPI:
         session_cookie="sge_session",
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         same_site="lax",
-        https_only=settings.ENV == 'production',
     )
     
     # 3. CORS Middleware (configured from environment)

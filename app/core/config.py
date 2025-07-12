@@ -158,16 +158,7 @@ class Settings(BaseSettings):
             return [
                 frontend_url,
                 "https://sge-dashboard-web.onrender.com",
-                "https://sge-dashboard-api.onrender.com",
-                # Add all possible page routes for the frontend
-                "https://sge-dashboard-web.onrender.com/grants",
-                "https://sge-dashboard-web.onrender.com/tasks",
-                "https://sge-dashboard-web.onrender.com/admin",
-                "https://sge-dashboard-web.onrender.com/projects",
-                "https://sge-dashboard-web.onrender.com/impact",
-                "https://sge-dashboard-web.onrender.com/media",
-                "https://sge-dashboard-web.onrender.com/time-logs",
-                "https://sge-dashboard-web.onrender.com/settings"
+                "https://sge-dashboard-api.onrender.com"
             ]
         else:
             return [
