@@ -3,9 +3,9 @@ import { Grant, GrantFilters, CreateGrantInput, UpdateGrantRequest } from '../ty
 
 // Constants for API endpoints
 const ENDPOINTS = {
-  BASE: '/grants',
+  BASE: '/grants/',
   SCRAPER: '/scraper',
-  SOURCES: '/grants/sources',
+  SOURCES: '/grants/sources/',
 } as const;
 
 export interface GrantsResponse {
@@ -77,16 +77,16 @@ export const grantsApi = {
   },
 
   runScraper: async () => {
-    await api.post(`${ENDPOINTS.SCRAPER}/run`);
+    await api.post(`${ENDPOINTS.SCRAPER}/run/`);
   },
 
   getScraperStatus: async () => {
-    const response = await api.get<ScraperStatus>(`${ENDPOINTS.SCRAPER}/status`);
+    const response = await api.get<ScraperStatus>(`${ENDPOINTS.SCRAPER}/status/`);
     return response.data;
   },
 
   runScrapers: async (request: ScraperRunRequest) => {
-    const response = await api.post(`${ENDPOINTS.SCRAPER}/run`, request);
+    const response = await api.post(`${ENDPOINTS.SCRAPER}/run/`, request);
     return response.data;
   },
 

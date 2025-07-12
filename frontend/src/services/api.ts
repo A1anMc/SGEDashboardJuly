@@ -174,11 +174,11 @@ api.interceptors.response.use(
  * @property {string} description - Task description
  */
 export const tasksApi = {
-  getAll: () => api.get<ApiResponse<Task[]>>('/tasks'),
-  getById: (id: string) => api.get<ApiResponse<Task>>(`/tasks/${id}`),
-  create: (data: CreateTaskRequest) => api.post<ApiResponse<Task>>('/tasks', data),
-  update: (id: string, data: UpdateTaskRequest) => api.put<ApiResponse<Task>>(`/tasks/${id}`, data),
-  delete: (id: string) => api.delete<ApiResponse<void>>(`/tasks/${id}`),
+  getAll: () => api.get<ApiResponse<Task[]>>('/tasks/'),
+  getById: (id: string) => api.get<ApiResponse<Task>>(`/tasks/${id}/`),
+  create: (data: CreateTaskRequest) => api.post<ApiResponse<Task>>('/tasks/', data),
+  update: (id: string, data: UpdateTaskRequest) => api.put<ApiResponse<Task>>(`/tasks/${id}/`, data),
+  delete: (id: string) => api.delete<ApiResponse<void>>(`/tasks/${id}/`),
 };
 
 /**
@@ -188,11 +188,11 @@ export const tasksApi = {
  * @property {string} email - User email
  */
 export const usersApi = {
-  getAll: () => api.get<ApiResponse<User[]>>('/users'),
-  getById: (id: string) => api.get<ApiResponse<User>>(`/users/${id}`),
-  create: (data: CreateUserRequest) => api.post<ApiResponse<User>>('/users', data),
-  update: (id: string, data: UpdateUserRequest) => api.put<ApiResponse<User>>(`/users/${id}`, data),
-  delete: (id: string) => api.delete<ApiResponse<void>>(`/users/${id}`),
+  getAll: () => api.get<ApiResponse<User[]>>('/users/'),
+  getById: (id: string) => api.get<ApiResponse<User>>(`/users/${id}/`),
+  create: (data: CreateUserRequest) => api.post<ApiResponse<User>>('/users/', data),
+  update: (id: string, data: UpdateUserRequest) => api.put<ApiResponse<User>>(`/users/${id}/`, data),
+  delete: (id: string) => api.delete<ApiResponse<void>>(`/users/${id}/`),
 };
 
 /**
@@ -202,11 +202,11 @@ export const usersApi = {
  * @property {string} name - Project name
  */
 export const projectsApi = {
-  getAll: () => api.get<ApiResponse<Project[]>>('/projects'),
-  getById: (id: string) => api.get<ApiResponse<Project>>(`/projects/${id}`),
-  create: (data: CreateProjectRequest) => api.post<ApiResponse<Project>>('/projects', data),
-  update: (id: string, data: UpdateProjectRequest) => api.put<ApiResponse<Project>>(`/projects/${id}`, data),
-  delete: (id: string) => api.delete<ApiResponse<void>>(`/projects/${id}`),
+  getAll: () => api.get<ApiResponse<Project[]>>('/projects/'),
+  getById: (id: string) => api.get<ApiResponse<Project>>(`/projects/${id}/`),
+  create: (data: CreateProjectRequest) => api.post<ApiResponse<Project>>('/projects/', data),
+  update: (id: string, data: UpdateProjectRequest) => api.put<ApiResponse<Project>>(`/projects/${id}/`, data),
+  delete: (id: string) => api.delete<ApiResponse<void>>(`/projects/${id}/`),
 };
 
 // Export the main api instance
