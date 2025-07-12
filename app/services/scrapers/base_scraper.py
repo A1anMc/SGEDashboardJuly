@@ -85,10 +85,24 @@ class BaseScraper(ABC):
             return ""
         return " ".join(text.split())
     
-    def _parse_date(self, date_str: str) -> Optional[datetime]:
-        """Parse date string into datetime object."""
-        if not date_str:
+    def _parse_date(self, date_input) -> Optional[datetime]:
+        """Parse date string or datetime object into datetime object."""
+        if not date_input:
             return None
+        
+        # If it's already a datetime object, return it
+        if isinstance(date_input, datetime):
+            return date_input
+        
+        # If it's not a string, try to convert it
+        if not isinstance(date_input, str):
+            try:
+                date_str = str(date_input)
+            except:
+                logger.warning(f"Could not convert date input to string: {date_input}")
+                return None
+        else:
+            date_str = date_input
             
         date_formats = [
             "%Y-%m-%d",  # 2024-03-20

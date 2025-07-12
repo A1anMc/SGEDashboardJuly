@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, Text, Numeric, JSON, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, Text, Numeric, JSON, ForeignKey, func
 from sqlalchemy.orm import relationship
 from app.db.base_class import Base
 
@@ -23,8 +23,8 @@ class Grant(Base):
     # Dates
     open_date = Column(DateTime, nullable=True, index=True)
     deadline = Column(DateTime, nullable=True, index=True)
-    created_at = Column(DateTime, nullable=False, server_default='CURRENT_TIMESTAMP')
-    updated_at = Column(DateTime, nullable=False, server_default='CURRENT_TIMESTAMP', onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
     
     # Categorization
     industry_focus = Column(String(100), nullable=True, index=True)

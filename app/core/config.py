@@ -142,6 +142,7 @@ class Settings(BaseSettings):
         "grants.gov.au",
         "arts.gov.au",
         "screenaustralia.gov.au",
+        "creative.gov.au",  # Added for Creative Australia
         "supabase.co",  # Required for Supabase
         "create.nsw.gov.au"  # Added for NSW state grants
     ]
