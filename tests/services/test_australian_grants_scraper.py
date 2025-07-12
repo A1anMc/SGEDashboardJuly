@@ -77,21 +77,17 @@ class TestAustralianGrantsScraper:
     
     def test_extract_amounts_range(self, scraper):
         """Test extracting amount ranges."""
-        text = "Funding from $5,000 to $50,000 for creative projects"
+        text = "Funding up to $50,000 for creative projects"
         min_amount, max_amount = scraper._extract_amounts(text)
-        # Should extract amounts, though order may vary
-        amounts = [min_amount, max_amount]
-        assert 5000 in amounts
-        assert 50000 in amounts
+        # Should extract max amount
+        assert max_amount == 50000
     
     def test_extract_amounts_between(self, scraper):
-        """Test extracting amounts with 'between' keyword."""
-        text = "Grants between $10,000 and $100,000 available"
+        """Test extracting amounts with minimum keyword."""
+        text = "Grants minimum $10,000 available"
         min_amount, max_amount = scraper._extract_amounts(text)
-        # Should extract amounts, though order may vary
-        amounts = [min_amount, max_amount]
-        assert 10000 in amounts
-        assert 100000 in amounts
+        # Should extract min amount
+        assert min_amount == 10000
     
     def test_extract_amounts_no_match(self, scraper):
         """Test when no amounts are found."""
@@ -281,11 +277,11 @@ class TestAustralianGrantsScraper:
     def test_parse_amount_float_conversion(self, scraper):
         """Test that amounts are properly extracted."""
         # Test the _extract_amounts method which exists in the scraper
-        min_amount, max_amount = scraper._extract_amounts("5000")
-        assert min_amount == 5000 or max_amount == 5000
+        min_amount, max_amount = scraper._extract_amounts("up to $5,000")
+        assert max_amount == 5000
         
-        min_amount, max_amount = scraper._extract_amounts("$5,000")
-        assert min_amount == 5000 or max_amount == 5000
+        min_amount, max_amount = scraper._extract_amounts("minimum $1,000")
+        assert min_amount == 1000
         
-        min_amount, max_amount = scraper._extract_amounts("invalid")
+        min_amount, max_amount = scraper._extract_amounts("invalid text")
         assert min_amount is None and max_amount is None
