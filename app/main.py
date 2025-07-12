@@ -194,7 +194,6 @@ def create_app() -> FastAPI:
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         same_site="lax",
         https_only=settings.ENV == 'production',
-        http_only=True,  # Prevent XSS attacks
     )
     
     # 3. CORS Middleware (configured from environment)
@@ -246,7 +245,8 @@ def create_app() -> FastAPI:
             response.headers["Content-Security-Policy"] = "; ".join(csp_policy)
         
         # Remove server header for security
-        response.headers.pop("server", None)
+        if "server" in response.headers:
+            del response.headers["server"]
         
         return response
     

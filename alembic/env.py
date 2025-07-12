@@ -13,7 +13,7 @@ from app.db.base import Base
 from app.core.config import settings
 
 # Load environment variables
-load_dotenv(".envV2")
+load_dotenv(".env")
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -47,34 +47,54 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
-    # Handle Supabase PostgreSQL connection
     url = get_url()
-    connectable = create_engine(
-        url,
-        pool_pre_ping=True,
-        pool_size=5,
-        max_overflow=10,
-        pool_recycle=3600,
-        connect_args={
-            "application_name": "sge-dashboard-migrations",
-            "keepalives": 1,
-            "keepalives_idle": 30,
-            "keepalives_interval": 10,
-            "keepalives_count": 5
-        }
-    )
+    
+    # Configure engine based on database type
+    if url.startswith("sqlite"):
+        # SQLite configuration
+        connectable = create_engine(
+            url,
+            pool_pre_ping=True,
+            connect_args={"check_same_thread": False}
+        )
+    else:
+        # PostgreSQL configuration (Supabase/Render)
+        connectable = create_engine(
+            url,
+            pool_pre_ping=True,
+            pool_size=5,
+            max_overflow=10,
+            pool_recycle=3600,
+            connect_args={
+                "application_name": "sge-dashboard-migrations",
+                "keepalives": 1,
+                "keepalives_idle": 30,
+                "keepalives_interval": 10,
+                "keepalives_count": 5
+            }
+        )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection,
-            target_metadata=target_metadata,
-            compare_type=True,
-            compare_server_default=True,
-            # Supabase-specific settings
-            include_schemas=True,
-            include_name=True,
-            render_as_batch=False  # PostgreSQL doesn't need batch mode
-        )
+        # Configure context based on database type
+        if url.startswith("sqlite"):
+            context.configure(
+                connection=connection,
+                target_metadata=target_metadata,
+                compare_type=True,
+                compare_server_default=True,
+                render_as_batch=True  # SQLite needs batch mode for ALTER operations
+            )
+        else:
+            context.configure(
+                connection=connection,
+                target_metadata=target_metadata,
+                compare_type=True,
+                compare_server_default=True,
+                # PostgreSQL-specific settings
+                include_schemas=True,
+                include_name=True,
+                render_as_batch=False  # PostgreSQL doesn't need batch mode
+            )
 
         with context.begin_transaction():
             context.run_migrations()

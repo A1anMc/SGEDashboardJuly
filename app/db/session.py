@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 from app.core.config import settings
@@ -80,7 +80,7 @@ def get_engine(url=None, **kwargs):
             # Test the connection only if not in testing mode
             if not settings.TESTING:
                 with engine.connect() as conn:
-                    result = conn.execute("SELECT 1")
+                    result = conn.execute(text("SELECT 1"))
                     logger.info("Database connection test successful")
             return engine
         except Exception as e:
@@ -147,7 +147,7 @@ def check_db_health() -> bool:
         SessionLocal = get_session_local()
         db = SessionLocal()
         try:
-            result = db.execute("SELECT 1")
+            result = db.execute(text("SELECT 1"))
             return True
         finally:
             db.close()

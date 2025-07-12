@@ -71,7 +71,7 @@ services:
       - key: FRONTEND_URL
         value: "https://sge-dashboard-web.onrender.com"
       - key: CORS_ORIGINS
-        value: '["https://sge-dashboard-web.onrender.com", "https://sge-dashboard-api.onrender.com"]'
+        value: '["https://sge-dashboard-web.onrender.com", "https://sge-dashboard-api.onrender.com", "https://sge-dashboard-web.onrender.com/grants"]'
       
       # Rate Limiting (optional)
       - key: RATE_LIMIT_ENABLED

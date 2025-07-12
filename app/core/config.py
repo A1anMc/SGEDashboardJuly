@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import json
 
 # Load environment variables before creating settings
-load_dotenv(dotenv_path=".envV2", override=True)
+load_dotenv(dotenv_path=".env", override=True)
 
 class Settings(BaseSettings):
     # Core
@@ -158,7 +158,10 @@ class Settings(BaseSettings):
             return [
                 frontend_url,
                 "https://sge-dashboard-web.onrender.com",
-                "https://sge-dashboard-api.onrender.com"
+                "https://sge-dashboard-api.onrender.com",
+                "https://sge-dashboard-web.onrender.com/grants",
+                "https://sge-dashboard-web.onrender.com/tasks",
+                "https://sge-dashboard-web.onrender.com/admin"
             ]
         else:
             return [
