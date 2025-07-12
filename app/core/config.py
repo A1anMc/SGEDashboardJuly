@@ -123,6 +123,16 @@ class Settings(BaseSettings):
             "base_url": "https://www.screenaustralia.gov.au",  # Default to Screen Australia as primary source
             "grants_path": "/funding-and-support",
             "description": "Australian Grants Aggregator"
+        },
+        "current_grants": {
+            "base_url": "https://business.gov.au",
+            "grants_path": "/grants-and-programs",
+            "description": "Current Verified Australian Grants"
+        },
+        "dummy": {
+            "base_url": "https://example.com",
+            "grants_path": "/dummy",
+            "description": "Dummy scraper for testing"
         }
     }
     

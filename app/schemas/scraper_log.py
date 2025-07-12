@@ -9,7 +9,7 @@ class ScraperLogBase(BaseModel):
     grants_added: int = 0
     grants_updated: int = 0
     error_message: Optional[str] = None
-    metadata: Optional[Dict] = None
+    scraper_metadata: Optional[Dict] = None
 
 class ScraperLogCreate(ScraperLogBase):
     pass

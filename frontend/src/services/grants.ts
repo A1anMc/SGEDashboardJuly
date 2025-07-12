@@ -4,7 +4,8 @@ import { Grant, GrantFilters, CreateGrantInput, UpdateGrantRequest } from '../ty
 // Constants for API endpoints
 const ENDPOINTS = {
   BASE: '/grants/',
-  SCRAPER: '/scraper',
+  SCRAPER_RUN: '/grants/scrape/',
+  SCRAPER_STATUS: '/scraper/sources/',
   SOURCES: '/grants/sources/',
 } as const;
 
@@ -77,16 +78,29 @@ export const grantsApi = {
   },
 
   runScraper: async () => {
-    await api.post(`${ENDPOINTS.SCRAPER}/run/`);
+    await api.post(ENDPOINTS.SCRAPER_RUN);
   },
 
   getScraperStatus: async () => {
-    const response = await api.get<ScraperStatus>(`${ENDPOINTS.SCRAPER}/status/`);
-    return response.data;
+    const response = await api.get(ENDPOINTS.SCRAPER_STATUS);
+    // Transform the array response to match the expected format
+    const sources = response.data || [];
+    const totalSources = sources.length;
+    const successfulSources = sources.filter((s: any) => s.status === 'success').length;
+    const errorSources = sources.filter((s: any) => s.status === 'error').length;
+    
+    return {
+      status: totalSources > 0 ? (successfulSources > 0 ? 'active' : 'error') : 'inactive',
+      available_sources: sources.map((s: any) => s.source_name),
+      active_sources: sources.filter((s: any) => s.status === 'success').map((s: any) => s.source_name),
+      last_run: sources.length > 0 ? sources[0].last_run : null,
+      success_count: successfulSources,
+      error_count: errorSources
+    };
   },
 
   runScrapers: async (request: ScraperRunRequest) => {
-    const response = await api.post(`${ENDPOINTS.SCRAPER}/run/`, request);
+    const response = await api.post(ENDPOINTS.SCRAPER_RUN, request);
     return response.data;
   },
 

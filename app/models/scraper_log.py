@@ -17,7 +17,7 @@ class ScraperLog(Base):
     grants_added = Column(Integer, default=0)
     grants_updated = Column(Integer, default=0)
     error_message = Column(Text)
-    scraper_metadata = Column(JSON)  # Store additional info like URLs scraped, rate limits, etc.
+    scraper_metadata = Column("metadata", JSON)  # Store additional info like URLs scraped, rate limits, etc.
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

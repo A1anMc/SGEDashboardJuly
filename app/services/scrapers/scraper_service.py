@@ -9,6 +9,7 @@ from app.services.scrapers.business_gov import BusinessGovScraper
 from app.services.scrapers.grantconnect import GrantConnectScraper
 from app.services.scrapers.dummy_scraper import DummyScraper
 from app.services.scrapers.australian_grants_scraper import AustralianGrantsScraper
+from app.services.scrapers.current_grants_scraper import CurrentGrantsScraper
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,8 @@ class ScraperService:
             "business.gov.au": BusinessGovScraper,
             "grantconnect": GrantConnectScraper,
             "dummy": DummyScraper,
-            "australian_grants": AustralianGrantsScraper
+            "australian_grants": AustralianGrantsScraper,
+            "current_grants": CurrentGrantsScraper
         }
     
     def get_available_sources(self) -> List[str]:
@@ -94,7 +96,7 @@ class ScraperService:
                     "status": "error",
                     "error": str(e)
                 }
-        return results 
+        return results
 
 async def scrape_community_grants(self) -> List[Dict]:
     """
