@@ -87,9 +87,9 @@ const nextConfig = {
     // Content Security Policy
     const cspDirectives = [
       "default-src 'self'",
-      // Scripts: More restrictive in production
+      // Scripts: More restrictive in production, allow eval in development
       isProd 
-        ? "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.onrender.com"
+        ? "script-src 'self' 'unsafe-inline' https://*.onrender.com"
         : "script-src 'self' 'unsafe-eval' 'unsafe-inline' http://localhost:* ws://localhost:*",
       // Styles: Allow inline for styled-components and CSS-in-JS
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",

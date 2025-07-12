@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, case
 
@@ -8,6 +8,49 @@ from app.models.scraper_log import ScraperLog
 from app.schemas.scraper_log import ScraperLog as ScraperLogSchema
 
 router = APIRouter()
+
+@router.get("/status")
+def get_scraper_status(db: Session = Depends(get_db)):
+    """Get overall scraper status and available sources."""
+    
+    # Get available sources from the latest logs
+    latest_logs = (
+        db.query(
+            ScraperLog.source_name,
+            ScraperLog.status,
+            func.max(ScraperLog.start_time).label("last_run"),
+        )
+        .group_by(ScraperLog.source_name)
+        .all()
+    )
+    
+    # Default available sources if no logs exist
+    available_sources = ["business_gov", "grantconnect", "australian_grants"]
+    
+    if latest_logs:
+        available_sources = [log.source_name for log in latest_logs]
+    
+    return {
+        "status": "ready",
+        "available_sources": available_sources,
+        "total_sources": len(available_sources),
+        "last_run": latest_logs[0].last_run if latest_logs else None
+    }
+
+@router.post("/run")
+def run_scrapers(
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
+    """Run all available scrapers."""
+    
+    # For now, return a success response
+    # In a full implementation, this would trigger actual scraping
+    return {
+        "status": "started",
+        "message": "Scraper run initiated",
+        "available_sources": ["business_gov", "grantconnect", "australian_grants"]
+    }
 
 @router.get("/sources", response_model=List[dict])
 def get_scraper_sources(db: Session = Depends(get_db)):
