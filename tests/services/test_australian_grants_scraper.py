@@ -204,14 +204,18 @@ class TestAustralianGrantsScraper:
             <meta name="description" content="This is the meta description for the page">
         </head>
         <body>
-            <p>Body content</p>
+            <main>
+                <p>This is a substantial paragraph with enough content to be extracted as a description. It provides meaningful information about the grant program and its objectives.</p>
+                <p>Additional paragraph content that adds context.</p>
+            </main>
         </body>
         </html>
         """
         soup = BeautifulSoup(html, 'html.parser')
         description = scraper._extract_page_description(soup)
-        # The method should extract some description
-        assert description is not None or description == "This is the meta description for the page"
+        # The method should extract description from main content paragraphs
+        assert description is not None
+        assert len(description) > 50  # Should have substantial content
     
     def test_get_date_context(self, scraper):
         """Test date extraction from text."""
