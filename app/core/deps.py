@@ -4,14 +4,14 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from sqlalchemy.orm import Session
 from app.core.config import settings
-from app.db.session import SessionLocal
-from app.models.user import User
+from app.db.session import get_session_local
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
 
 def get_db() -> Generator:
     """Get SQLAlchemy database session."""
     try:
+        SessionLocal = get_session_local()
         db = SessionLocal()
         yield db
     finally:
@@ -20,8 +20,10 @@ def get_db() -> Generator:
 async def get_current_user(
     db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme)
-) -> User:
+):
     """Get current authenticated user."""
+    from app.models.user import User  # Import here to avoid circular import
+    
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -50,8 +52,8 @@ async def get_current_user(
     return user
 
 async def get_current_active_superuser(
-    current_user: User = Depends(get_current_user),
-) -> User:
+    current_user = Depends(get_current_user),
+):
     """Get current authenticated superuser."""
     if not current_user.is_superuser:
         raise HTTPException(

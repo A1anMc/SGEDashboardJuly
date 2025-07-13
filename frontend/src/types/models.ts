@@ -32,7 +32,7 @@ export interface Grant {
   created_at: Date;
   updated_at: Date;
   created_by_id?: number;
-  tags: Tag[];
+  tags?: Tag[];
 }
 
 export interface Tag {

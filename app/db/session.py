@@ -22,9 +22,14 @@ def get_engine(url=None, **kwargs):
     
     # Validate database URL - no localhost fallbacks in production
     if not final_url:
-        error_msg = "DATABASE_URL environment variable is required"
-        logger.error(error_msg)
-        raise RuntimeError(error_msg)
+        if settings.ENV == "production":
+            error_msg = "DATABASE_URL environment variable is required in production"
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
+        else:
+            # Use SQLite for development if no DATABASE_URL is provided
+            final_url = "sqlite:///./dev.db"
+            logger.info("No DATABASE_URL provided, using SQLite for development")
     
     # Check for localhost in production
     if settings.ENV == "production" and ("localhost" in final_url or "127.0.0.1" in final_url):
@@ -32,7 +37,7 @@ def get_engine(url=None, **kwargs):
         logger.error(error_msg)
         raise RuntimeError(error_msg)
     
-    # Validate PostgreSQL URL format
+    # Validate database URL format
     if not final_url.startswith(("postgresql://", "sqlite:///")):
         error_msg = f"DATABASE_URL must start with postgresql:// or sqlite:/// (got: {final_url[:20]}...)"
         logger.error(error_msg)

@@ -260,11 +260,11 @@ class Settings(BaseSettings):
             return v
         
         # For PostgreSQL URLs, basic validation
-        if not v.startswith("postgresql://"):
+        if not (v.startswith("postgresql://") or v.startswith("sqlite:///")):
             raise ValueError("DATABASE_URL must start with postgresql:// or sqlite:///")
         
-        # Prevent localhost in production
-        if env == "production" and ("localhost" in v or "127.0.0.1" in v):
+        # Prevent localhost in production (but allow SQLite files)
+        if env == "production" and not v.startswith("sqlite:///") and ("localhost" in v or "127.0.0.1" in v):
             raise ValueError("DATABASE_URL cannot use localhost in production environment")
         
         # For Supabase URLs, ensure proper format

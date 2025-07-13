@@ -1,32 +1,26 @@
 import { FC } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { grantsApi } from '../../services/grants';
-import { Grant, GrantFilters } from '../../types/models';
+import { Grant } from '../../types/models';
 import { GrantCard } from './GrantCard';
 import { ErrorAlert } from '../ui/error-alert';
 import { ErrorBoundary } from '../ui/error-boundary';
 import { getErrorMessage } from '../../utils/error-handling';
 import React from 'react';
-import toast from 'react-hot-toast';
 
 interface GrantListProps {
-  filters: GrantFilters;
+  grants: Grant[];
+  isLoading: boolean;
+  error: any;
   onGrantClick: (grant: Grant) => void;
+  onRetry?: () => void;
 }
 
-export const GrantList: FC<GrantListProps> = ({ filters, onGrantClick }) => {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['grants', filters],
-    queryFn: () => grantsApi.getGrants(filters),
-  });
-
-  React.useEffect(() => {
-    if (error) {
-      console.error('Failed to fetch grants:', error);
-      toast.error('Failed to load grants. Please try again later.');
-    }
-  }, [error]);
-
+export const GrantList: FC<GrantListProps> = ({ 
+  grants, 
+  isLoading, 
+  error, 
+  onGrantClick, 
+  onRetry 
+}) => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -41,12 +35,12 @@ export const GrantList: FC<GrantListProps> = ({ filters, onGrantClick }) => {
         title="Failed to load grants"
         message={getErrorMessage(error)}
         retryable={true}
-        onRetry={() => refetch()}
+        onRetry={onRetry}
       />
     );
   }
 
-  if (!data?.items.length) {
+  if (!grants.length) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-gray-500">No grants found.</div>
@@ -57,7 +51,7 @@ export const GrantList: FC<GrantListProps> = ({ filters, onGrantClick }) => {
   return (
     <ErrorBoundary>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {data.items.map((grant) => (
+        {grants.map((grant) => (
           <GrantCard
             key={grant.id}
             grant={grant}

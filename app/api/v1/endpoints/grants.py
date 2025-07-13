@@ -33,7 +33,7 @@ def get_grants(
     industry_focus: Optional[str] = Query(None, enum=INDUSTRY_FOCUS_OPTIONS),
     location: Optional[str] = Query(None, enum=LOCATION_ELIGIBILITY_OPTIONS),
     org_type: Optional[str] = Query(None, enum=ORG_TYPE_OPTIONS),
-    status: Optional[str] = Query(None, enum=["open", "closed", "draft"])
+    status: Optional[str] = Query(None, enum=["open", "closed", "draft", "active"])
 ):
     """Get list of grants with optional filtering."""
     try:

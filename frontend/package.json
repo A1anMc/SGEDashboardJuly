@@ -26,6 +26,7 @@
     "@supabase/gotrue-js": "^2.70.0",
     "@supabase/supabase-js": "^2.50.5",
     "@tanstack/react-query": "^5.81.5",
+    "@tanstack/react-query-devtools": "^5.83.0",
     "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",

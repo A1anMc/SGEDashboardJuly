@@ -72,8 +72,8 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  withCredentials: true, // Important for cookies/auth
-  timeout: 30000, // 30 second timeout
+  withCredentials: false, // Disable for CORS compatibility
+  timeout: 10000, // Reduce to 10 second timeout
 });
 
 /**

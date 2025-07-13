@@ -6,21 +6,39 @@ import { toast } from 'react-hot-toast';
 export const useGrants = (filters: GrantFilters = { page: 1, size: 10 }) => {
   const queryClient = useQueryClient();
 
-  // Query for grants list with retry and error handling
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
+  console.log('[useGrants] Hook called with filters:', filters);
+
+  // Simplified query implementation
+  const queryResult = useQuery({
     queryKey: ['grants', filters],
-    queryFn: () => grantsApi.getGrants(filters),
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-    retry: 3, // Retry failed requests 3 times
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000)
+    queryFn: async () => {
+      console.log('[useGrants] Query function called');
+      
+      try {
+        const result = await grantsApi.getGrants(filters);
+        console.log('[useGrants] Query function success:', result);
+        return result;
+      } catch (error) {
+        console.error('[useGrants] Query function error:', error);
+        throw error;
+      }
+    },
+    enabled: true,
+    staleTime: 0,
+    retry: 1,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
   });
 
-  // Create grant mutation with improved error handling
+  console.log('[useGrants] Query result:', {
+    data: queryResult.data,
+    isLoading: queryResult.isLoading,
+    isFetching: queryResult.isFetching,
+    isError: queryResult.isError,
+    error: queryResult.error,
+  });
+
+  // Create grant mutation
   const createMutation = useMutation({
     mutationFn: (grant: CreateGrantRequest) => {
       const grantInput: CreateGrantInput = {
@@ -34,7 +52,6 @@ export const useGrants = (filters: GrantFilters = { page: 1, size: 10 }) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['grants'] });
-      queryClient.invalidateQueries({ queryKey: ['grants', 'dashboard'] });
       toast.success('Grant created successfully');
     },
     onError: (error) => {
@@ -43,7 +60,7 @@ export const useGrants = (filters: GrantFilters = { page: 1, size: 10 }) => {
     },
   });
 
-  // Update grant mutation with improved error handling
+  // Update grant mutation
   const updateMutation = useMutation({
     mutationFn: ({ id, grant }: { id: string; grant: UpdateGrantRequest }) => {
       const grantInput: CreateGrantInput = {
@@ -70,7 +87,6 @@ export const useGrants = (filters: GrantFilters = { page: 1, size: 10 }) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['grants'] });
-      queryClient.invalidateQueries({ queryKey: ['grants', 'dashboard'] });
       toast.success('Grant updated successfully');
     },
     onError: (error) => {
@@ -79,12 +95,11 @@ export const useGrants = (filters: GrantFilters = { page: 1, size: 10 }) => {
     },
   });
 
-  // Delete grant mutation with improved error handling
+  // Delete grant mutation
   const deleteMutation = useMutation({
     mutationFn: (id: string) => grantsApi.deleteGrant(Number(id)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['grants'] });
-      queryClient.invalidateQueries({ queryKey: ['grants', 'dashboard'] });
       toast.success('Grant deleted successfully');
     },
     onError: (error) => {
@@ -93,7 +108,7 @@ export const useGrants = (filters: GrantFilters = { page: 1, size: 10 }) => {
     },
   });
 
-  // Run scraper mutation with improved error handling
+  // Run scraper mutation
   const runScraperMutation = useMutation({
     mutationFn: (request?: ScraperRunRequest) => {
       const scraperRequest: ScraperRunRequest = request || {};
@@ -101,10 +116,8 @@ export const useGrants = (filters: GrantFilters = { page: 1, size: 10 }) => {
     },
     onSuccess: () => {
       toast.success('Scraper started successfully');
-      // Refetch grants after a delay to allow scraper to complete
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ['grants'] });
-        queryClient.invalidateQueries({ queryKey: ['grants', 'dashboard'] });
       }, 5000);
     },
     onError: (error) => {
@@ -113,16 +126,18 @@ export const useGrants = (filters: GrantFilters = { page: 1, size: 10 }) => {
     },
   });
 
-  return {
-    grants: data?.items || [],
-    total: data?.total || 0,
-    page: data?.page || 1,
-    size: data?.size || 10,
-    hasNext: data ? (data.page * data.size) < data.total : false,
-    hasPrev: data ? data.page > 1 : false,
-    isLoading,
-    error,
-    refetch,
+  const result = {
+    grants: queryResult.data?.items || [],
+    total: queryResult.data?.total || 0,
+    page: queryResult.data?.page || 1,
+    size: queryResult.data?.size || 10,
+    hasNext: queryResult.data ? (queryResult.data.page * queryResult.data.size) < queryResult.data.total : false,
+    hasPrev: queryResult.data ? queryResult.data.page > 1 : false,
+    isLoading: queryResult.isLoading,
+    isFetching: queryResult.isFetching,
+    isError: queryResult.isError,
+    error: queryResult.error,
+    refetch: queryResult.refetch,
     createGrant: (grant: CreateGrantRequest) => createMutation.mutate(grant),
     updateGrant: (id: string, grant: UpdateGrantRequest) => 
       updateMutation.mutate({ id, grant }),
@@ -133,4 +148,13 @@ export const useGrants = (filters: GrantFilters = { page: 1, size: 10 }) => {
     isDeleting: deleteMutation.isPending,
     isScraperRunning: runScraperMutation.isPending,
   };
+
+  console.log('[useGrants] Returning result:', {
+    grantsCount: result.grants.length,
+    total: result.total,
+    isLoading: result.isLoading,
+    isError: result.isError,
+  });
+
+  return result;
 }; 

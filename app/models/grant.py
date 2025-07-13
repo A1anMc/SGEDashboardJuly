@@ -38,11 +38,11 @@ class Grant(Base):
     notes = Column(Text, nullable=True)
     
     # Relationships
-    created_by_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    created_by = relationship("User", back_populates="grants")
+    created_by_id = Column(Integer, nullable=True)  # Temporarily removed FK constraint
+    # created_by = relationship("User", back_populates="grants")  # Temporarily disabled
     
     # Many-to-many relationship with tags
-    tags = relationship("Tag", secondary="grant_tags", back_populates="grants")
+    # tags = relationship("Tag", secondary="grant_tags", back_populates="grants")  # Temporarily disabled
     
     def __repr__(self):
         return f"<Grant {self.title}>"

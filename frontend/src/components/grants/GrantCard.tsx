@@ -84,7 +84,7 @@ export function GrantCard({ grant, onClick }: GrantCardProps) {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {grant.tags.map((tag, index) => (
+        {grant.tags?.map((tag, index) => (
           <span
             key={index}
             className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"

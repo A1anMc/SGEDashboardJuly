@@ -21,5 +21,5 @@ class Tag(Base):
     
     # Relationships
     projects = relationship("Project", secondary="project_tags", back_populates="tags")
-    grants = relationship("Grant", secondary="grant_tags", back_populates="tags")
+    # grants = relationship("Grant", secondary="grant_tags", back_populates="tags")  # Temporarily disabled
     tasks = relationship("Task", secondary="task_tags", back_populates="tags") 
