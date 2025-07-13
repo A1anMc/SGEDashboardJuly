@@ -3,7 +3,9 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     // Check backend connectivity
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 
+                      process.env.BACKEND_URL || 
+                      'https://sge-dashboard-api.onrender.com';
     const backendHealth = await fetch(`${backendUrl}/health`, {
       method: 'GET',
       headers: {

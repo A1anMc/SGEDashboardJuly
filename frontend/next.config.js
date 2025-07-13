@@ -29,7 +29,11 @@ const nextConfig = {
   
   // Environment variables (non-sensitive only)
   env: {
-    BACKEND_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
+    BACKEND_URL: process.env.NEXT_PUBLIC_API_URL || (
+      process.env.NODE_ENV === 'production' 
+        ? 'https://sge-dashboard-api.onrender.com'
+        : 'http://localhost:8000'
+    ),
     ENVIRONMENT: process.env.NODE_ENV || 'development',
   },
 
