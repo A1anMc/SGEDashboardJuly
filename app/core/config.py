@@ -5,11 +5,21 @@ from pydantic import field_validator, ConfigDict
 from dotenv import load_dotenv
 import json
 
-# Load environment variables before creating settings
-try:
-    load_dotenv(dotenv_path=".env", override=False)  # Changed to not override existing env vars
-except Exception as e:
-    print(f"Warning: Error loading .env file (this is OK in production): {e}")
+# Print environment state before loading anything
+print("Initial DATABASE_URL:", os.getenv("DATABASE_URL", "not set"))
+
+# Only load .env in development
+if os.getenv("ENVIRONMENT", "development") != "production":
+    try:
+        load_dotenv(dotenv_path=".env", override=False)
+        print("Loaded .env file (development mode)")
+    except Exception as e:
+        print(f"Warning: Error loading .env file: {e}")
+else:
+    print("Production environment detected - skipping .env file loading")
+
+# Print environment state after loading
+print("Final DATABASE_URL:", os.getenv("DATABASE_URL", "not set"))
 
 class Settings(BaseSettings):
     # Core
@@ -246,7 +256,7 @@ class Settings(BaseSettings):
     def validate_database_url(cls, v: str, info) -> str:
         """Validate database URL based on environment."""
         # Print debug info about the database URL
-        print(f"Validating DATABASE_URL (type: {type(v)})")
+        print(f"Validating DATABASE_URL: {v.split('://')[0] if '://' in v else 'invalid'}")
         print(f"Environment: {info.data.get('ENV', 'unknown')}")
         
         # If we're testing, use the test database URL
@@ -259,7 +269,7 @@ class Settings(BaseSettings):
             if not v:
                 raise ValueError("DATABASE_URL environment variable is required in production")
             if not v.startswith("postgresql://"):
-                raise ValueError(f"DATABASE_URL must start with postgresql:// (got: {v.split('://')[0] if '://' in v else 'invalid'})")
+                raise ValueError("DATABASE_URL must start with postgresql://")
             if "localhost" in v or "127.0.0.1" in v:
                 raise ValueError("DATABASE_URL cannot use localhost in production environment")
         
@@ -269,7 +279,7 @@ class Settings(BaseSettings):
         
         # For PostgreSQL URLs, basic validation
         if not v.startswith("postgresql://"):
-            raise ValueError(f"DATABASE_URL must start with postgresql:// (got: {v.split('://')[0] if '://' in v else 'invalid'})")
+            raise ValueError("DATABASE_URL must start with postgresql://")
         
         # For Supabase URLs, ensure proper format
         if "supabase.co" in v:
