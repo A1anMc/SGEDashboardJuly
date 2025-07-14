@@ -1,5 +1,3 @@
-'use client';
-
 import { Toaster } from 'react-hot-toast';
 import { ErrorBoundary } from '../components/ui/error-boundary';
 import './globals.css';

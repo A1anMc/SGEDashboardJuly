@@ -115,22 +115,51 @@ const nextConfig = {
     ]
   },
 
-  // Webpack configuration for optimization
+  // Optimized webpack configuration
   webpack: (config, { dev, isServer }) => {
     if (!dev && !isServer) {
+      // Optimize chunk splitting for better caching
       config.optimization.splitChunks = {
         chunks: 'all',
         minSize: 20000,
-        maxSize: 244000,
+        maxSize: 200000, // Reduced from 244000 for better caching
         minChunks: 1,
         maxAsyncRequests: 30,
         maxInitialRequests: 30,
         cacheGroups: {
-          defaultVendors: {
+          // Vendor chunks for better caching
+          vendor: {
             test: /[\\/]node_modules[\\/]/,
-            priority: -10,
+            name: 'vendors',
+            chunks: 'all',
+            priority: 10,
             reuseExistingChunk: true,
           },
+          // Common chunks for shared code
+          common: {
+            name: 'common',
+            minChunks: 2,
+            chunks: 'all',
+            priority: 5,
+            reuseExistingChunk: true,
+          },
+          // UI framework chunks
+          ui: {
+            test: /[\\/]node_modules[\\/](@mui|@radix-ui|@headlessui|@heroicons)[\\/]/,
+            name: 'ui-vendors',
+            chunks: 'all',
+            priority: 8,
+            reuseExistingChunk: true,
+          },
+          // Chart and visualization chunks
+          charts: {
+            test: /[\\/]node_modules[\\/](recharts|framer-motion)[\\/]/,
+            name: 'charts-vendors',
+            chunks: 'all',
+            priority: 7,
+            reuseExistingChunk: true,
+          },
+          // Default fallback
           default: {
             minChunks: 2,
             priority: -20,
@@ -138,13 +167,39 @@ const nextConfig = {
           },
         },
       };
+
+      // Optimize module resolution
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        // Optimize imports for better tree shaking
+        '@': require('path').resolve(__dirname, 'src'),
+      };
     }
+
+    // Add bundle analyzer plugin for development analysis
+    if (process.env.ANALYZE === 'true') {
+      const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+      config.plugins.push(
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'static',
+          openAnalyzer: false,
+          reportFilename: '.next/analyze/bundle-report.html',
+        })
+      );
+    }
+
     return config;
   },
 
   // Production optimizations
   swcMinify: true,
   productionBrowserSourceMaps: false,
+  
+  // Experimental optimizations
+  experimental: {
+    // Enable modern bundling features
+    optimizePackageImports: ['@mui/material', '@mui/icons-material', '@radix-ui/react-dialog', '@radix-ui/react-popover'],
+  },
 }
 
 module.exports = withBundleAnalyzer(nextConfig);

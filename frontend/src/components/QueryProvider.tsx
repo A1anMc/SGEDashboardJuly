@@ -1,8 +1,16 @@
 'use client'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { ReactNode, useState } from 'react'
+import dynamic from 'next/dynamic'
+
+// Dynamic import for ReactQueryDevtools (development only)
+const ReactQueryDevtools = dynamic(
+  () => import('@tanstack/react-query-devtools').then(mod => ({ default: mod.ReactQueryDevtools })),
+  {
+    ssr: false,
+  }
+)
 
 export default function QueryProvider({ children }: { children: ReactNode }) {
   const [client] = useState(() => new QueryClient({

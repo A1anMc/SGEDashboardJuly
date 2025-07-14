@@ -8,9 +8,6 @@ Sentry.init({
   
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: process.env.NODE_ENV === 'development',
-
-  // Capture all errors in server-side code
-  enableTracing: true,
   
   // Custom error sampling based on error type
   beforeSend(event) {

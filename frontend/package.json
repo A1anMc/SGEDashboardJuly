@@ -17,7 +17,11 @@
     "analyze": "ANALYZE=true next build",
     "clean": "rm -rf .next out",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,md}\"",
-    "validate": "npm run lint && npm run type-check && npm run test"
+    "validate": "npm run lint && npm run type-check && npm run test",
+    "security-scan": "./scripts/security-scan.sh",
+    "audit": "npm audit --audit-level=high",
+    "outdated": "npm outdated",
+    "ci": "npm run lint && npm run type-check && npm run test && npm run security-scan"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
