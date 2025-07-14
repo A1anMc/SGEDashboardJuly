@@ -6,8 +6,8 @@ from datetime import datetime
 
 router = APIRouter()
 
-@router.get("")
-@router.head("")
+@router.get("/")
+@router.head("/")
 async def health_check():
     db_healthy = check_db_health()
     return {

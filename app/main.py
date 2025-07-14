@@ -359,39 +359,7 @@ def create_app() -> FastAPI:
             "status": "operational"
         }
     
-    @app.get("/health")
-    async def health_check():
-        """Enhanced health check endpoint."""
-        try:
-            is_healthy = check_db_health()
-            if not is_healthy:
-                logger.warning("Health check failed: Database connection issue")
-                return JSONResponse(
-                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    content={
-                        "status": "error",
-                        "message": "Database connection failed",
-                        "timestamp": datetime.utcnow().isoformat()
-                    }
-                )
-            
-            return {
-                "status": "healthy",
-                "database": "connected",
-                "environment": settings.ENV,
-                "version": "1.0.0",
-                "timestamp": datetime.utcnow().isoformat()
-            }
-        except Exception as e:
-            logger.error(f"Health check error: {str(e)}")
-            return JSONResponse(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                content={
-                    "status": "error",
-                    "message": "Health check failed",
-                    "timestamp": datetime.utcnow().isoformat()
-                }
-            )
+
     
     # Debug endpoints (only available in debug mode)
     @app.get("/api/debug/db", include_in_schema=False)
