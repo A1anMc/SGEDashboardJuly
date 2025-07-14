@@ -5,7 +5,13 @@ from pydantic import field_validator, ConfigDict
 from dotenv import load_dotenv
 import json
 
+# Force environment to production on Render
+if os.getenv("RENDER", "false").lower() == "true":
+    os.environ["ENVIRONMENT"] = "production"
+    print("Render detected - forcing production environment")
+
 # Print environment state before loading anything
+print("Initial environment:", os.getenv("ENVIRONMENT", "not set"))
 print("Initial DATABASE_URL:", os.getenv("DATABASE_URL", "not set"))
 
 # Only load .env in development
@@ -19,6 +25,7 @@ else:
     print("Production environment detected - skipping .env file loading")
 
 # Print environment state after loading
+print("Final environment:", os.getenv("ENVIRONMENT", "not set"))
 print("Final DATABASE_URL:", os.getenv("DATABASE_URL", "not set"))
 
 class Settings(BaseSettings):
@@ -29,7 +36,7 @@ class Settings(BaseSettings):
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
     HOST: str = "0.0.0.0"
     PORT: int = 8000
-    ENV: str = os.getenv("ENVIRONMENT", "development")
+    ENV: str = os.getenv("ENVIRONMENT", "production")  # Default to production for safety
     
     # Security
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
