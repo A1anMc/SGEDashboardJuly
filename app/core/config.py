@@ -6,7 +6,10 @@ from dotenv import load_dotenv
 import json
 
 # Load environment variables before creating settings
-load_dotenv(dotenv_path=".env", override=True)
+try:
+    load_dotenv(dotenv_path=".env", override=False)  # Changed to not override existing env vars
+except Exception as e:
+    print(f"Warning: Error loading .env file (this is OK in production): {e}")
 
 class Settings(BaseSettings):
     # Core
@@ -242,6 +245,10 @@ class Settings(BaseSettings):
     @classmethod
     def validate_database_url(cls, v: str, info) -> str:
         """Validate database URL based on environment."""
+        # Print debug info about the database URL
+        print(f"Validating DATABASE_URL (type: {type(v)})")
+        print(f"Environment: {info.data.get('ENV', 'unknown')}")
+        
         # If we're testing, use the test database URL
         if info.data.get("TESTING", False):
             return info.data.get("TEST_DATABASE_URL")
@@ -252,7 +259,7 @@ class Settings(BaseSettings):
             if not v:
                 raise ValueError("DATABASE_URL environment variable is required in production")
             if not v.startswith("postgresql://"):
-                raise ValueError("DATABASE_URL must start with postgresql:// in production")
+                raise ValueError(f"DATABASE_URL must start with postgresql:// (got: {v.split('://')[0] if '://' in v else 'invalid'})")
             if "localhost" in v or "127.0.0.1" in v:
                 raise ValueError("DATABASE_URL cannot use localhost in production environment")
         
@@ -262,7 +269,7 @@ class Settings(BaseSettings):
         
         # For PostgreSQL URLs, basic validation
         if not v.startswith("postgresql://"):
-            raise ValueError("DATABASE_URL must start with postgresql://")
+            raise ValueError(f"DATABASE_URL must start with postgresql:// (got: {v.split('://')[0] if '://' in v else 'invalid'})")
         
         # For Supabase URLs, ensure proper format
         if "supabase.co" in v:
