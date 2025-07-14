@@ -15,6 +15,9 @@ const nextConfig = {
   experimental: {
     // Enable modern bundling
     esmExternals: true,
+    // Ensure proper static file copying
+    outputFileTracingRoot: process.env.NODE_ENV === 'production' ? './' : undefined,
+    outputStandalone: true,
   },
   
   // Image optimization with security
