@@ -34,7 +34,42 @@ headers = {
 await asyncio.sleep(random.uniform(2, 5))
 ```
 
-### 3. CORS Configuration Failures
+### 3. API Connection Failures
+**Component**: Frontend-Backend API communication & External integrations
+**Issue**: Network connectivity, endpoint reliability, timeout issues, API versioning mismatches
+**Impact**: Complete system breakdown, no data access, external service failures
+**Detection**: Connection timeouts, 500 errors, network failures, API version conflicts
+**Mitigation**:
+```python
+# Implement robust API client with retry logic
+import backoff
+import httpx
+
+@backoff.on_exception(backoff.expo, httpx.RequestError, max_tries=3)
+async def make_api_request(url: str, **kwargs):
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        response = await client.get(url, **kwargs)
+        response.raise_for_status()
+        return response.json()
+
+# Add API health monitoring
+async def check_api_connectivity():
+    endpoints = [
+        "https://sge-dashboard-api.onrender.com/health",
+        f"{settings.SUPABASE_URL}/rest/v1/",
+        "https://api.sentry.io/"
+    ]
+    results = {}
+    for endpoint in endpoints:
+        try:
+            await make_api_request(endpoint)
+            results[endpoint] = "healthy"
+        except Exception as e:
+            results[endpoint] = f"failed: {str(e)}"
+    return results
+```
+
+### 4. CORS Configuration Failures
 **Component**: Frontend-Backend API communication
 **Issue**: Environment mismatch between development and production URLs
 **Impact**: API calls fail, frontend can't load data
@@ -50,7 +85,7 @@ else:
 
 ## 🟡 **Medium Priority Issues**
 
-### 4. JWT Token Expiration
+### 5. JWT Token Expiration
 **Component**: Authentication system
 **Issue**: 30-minute token expiration too short for long-running tasks
 **Impact**: Users logged out during important operations
@@ -62,7 +97,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES: int = 120  # Extend to 2 hours
 REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 ```
 
-### 5. Data Type Mismatches
+### 6. Data Type Mismatches
 **Component**: API data serialization
 **Issue**: Backend sends strings, frontend expects numbers
 **Impact**: UI calculations fail, display errors
@@ -81,7 +116,7 @@ class GrantResponse(BaseModel):
         return float(v) if isinstance(v, str) else v
 ```
 
-### 6. Redis Cache Synchronization
+### 7. Redis Cache Synchronization
 **Component**: Planned Redis caching layer
 **Issue**: PostgreSQL updates not reflected in Redis cache
 **Impact**: Users see stale data, inconsistent state
@@ -100,7 +135,7 @@ async def update_grant(grant_id: int, data: dict):
 
 ## 🟢 **Low Priority Issues**
 
-### 7. WebSocket Connection Management
+### 8. WebSocket Connection Management
 **Component**: Planned real-time updates
 **Issue**: WebSocket connections not properly closed
 **Impact**: Memory leaks, connection exhaustion
@@ -121,7 +156,7 @@ async def websocket_endpoint(websocket: WebSocket):
         await cleanup_connection(websocket)
 ```
 
-### 8. Victorian Compliance Data Validation
+### 9. Victorian Compliance Data Validation
 **Component**: Phase 5.4 compliance features
 **Issue**: Invalid enum values for Victorian government fields
 **Impact**: Export reports fail validation
@@ -178,6 +213,7 @@ sentry_sdk.init(
 |-------|-------------|--------|----------|
 | Database Pool Exhaustion | High | Critical | 🔴 |
 | Web Scraper Blocking | High | High | 🔴 |
+| API Connection Failures | High | Critical | 🔴 |
 | CORS Configuration | Medium | High | 🔴 |
 | JWT Token Expiration | Medium | Medium | 🟡 |
 | Data Type Mismatches | Medium | Medium | 🟡 |
@@ -199,6 +235,7 @@ sentry_sdk.init(
 
 ### Immediate (Next Sprint)
 - [ ] Add database connection pool monitoring
+- [ ] Implement robust API client with retry logic and connection monitoring
 - [ ] Implement Redis cache invalidation strategy
 - [ ] Add comprehensive health checks
 - [ ] Set up error tracking with Sentry
