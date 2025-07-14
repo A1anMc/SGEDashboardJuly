@@ -1,7 +1,9 @@
 /** @type {import('next').NextConfig} */
-const withBundleAnalyzer = require('@next/bundle-analyzer')({
-  enabled: process.env.ANALYZE === 'true',
-});
+
+// Conditionally load bundle analyzer only when needed
+const withBundleAnalyzer = process.env.ANALYZE === 'true' 
+  ? require('@next/bundle-analyzer')({ enabled: true })
+  : (config) => config;
 
 const nextConfig = {
   // Production optimization
@@ -178,14 +180,18 @@ const nextConfig = {
 
     // Add bundle analyzer plugin for development analysis
     if (process.env.ANALYZE === 'true') {
-      const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
-      config.plugins.push(
-        new BundleAnalyzerPlugin({
-          analyzerMode: 'static',
-          openAnalyzer: false,
-          reportFilename: '.next/analyze/bundle-report.html',
-        })
-      );
+      try {
+        const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+        config.plugins.push(
+          new BundleAnalyzerPlugin({
+            analyzerMode: 'static',
+            openAnalyzer: false,
+            reportFilename: '.next/analyze/bundle-report.html',
+          })
+        );
+      } catch (error) {
+        console.warn('Bundle analyzer not available, skipping...');
+      }
     }
 
     return config;
