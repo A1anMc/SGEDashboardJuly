@@ -83,7 +83,7 @@ make lint     # Runs ruff and pylint on backend and npm run lint in frontend
 make format   # Runs black and isort on backend and npm run format in frontend
 
 # Database
-make db-reset # Removes dev.db and runs alembic upgrade head to reset SQLite database
+make db-reset # Resets PostgreSQL database by running alembic downgrade base then upgrade head
 ```
 
 ## Deployment Configuration

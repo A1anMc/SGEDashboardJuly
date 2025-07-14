@@ -94,7 +94,7 @@ The task management system is a core component of the SGE Dashboard, providing f
 ### Previous Build Issues
 1. **Database Migration Issues**
    - Initial migration used UUID and PostgreSQL-specific features
-   - Fixed by using integer IDs and SQLite-compatible constraints
+   - Fixed by using integer IDs and PostgreSQL-compatible constraints
 
 2. **Model Relationship Issues**
    - TeamMember relationship caused circular imports

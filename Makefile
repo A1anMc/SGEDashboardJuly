@@ -26,5 +26,5 @@ format:
 	cd frontend && npm run format
 
 db-reset:
-	rm -f dev.db
-	alembic upgrade heads 
+	alembic downgrade base
+	alembic upgrade head 

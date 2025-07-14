@@ -5,7 +5,7 @@
 ```
 Frontend (Next.js 14.0.0 + Tailwind)
   ↕ API (FastAPI @ localhost:8000)
-    ↕ Database (SQLite/PostgreSQL)
+    ↕ Database (PostgreSQL)
     ↕ Scraper Services (aiohttp + BeautifulSoup)
     ↕ Tag System
 ```
@@ -22,8 +22,7 @@ Frontend (Next.js 14.0.0 + Tailwind)
   - Async Scraper Services
   - Authentication System
 - Database: 
-  - SQLite for Development
-  - PostgreSQL for Production
+  - PostgreSQL for Development and Production
   - Alembic Migrations
 - Testing:
   - Frontend: Jest + React Testing Library
