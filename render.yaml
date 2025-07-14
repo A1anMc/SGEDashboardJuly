@@ -190,9 +190,14 @@ print('DATABASE_URL type:', os.getenv('DATABASE_URL', 'not set').split('://')[0]
       # Copy static files from all subdirectories
       find .next/static -type d -exec mkdir -p .next/standalone/{} \;
       find .next/static -type f -exec cp {} .next/standalone/{} \;
+      # Copy server.js and required files
+      cp .next/standalone/server.js .next/standalone/
+      cp -r .next/standalone/.next/static .next/standalone/.next/
+      cp package.json .next/standalone/
     startCommand: |
       cd frontend/.next/standalone
       export PORT=$PORT
+      export NODE_ENV=production
       node server.js
     envVars:
       # Backend API URL
@@ -220,9 +225,9 @@ print('DATABASE_URL type:', os.getenv('DATABASE_URL', 'not set').split('://')[0]
         sync: false
       - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
         sync: false
-      
-    healthCheckPath: /
-    autoDeploy: false  # Manual deployment for security
+    
+    healthCheckPath: /api/health
+    autoDeploy: false
     scaling:
       minInstances: 1
       maxInstances: 2
