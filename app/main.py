@@ -14,6 +14,7 @@ import logging
 import time
 import os
 import sys
+import traceback
 
 # Import Base and models
 from app.db.base import Base  # noqa: F401
@@ -31,7 +32,7 @@ from app.api.v1.api import api_router
 from app.db.session import get_engine_instance, close_database
 from app.core.config import settings
 from app.core.error_handlers import setup_error_handlers
-from app.db.init_db import init_db, check_db_health, get_db_info, validate_database_config, init_database
+from app.db.init_db import init_db, check_db_health, get_db_info, validate_database_config
 
 # Configure logging with production-safe format
 logging.basicConfig(
@@ -182,7 +183,63 @@ def create_app() -> FastAPI:
     
     # === SECURITY MIDDLEWARE STACK (Order matters!) ===
     
-    # 1. Trusted Host Middleware (prevent host header attacks)
+    # 1. Error Logging Middleware (must be first to catch all errors)
+    @app.middleware("http")
+    async def error_logging_middleware(request: Request, call_next):
+        """Log detailed error information in production."""
+        start_time = time.time()
+        path = request.url.path
+        method = request.method
+        
+        try:
+            response = await call_next(request)
+            
+            # Log response time for all requests
+            duration = time.time() - start_time
+            logger.info(
+                f"Request completed",
+                extra={
+                    "path": path,
+                    "method": method,
+                    "status_code": response.status_code,
+                    "duration_ms": round(duration * 1000, 2)
+                }
+            )
+            
+            return response
+            
+        except Exception as e:
+            # Log detailed error information
+            logger.error(
+                f"Request failed",
+                extra={
+                    "path": path,
+                    "method": method,
+                    "error": str(e),
+                    "traceback": traceback.format_exc(),
+                    "duration_ms": round((time.time() - start_time) * 1000, 2)
+                }
+            )
+            
+            # Report to Sentry if available
+            if settings.SENTRY_DSN:
+                try:
+                    import sentry_sdk
+                    sentry_sdk.capture_exception(e)
+                except ImportError:
+                    pass
+            
+            # Return error response
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content={
+                    "detail": str(e) if settings.DEBUG else "Internal server error",
+                    "path": path,
+                    "method": method
+                }
+            )
+    
+    # 2. Trusted Host Middleware (prevent host header attacks)
     if settings.ENV == 'production':
         app.add_middleware(
             TrustedHostMiddleware,
