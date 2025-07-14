@@ -7,6 +7,8 @@ import logging
 import time
 from contextlib import contextmanager
 from typing import Optional
+import socket
+from urllib.parse import urlparse
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -15,6 +17,49 @@ logger = logging.getLogger(__name__)
 # Global engine variable (will be initialized lazily)
 _engine: Optional[object] = None
 _SessionLocal: Optional[sessionmaker] = None
+
+def resolve_hostname(url):
+    """Resolve database hostname and return updated URL if needed."""
+    parsed = urlparse(url)
+    if not parsed.hostname:
+        return url
+    
+    try:
+        # Try to resolve the hostname
+        logger.info(f"Attempting to resolve hostname: {parsed.hostname}")
+        resolved_ip = socket.gethostbyname(parsed.hostname)
+        logger.info(f"Hostname resolved to IP: {resolved_ip}")
+        
+        # If resolution successful, return original URL
+        return url
+    except socket.gaierror as e:
+        logger.error(f"Failed to resolve hostname {parsed.hostname}: {e}")
+        
+        # Check if hostname is from Render's database
+        if "render.com" in parsed.hostname:
+            # Try alternative Render database domains
+            alt_domains = [
+                parsed.hostname.replace("dpg-", "oregon-postgres-"),  # Try Oregon region
+                parsed.hostname.replace("dpg-", "frankfurt-postgres-"),  # Try Frankfurt region
+                f"{parsed.hostname}.render-databases.com",  # Try with full domain
+                f"{parsed.hostname}.internal-database.render.com"  # Try internal domain
+            ]
+            
+            for alt_domain in alt_domains:
+                try:
+                    logger.info(f"Trying alternative domain: {alt_domain}")
+                    resolved_ip = socket.gethostbyname(alt_domain)
+                    logger.info(f"Alternative domain resolved to IP: {resolved_ip}")
+                    
+                    # Construct new URL with working domain
+                    new_url = url.replace(parsed.hostname, alt_domain)
+                    logger.info(f"Using alternative database URL with domain: {alt_domain}")
+                    return new_url
+                except socket.gaierror:
+                    continue
+        
+        # If all attempts fail, return original URL
+        return url
 
 def get_engine(url=None, **kwargs):
     """Create SQLAlchemy engine with retry logic and proper configuration."""
@@ -43,6 +88,9 @@ def get_engine(url=None, **kwargs):
         logger.error(error_msg)
         raise RuntimeError(error_msg)
     
+    # Try to resolve hostname and get working URL
+    final_url = resolve_hostname(final_url)
+    
     logger.info(f"Connecting to database: {final_url.split('@')[0] if '@' in final_url else final_url.split('://')[0]}://***")
     
     # Default engine arguments
@@ -64,6 +112,7 @@ def get_engine(url=None, **kwargs):
             "keepalives_idle": 30,
             "keepalives_interval": 10,
             "keepalives_count": 5,
+            "connect_timeout": 10,  # Add connection timeout
         }
     })
     
