@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     
     # Database
     DATABASE_URL: str = os.getenv("DATABASE_URL", "")
-    TEST_DATABASE_URL: str = "sqlite:///./test.db"
+    TEST_DATABASE_URL: str = "postgresql://alanmccarthy@localhost:5432/sge_dashboard_test"
     DATABASE_MAX_RETRIES: int = int(os.getenv("DATABASE_MAX_RETRIES", "5"))
     DATABASE_RETRY_DELAY: int = int(os.getenv("DATABASE_RETRY_DELAY", "1"))
     DATABASE_ECHO: bool = os.getenv("DATABASE_ECHO", "false").lower() == "true"
@@ -82,9 +82,9 @@ class Settings(BaseSettings):
     SENTRY_TRACES_SAMPLE_RATE: float = float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "1.0"))
     
     # Rate Limiting
-    RATE_LIMIT_ENABLED: bool = os.getenv("RATE_LIMIT_ENABLED", "true").lower() == "true"
-    RATE_LIMIT_REQUESTS_PER_MINUTE: int = int(os.getenv("RATE_LIMIT_REQUESTS_PER_MINUTE", "60"))
-    RATE_LIMIT_REQUESTS_PER_HOUR: int = int(os.getenv("RATE_LIMIT_REQUESTS_PER_HOUR", "1000"))
+    RATE_LIMIT_ENABLED: bool = os.getenv("RATE_LIMIT_ENABLED", "false" if os.getenv("ENVIRONMENT", "development") == "development" else "true").lower() == "true"
+    RATE_LIMIT_REQUESTS_PER_MINUTE: int = int(os.getenv("RATE_LIMIT_REQUESTS_PER_MINUTE", "600" if os.getenv("ENVIRONMENT", "development") == "development" else "60"))
+    RATE_LIMIT_REQUESTS_PER_HOUR: int = int(os.getenv("RATE_LIMIT_REQUESTS_PER_HOUR", "10000" if os.getenv("ENVIRONMENT", "development") == "development" else "1000"))
     REDIS_URL: Optional[str] = os.getenv("REDIS_URL")  # For rate limiting backend
     
     # Trusted Hosts (for production)
@@ -244,28 +244,25 @@ class Settings(BaseSettings):
         """Validate database URL based on environment."""
         # If we're testing, use the test database URL
         if info.data.get("TESTING", False):
-            return info.data.get("TEST_DATABASE_URL", "sqlite:///./test.db")
+            return info.data.get("TEST_DATABASE_URL")
         
         # DATABASE_URL is required in production
         env = info.data.get("ENV", "development")
-        if env == "production" and not v:
-            raise ValueError("DATABASE_URL environment variable is required in production")
+        if env == "production":
+            if not v:
+                raise ValueError("DATABASE_URL environment variable is required in production")
+            if not v.startswith("postgresql://"):
+                raise ValueError("DATABASE_URL must start with postgresql:// in production")
+            if "localhost" in v or "127.0.0.1" in v:
+                raise ValueError("DATABASE_URL cannot use localhost in production environment")
         
-        # If no DATABASE_URL provided in development, allow empty (will be handled by session.py)
+        # For development, allow empty (will be handled by session.py)
         if not v:
             return v
         
-        # For SQLite URLs, no further validation needed
-        if v.startswith("sqlite:///"):
-            return v
-        
         # For PostgreSQL URLs, basic validation
-        if not (v.startswith("postgresql://") or v.startswith("sqlite:///")):
-            raise ValueError("DATABASE_URL must start with postgresql:// or sqlite:///")
-        
-        # Prevent localhost in production (but allow SQLite files)
-        if env == "production" and not v.startswith("sqlite:///") and ("localhost" in v or "127.0.0.1" in v):
-            raise ValueError("DATABASE_URL cannot use localhost in production environment")
+        if not v.startswith("postgresql://"):
+            raise ValueError("DATABASE_URL must start with postgresql://")
         
         # For Supabase URLs, ensure proper format
         if "supabase.co" in v:

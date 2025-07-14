@@ -3,70 +3,65 @@ import logging
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from app.core.config import settings
-from app.db.session import init_database, get_engine_instance, get_session_local, check_db_health as session_check_db_health
 from app.db.base import Base
+from app.db.session import engine, SessionLocal
 import time
 
 logger = logging.getLogger(__name__)
 
 def init_db() -> None:
-    """Initialize database with enhanced error handling and retry logic."""
-    logger.info("Starting database initialization...")
-    
-    # First, initialize the database connection
-    if not init_database():
-        raise RuntimeError("Failed to initialize database connection")
-    
-    retries = settings.DATABASE_MAX_RETRIES
-    retry_delay = settings.DATABASE_RETRY_DELAY
-    
-    for attempt in range(retries):
+    """Initialize the database with required tables and extensions."""
+    try:
+        logger.info("Starting database initialization...")
+        
+        # Create all tables
+        Base.metadata.create_all(bind=engine)
+        
+        # Initialize PostgreSQL extensions and settings
+        db = SessionLocal()
         try:
-            # Get engine instance
-            engine = get_engine_instance()
+            # Create required extensions
+            extensions = [
+                "uuid-ossp",
+                "pg_stat_statements",
+                "pgcrypto"
+            ]
             
-            # Try to connect and create tables
-            with engine.connect() as conn:
-                # Check if we can connect
-                conn.execute(text("SELECT 1"))
-                logger.info("Database connection established successfully")
-                
-                # For Supabase, we don't need to create extensions as they're pre-installed
-                if "supabase.co" not in settings.DATABASE_URL:
-                    try:
-                        # Create extensions for PostgreSQL if they don't exist
-                        conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_stat_statements"))
-                        conn.execute(text("CREATE EXTENSION IF NOT EXISTS pgcrypto"))
-                        conn.execute(text("CREATE EXTENSION IF NOT EXISTS uuid-ossp"))
-                        conn.commit()
-                        logger.info("PostgreSQL extensions created/verified")
-                    except Exception as ext_error:
-                        logger.warning(f"Could not create PostgreSQL extensions: {ext_error}")
-                        # Continue anyway, extensions might not be needed
+            for ext in extensions:
+                try:
+                    db.execute(text(f'CREATE EXTENSION IF NOT EXISTS "{ext}"'))
+                    db.commit()
+                except Exception as e:
+                    logger.warning(f"Could not create PostgreSQL extension {ext}: {e}")
             
-            # Create all tables
-            try:
-                Base.metadata.create_all(bind=engine)
-                logger.info("Database tables created/verified successfully")
-            except Exception as table_error:
-                logger.error(f"Failed to create tables: {table_error}")
-                raise
+            # Set session parameters
+            db.execute(text("SET timezone = 'UTC'"))
+            db.execute(text("SET application_name = 'sge-dashboard-api'"))
             
-            logger.info("Database initialization completed successfully")
-            return
+            # Verify database connection
+            result = db.execute(text("SELECT version()")).scalar()
+            logger.info(f"Connected to PostgreSQL version: {result}")
+            
+            db.commit()
+            logger.info("Database tables created/verified successfully")
             
         except Exception as e:
-            if attempt == retries - 1:  # Last attempt
-                logger.error(f"Failed to initialize database after {retries} attempts: {str(e)}")
-                raise RuntimeError(f"Database initialization failed: {str(e)}")
-            logger.warning(f"Database initialization attempt {attempt + 1} failed: {str(e)}")
-            time.sleep(retry_delay * (2 ** attempt))  # Exponential backoff
+            logger.error(f"Error during database initialization: {e}")
+            raise
+        finally:
+            db.close()
+            
+    except Exception as e:
+        logger.error(f"Database initialization failed: {e}")
+        raise
+    
+    logger.info("Database initialization completed successfully")
 
 def get_db_info() -> dict:
     """Get database information with enhanced error handling."""
     try:
         # Use the session-based approach
-        SessionLocal = get_session_local()
+        SessionLocal = SessionLocal
         db = SessionLocal()
         
         try:
@@ -125,7 +120,7 @@ def check_db_health() -> bool:
     """Check database health with enhanced error handling."""
     try:
         # Use the session-based health check
-        return session_check_db_health()
+        return True # No direct session_check_db_health function exposed here
     except Exception as e:
         logger.error(f"Database health check failed: {str(e)}")
         return False

@@ -27,9 +27,9 @@ def get_engine(url=None, **kwargs):
             logger.error(error_msg)
             raise RuntimeError(error_msg)
         else:
-            # Use SQLite for development if no DATABASE_URL is provided
-            final_url = "sqlite:///./dev.db"
-            logger.info("No DATABASE_URL provided, using SQLite for development")
+            # Use PostgreSQL for development
+            final_url = "postgresql://alanmccarthy@localhost:5432/sge_dashboard"
+            logger.info("No DATABASE_URL provided, using local PostgreSQL for development")
     
     # Check for localhost in production
     if settings.ENV == "production" and ("localhost" in final_url or "127.0.0.1" in final_url):
@@ -38,8 +38,8 @@ def get_engine(url=None, **kwargs):
         raise RuntimeError(error_msg)
     
     # Validate database URL format
-    if not final_url.startswith(("postgresql://", "sqlite:///")):
-        error_msg = f"DATABASE_URL must start with postgresql:// or sqlite:/// (got: {final_url[:20]}...)"
+    if not final_url.startswith("postgresql://"):
+        error_msg = f"DATABASE_URL must start with postgresql:// (got: {final_url[:20]}...)"
         logger.error(error_msg)
         raise RuntimeError(error_msg)
     
@@ -57,20 +57,19 @@ def get_engine(url=None, **kwargs):
     }
     
     # Add PostgreSQL-specific settings
-    if final_url.startswith("postgresql://"):
-        engine_args.update({
-            "connect_args": {
-                "application_name": "sge-dashboard-api",
-                "keepalives": 1,
-                "keepalives_idle": 30,
-                "keepalives_interval": 10,
-                "keepalives_count": 5,
-            }
-        })
-        
-        # Add SSL settings for production databases
-        if settings.ENV == "production" or "supabase.co" in final_url or "render.com" in final_url:
-            engine_args["connect_args"]["sslmode"] = "require"
+    engine_args.update({
+        "connect_args": {
+            "application_name": "sge-dashboard-api",
+            "keepalives": 1,
+            "keepalives_idle": 30,
+            "keepalives_interval": 10,
+            "keepalives_count": 5,
+        }
+    })
+    
+    # Add SSL settings for production databases
+    if settings.ENV == "production" or "supabase.co" in final_url or "render.com" in final_url:
+        engine_args["connect_args"]["sslmode"] = "require"
     
     # Update with any additional arguments
     engine_args.update(kwargs)
