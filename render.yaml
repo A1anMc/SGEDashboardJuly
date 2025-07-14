@@ -9,13 +9,18 @@ services:
       # Install optional security packages
       pip install slowapi[redis] sentry-sdk[fastapi] || echo "Optional packages not installed"
     startCommand: |
+      echo "Starting backend deployment..."
+      echo "Database URL: $DATABASE_URL"
       alembic upgrade head || echo "Database migration failed, continuing..."
       gunicorn app.main:app \
         --workers 1 \
         --worker-class uvicorn.workers.UvicornWorker \
         --bind 0.0.0.0:$PORT \
-        --timeout 120 \
-        --keep-alive 65 \
+        --timeout 300 \
+        --keep-alive 120 \
+        --max-requests 1000 \
+        --max-requests-jitter 50 \
+        --preload \
         --log-level info \
         --error-logfile - \
         --access-logfile - \
