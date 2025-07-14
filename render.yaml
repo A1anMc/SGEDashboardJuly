@@ -17,10 +17,6 @@ services:
       find . -name ".env*" -type f -delete
       echo "Removed any existing .env files"
       
-      # Verify .env files are gone
-      echo "Checking for remaining .env files:"
-      find . -name ".env*" -type f
-      
       # Install optional security packages
       pip install slowapi[redis] sentry-sdk[fastapi] || echo "Optional packages not installed"
       
@@ -29,12 +25,20 @@ services:
       python -c "
 import os
 import json
+import socket
 
 def check_env():
     print('ENVIRONMENT:', os.getenv('ENVIRONMENT', 'not set'))
     print('RENDER:', os.getenv('RENDER', 'not set'))
-    print('DATABASE_URL type:', os.getenv('DATABASE_URL', 'not set').split('://')[0] if '://' in os.getenv('DATABASE_URL', '') else 'invalid')
-    print('Current directory files:', json.dumps(os.listdir('.'), indent=2))
+    db_url = os.getenv('DATABASE_URL', 'not set')
+    print('DATABASE_URL type:', db_url.split('://')[0] if '://' in db_url else 'invalid')
+    if '@' in db_url:
+        host = db_url.split('@')[1].split('/')[0]
+        try:
+            ip = socket.gethostbyname(host)
+            print(f'Database host {host} resolves to {ip}')
+        except:
+            print(f'Could not resolve database host {host}')
 
 check_env()
 "
@@ -80,23 +84,31 @@ print('DATABASE_URL type:', os.getenv('DATABASE_URL', 'not set').split('://')[0]
       - key: DATABASE_SSL_MODE
         value: "require"
       - key: DATABASE_POOL_SIZE
-        value: "5"
+        value: "2"  # Reduced for stability
       - key: DATABASE_MAX_OVERFLOW
-        value: "10"
+        value: "5"  # Reduced for stability
       - key: DATABASE_POOL_TIMEOUT
         value: "30"
       - key: DATABASE_POOL_RECYCLE
         value: "1800"
       - key: DATABASE_MAX_RETRIES
-        value: "3"
+        value: "5"  # Increased retries
       - key: DATABASE_RETRY_DELAY
-        value: "2"
+        value: "5"  # Increased delay
       - key: DATABASE_ECHO
         value: "false"
+      - key: PGCONNECT_TIMEOUT
+        value: "10"
+      - key: PGSSLMODE
+        value: "require"
+      - key: PGDATESTYLE
+        value: "ISO, MDY"
+      - key: PGTZ
+        value: "UTC"
       
       # Security - Generated or set manually
       - key: SECRET_KEY
-        sync: false  # Set this manually without newline characters
+        sync: false
       - key: JWT_SECRET_KEY
         generateValue: true
       

@@ -1,4 +1,6 @@
 import os
+import socket
+from urllib.parse import urlparse
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
@@ -7,8 +9,6 @@ import logging
 import time
 from contextlib import contextmanager
 from typing import Optional
-import socket
-from urllib.parse import urlparse
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -18,40 +18,34 @@ logger = logging.getLogger(__name__)
 _engine: Optional[object] = None
 _SessionLocal: Optional[sessionmaker] = None
 
-def resolve_hostname(url):
-    """Resolve database hostname and return updated URL if needed."""
+def resolve_database_host(url: str) -> str:
+    """Resolve database hostname and return updated URL."""
     parsed = urlparse(url)
     if not parsed.hostname:
         return url
     
     try:
-        # Try to resolve the hostname
+        # Try to resolve the hostname directly
         logger.info(f"Attempting to resolve hostname: {parsed.hostname}")
-        resolved_ip = socket.gethostbyname(parsed.hostname)
-        logger.info(f"Hostname resolved to IP: {resolved_ip}")
-        
-        # If resolution successful, return original URL
+        socket.gethostbyname(parsed.hostname)
         return url
     except socket.gaierror as e:
         logger.error(f"Failed to resolve hostname {parsed.hostname}: {e}")
         
         # Check if hostname is from Render's database
         if "render.com" in parsed.hostname:
-            # Try alternative Render database domains
             alt_domains = [
-                parsed.hostname.replace("dpg-", "oregon-postgres-"),  # Try Oregon region
-                parsed.hostname.replace("dpg-", "frankfurt-postgres-"),  # Try Frankfurt region
-                f"{parsed.hostname}.render-databases.com",  # Try with full domain
-                f"{parsed.hostname}.internal-database.render.com"  # Try internal domain
+                parsed.hostname.replace("dpg-", "oregon-postgres-"),
+                parsed.hostname.replace("dpg-", "frankfurt-postgres-"),
+                f"{parsed.hostname}.render-databases.com",
+                f"{parsed.hostname}.internal-database.render.com",
+                f"{parsed.hostname}.postgres.render.com"
             ]
             
             for alt_domain in alt_domains:
                 try:
                     logger.info(f"Trying alternative domain: {alt_domain}")
-                    resolved_ip = socket.gethostbyname(alt_domain)
-                    logger.info(f"Alternative domain resolved to IP: {resolved_ip}")
-                    
-                    # Construct new URL with working domain
+                    socket.gethostbyname(alt_domain)
                     new_url = url.replace(parsed.hostname, alt_domain)
                     logger.info(f"Using alternative database URL with domain: {alt_domain}")
                     return new_url
@@ -72,7 +66,6 @@ def get_engine(url=None, **kwargs):
             logger.error(error_msg)
             raise RuntimeError(error_msg)
         else:
-            # Use PostgreSQL for development
             final_url = "postgresql://alanmccarthy@localhost:5432/sge_dashboard"
             logger.info("No DATABASE_URL provided, using local PostgreSQL for development")
     
@@ -84,12 +77,12 @@ def get_engine(url=None, **kwargs):
     
     # Validate database URL format
     if not final_url.startswith("postgresql://"):
-        error_msg = f"DATABASE_URL must start with postgresql:// (got: {final_url[:20]}...)"
+        error_msg = f"DATABASE_URL must start with postgresql:// (got: {final_url.split('://')[0] if '://' in final_url else 'invalid'})"
         logger.error(error_msg)
         raise RuntimeError(error_msg)
     
     # Try to resolve hostname and get working URL
-    final_url = resolve_hostname(final_url)
+    final_url = resolve_database_host(final_url)
     
     logger.info(f"Connecting to database: {final_url.split('@')[0] if '@' in final_url else final_url.split('://')[0]}://***")
     
@@ -112,7 +105,8 @@ def get_engine(url=None, **kwargs):
             "keepalives_idle": 30,
             "keepalives_interval": 10,
             "keepalives_count": 5,
-            "connect_timeout": 10,  # Add connection timeout
+            "connect_timeout": int(os.getenv("PGCONNECT_TIMEOUT", "10")),
+            "options": "-c timezone=UTC -c datestyle=ISO,MDY"
         }
     })
     
@@ -139,12 +133,6 @@ def get_engine(url=None, **kwargs):
         except Exception as e:
             if attempt == retries - 1:  # Last attempt
                 logger.error(f"Failed to connect to database after {retries} attempts: {str(e)}")
-                # Provide helpful error message for common issues
-                if "Connection refused" in str(e):
-                    logger.error("Database connection refused. Please check:")
-                    logger.error("1. DATABASE_URL environment variable is set correctly")
-                    logger.error("2. Database server is running and accessible")
-                    logger.error("3. Network connectivity to database host")
                 raise RuntimeError(f"Database connection failed: {str(e)}")
             logger.warning(f"Database connection attempt {attempt + 1} failed: {str(e)}")
             time.sleep(retry_delay * (2 ** attempt))  # Exponential backoff

@@ -13,6 +13,7 @@ from starlette.middleware.sessions import SessionMiddleware
 import logging
 import time
 import os
+import sys
 
 # Import Base and models
 from app.db.base import Base  # noqa: F401
@@ -30,7 +31,7 @@ from app.api.v1.api import api_router
 from app.db.session import get_engine_instance, close_database
 from app.core.config import settings
 from app.core.error_handlers import setup_error_handlers
-from app.db.init_db import init_db, check_db_health, get_db_info, validate_database_config
+from app.db.init_db import init_db, check_db_health, get_db_info, validate_database_config, init_database
 
 # Configure logging with production-safe format
 logging.basicConfig(
@@ -84,6 +85,8 @@ if settings.ENV == 'production' and settings.RATE_LIMIT_ENABLED:
         logger.info(f"Rate limiting enabled: {settings.RATE_LIMIT_REQUESTS_PER_MINUTE}/min, {settings.RATE_LIMIT_REQUESTS_PER_HOUR}/hour")
     except ImportError:
         logger.warning("SlowAPI not installed, rate limiting disabled")
+else:
+    logger.info(f"Rate limiting disabled in {settings.ENV} environment")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
