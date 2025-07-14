@@ -106,6 +106,12 @@ def get_engine_instance():
     global _engine
     if _engine is None:
         _engine = get_engine()
+        # Initialize pool monitor when engine is created
+        try:
+            from app.db.pool_monitor import initialize_pool_monitor
+            initialize_pool_monitor(_engine)
+        except Exception as e:
+            logger.warning(f"Failed to initialize pool monitor: {e}")
     return _engine
 
 def get_session_local():
@@ -145,6 +151,11 @@ def get_db_session():
         yield db
     finally:
         db.close()
+
+def get_db_session_sync():
+    """Get a database session for synchronous use (non-FastAPI)."""
+    SessionLocal = get_session_local()
+    return SessionLocal()
 
 def check_db_health() -> bool:
     """Check database health with proper error handling."""
