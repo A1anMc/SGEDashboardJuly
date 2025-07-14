@@ -33,6 +33,18 @@ async def health_check(db: Session = Depends(get_db_session)):
             logger.warning(f"Could not get pool metrics: {e}")
             pool_metrics = {"error": "Pool monitoring unavailable"}
         
+        # Get API client metrics
+        api_client_metrics = None
+        try:
+            from app.core.api_client import get_all_client_metrics, health_check_all_clients
+            api_client_metrics = {
+                "metrics": get_all_client_metrics(),
+                "health_checks": health_check_all_clients()
+            }
+        except Exception as e:
+            logger.warning(f"Could not get API client metrics: {e}")
+            api_client_metrics = {"error": "API client monitoring unavailable"}
+        
         # Overall health status
         overall_status = "healthy"
         if not db_healthy:
@@ -47,7 +59,8 @@ async def health_check(db: Session = Depends(get_db_session)):
             "version": settings.VERSION,
             "timestamp": datetime.now().isoformat(),
             "database_info": db_info,
-            "pool_metrics": pool_metrics
+            "pool_metrics": pool_metrics,
+            "api_client_metrics": api_client_metrics
         }
         
         # Add configuration info (without sensitive data)
