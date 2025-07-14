@@ -182,7 +182,12 @@ print('DATABASE_URL type:', os.getenv('DATABASE_URL', 'not set').split('://')[0]
       cd frontend
       npm ci --only=production
       npm run build
-    startCommand: cd frontend && node .next/standalone/server.js
+      # Copy public files to standalone directory
+      cp -r .next/static .next/standalone/.next/
+      cp -r public .next/standalone/
+    startCommand: |
+      cd frontend/.next/standalone
+      PORT=$PORT node server.js
     envVars:
       # Backend API URL
       - key: NEXT_PUBLIC_API_URL
