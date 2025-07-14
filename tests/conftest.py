@@ -31,18 +31,21 @@ from app.db.session import get_db_session
 
 # Create test database engine
 test_engine = create_engine(
-    "sqlite:///:memory:",
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-    pool_pre_ping=True
+    settings.DATABASE_URL,
+    pool_pre_ping=True,
+    pool_size=5,
+    max_overflow=10
 )
 
-# Enable SQLite foreign key support
+# Enable foreign key support based on database type
 @event.listens_for(Engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
+def set_foreign_keys(dbapi_connection, connection_record):
     if settings.TESTING:
         cursor = dbapi_connection.cursor()
-        cursor.execute("PRAGMA foreign_keys=ON")
+        if 'sqlite' in str(test_engine.url):
+            cursor.execute("PRAGMA foreign_keys=ON")
+        elif 'postgresql' in str(test_engine.url):
+            cursor.execute("SET session_replication_role = 'replica';")
         cursor.close()
 
 # Create test session factory

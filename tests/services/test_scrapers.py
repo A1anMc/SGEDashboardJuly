@@ -148,6 +148,12 @@ def mock_grantconnect_session():
 class TestScraper(BaseScraper):
     """Concrete test implementation of BaseScraper."""
     
+    @pytest.fixture(autouse=True)
+    def setup(self, db_session):
+        """Set up test scraper with database session."""
+        self.db = db_session
+        self.source = "test_source"
+    
     async def scrape(self) -> List[Dict[str, Any]]:
         """Test implementation of abstract method."""
         return []

@@ -41,8 +41,7 @@ class GrantResponse(GrantBase):
     updated_at: datetime
     created_by_id: Optional[int] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class GrantFilters(BaseModel):
     """Schema for grant filtering parameters."""

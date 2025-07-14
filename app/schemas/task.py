@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional, List, Dict
 from datetime import datetime
 from app.models.task import TaskStatus, TaskPriority
@@ -43,8 +43,7 @@ class TaskResponse(TaskBase):
     comment_count: int
     reaction_summary: Dict[str, List[int]] = {}
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class CommentBase(BaseModel):
     """Base schema for comments."""
@@ -70,8 +69,7 @@ class CommentResponse(CommentBase):
     updated_at: datetime
     reactions: Optional[Dict[str, List[int]]] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ReactionCreate(BaseModel):
     """Schema for creating a reaction."""
@@ -83,8 +81,7 @@ class ReactionResponse(ReactionCreate):
     id: int
     user_id: int
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class TimeEntryBase(BaseModel):
     """Base schema for time entry data."""
@@ -104,5 +101,4 @@ class TimeEntryResponse(TimeEntryBase):
     user_id: int
     created_at: datetime
     
-    class Config:
-        from_attributes = True 
+    model_config = ConfigDict(from_attributes=True) 

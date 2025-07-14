@@ -5,8 +5,8 @@ def setup_test_env():
     """Set up test environment variables."""
     os.environ.update({
         "TESTING": "true",
-        "DATABASE_URL": "sqlite:///:memory:",
-        "TEST_DATABASE_URL": "sqlite:///:memory:",
+        "DATABASE_URL": "postgresql://alanmccarthy@localhost:5432/sge_dashboard_test",
+        "TEST_DATABASE_URL": "postgresql://alanmccarthy@localhost:5432/sge_dashboard_test",
         "SECRET_KEY": "test-secret-key",
         "JWT_SECRET_KEY": "test-jwt-key",
         "JWT_ALGORITHM": "HS256",
