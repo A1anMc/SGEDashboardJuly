@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
     
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://alanmccarthy@localhost:5432/sge_dashboard")
     TEST_DATABASE_URL: str = "postgresql://alanmccarthy@localhost:5432/sge_dashboard_test"
     DATABASE_MAX_RETRIES: int = int(os.getenv("DATABASE_MAX_RETRIES", "5"))
     DATABASE_RETRY_DELAY: int = int(os.getenv("DATABASE_RETRY_DELAY", "1"))
