@@ -1,141 +1,109 @@
-"""Logging configuration for the application."""
-
+"""Enhanced logging configuration for the application."""
 import logging
-import logging.handlers
-import os
-from pathlib import Path
-from typing import Optional
 import json
+import sys
 from datetime import datetime
-import sentry_sdk
-from sentry_sdk.integrations.logging import LoggingIntegration
-from sentry_sdk.integrations.fastapi import FastApiIntegration
-from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
-
+from typing import Any, Dict
 from app.core.config import settings
 
-# Create logs directory if it doesn't exist
-LOGS_DIR = Path("logs")
-LOGS_DIR.mkdir(exist_ok=True)
-
-class RequestContextFilter(logging.Filter):
-    """Add request context to log records."""
+class StructuredLogger(logging.Logger):
+    """Custom logger that outputs structured JSON logs in production."""
     
-    def filter(self, record):
-        # These attributes will be empty if there's no request context
-        record.request_id = getattr(record, "request_id", "no_request")
-        record.path = getattr(record, "path", "no_path")
-        record.method = getattr(record, "method", "no_method")
-        record.user_id = getattr(record, "user_id", "no_user")
-        record.ip = getattr(record, "ip", "no_ip")
-        return True
-
-class JSONFormatter(logging.Formatter):
-    """Format log records as JSON."""
-    
-    def format(self, record):
+    def _log_to_json(self, level: int, msg: str, args: Any, exc_info: Any = None, extra: Dict = None) -> str:
+        timestamp = datetime.utcnow().isoformat()
         log_data = {
-            "timestamp": datetime.utcnow().isoformat(),
-            "level": record.levelname,
-            "message": record.getMessage(),
-            "module": record.module,
-            "function": record.funcName,
-            "line": record.lineno,
-            "request_id": getattr(record, "request_id", "no_request"),
-            "path": getattr(record, "path", "no_path"),
-            "method": getattr(record, "method", "no_method"),
-            "user_id": getattr(record, "user_id", "no_user"),
-            "ip": getattr(record, "ip", "no_ip")
+            "timestamp": timestamp,
+            "level": logging.getLevelName(level),
+            "message": msg % args if args else msg,
+            "environment": settings.ENV,
+            "service": "sge-dashboard-api"
         }
         
-        # Add extra fields if they exist
-        if hasattr(record, "extra"):
-            log_data.update(record.extra)
-            
-        # Add exception info if present
-        if record.exc_info:
-            log_data["exception"] = {
-                "type": str(record.exc_info[0].__name__),
-                "message": str(record.exc_info[1]),
-                "traceback": self.formatException(record.exc_info)
-            }
+        if exc_info:
+            if isinstance(exc_info, BaseException):
+                log_data["error"] = str(exc_info)
+            elif isinstance(exc_info, tuple):
+                log_data["error"] = str(exc_info[1])
+        
+        if extra:
+            log_data.update(extra)
             
         return json.dumps(log_data)
 
-def setup_logging(log_level: Optional[str] = None) -> None:
-    """Configure application-wide logging."""
+    def makeRecord(self, *args, **kwargs):
+        record = super().makeRecord(*args, **kwargs)
+        if settings.ENV == "production":
+            record.msg = self._log_to_json(record.levelno, record.msg, record.args, 
+                                         record.exc_info, record.extra if hasattr(record, 'extra') else None)
+            record.args = ()
+        return record
+
+def setup_logging():
+    """Configure application-wide logging with environment-specific settings."""
+    # Register our custom logger
+    logging.setLoggerClass(StructuredLogger)
     
-    # Use provided log level or default from settings
-    log_level = log_level or settings.LOG_LEVEL
-    numeric_level = getattr(logging, log_level.upper(), logging.INFO)
-    
-    # Create formatters
-    json_formatter = JSONFormatter()
-    console_formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
-    
-    # Create handlers
-    # 1. Console handler
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(console_formatter)
-    
-    # 2. JSON file handler with rotation
-    json_handler = logging.handlers.RotatingFileHandler(
-        LOGS_DIR / "app.json",
-        maxBytes=10_000_000,  # 10MB
-        backupCount=5
-    )
-    json_handler.setFormatter(json_formatter)
-    
-    # 3. Error file handler
-    error_handler = logging.handlers.RotatingFileHandler(
-        LOGS_DIR / "error.log",
-        maxBytes=10_000_000,  # 10MB
-        backupCount=5
-    )
-    error_handler.setLevel(logging.ERROR)
-    error_handler.setFormatter(json_formatter)
-    
-    # Configure root logger
+    # Set up root logger
     root_logger = logging.getLogger()
-    root_logger.setLevel(numeric_level)
+    root_logger.setLevel(settings.LOG_LEVEL)
     
-    # Add request context filter
-    context_filter = RequestContextFilter()
-    root_logger.addFilter(context_filter)
+    # Clear any existing handlers
+    root_logger.handlers = []
     
-    # Add handlers
+    # Console handler
+    console_handler = logging.StreamHandler(sys.stdout)
+    
+    if settings.ENV == "production":
+        # Production format - JSON structured logging
+        console_handler.setFormatter(logging.Formatter('%(message)s'))
+    else:
+        # Development format - human readable
+        format_str = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        console_handler.setFormatter(logging.Formatter(format_str))
+    
     root_logger.addHandler(console_handler)
-    root_logger.addHandler(json_handler)
-    root_logger.addHandler(error_handler)
     
-    # Configure Sentry integration if DSN is provided
-    if settings.SENTRY_DSN:
-        sentry_logging = LoggingIntegration(
-            level=logging.INFO,        # Capture info and above as breadcrumbs
-            event_level=logging.ERROR  # Send errors as events
-        )
-        
-        sentry_sdk.init(
-            dsn=settings.SENTRY_DSN,
-            environment=settings.SENTRY_ENVIRONMENT,
-            traces_sample_rate=settings.SENTRY_TRACES_SAMPLE_RATE,
-            integrations=[
-                sentry_logging,
-                FastApiIntegration(),
-                SqlalchemyIntegration(),
-            ]
-        )
-        
-        logging.info("Sentry integration initialized")
+    # Set up specific loggers with appropriate levels
+    loggers = {
+        'app': settings.LOG_LEVEL,
+        'uvicorn': logging.INFO,
+        'alembic': logging.INFO,
+        'sqlalchemy.engine': logging.WARNING,
+        'sqlalchemy.pool': logging.WARNING,
+    }
     
-    # Log startup message
-    logging.info(
-        "Logging system initialized",
-        extra={
-            "log_level": log_level,
-            "handlers": ["console", "json_file", "error_file"],
-            "sentry_enabled": bool(settings.SENTRY_DSN)
-        }
-    ) 
+    for logger_name, level in loggers.items():
+        logger = logging.getLogger(logger_name)
+        logger.setLevel(level)
+        
+    # Disable certain noisy loggers in production
+    if settings.ENV == "production":
+        logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+        
+    return root_logger
+
+# Convenience functions for structured logging
+def log_database_event(logger: logging.Logger, event_type: str, details: Dict[str, Any]):
+    """Log database-related events with consistent structure."""
+    logger.info("Database event", extra={
+        "event_type": event_type,
+        "database_details": details
+    })
+
+def log_api_event(logger: logging.Logger, endpoint: str, method: str, status_code: int, duration_ms: float):
+    """Log API-related events with consistent structure."""
+    logger.info("API request", extra={
+        "endpoint": endpoint,
+        "method": method,
+        "status_code": status_code,
+        "duration_ms": duration_ms
+    })
+
+def log_error_event(logger: logging.Logger, error: Exception, context: Dict[str, Any] = None):
+    """Log error events with consistent structure and context."""
+    error_details = {
+        "error_type": type(error).__name__,
+        "error_message": str(error),
+        "context": context or {}
+    }
+    logger.error("Application error", extra={"error_details": error_details}) 
