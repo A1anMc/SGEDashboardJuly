@@ -100,7 +100,7 @@ class SystemMonitor:
                 start_time = time.time()
                 response = requests.get(
                     f"{self.backend_url}{endpoint}",
-                    timeout=5,
+                    timeout=30,  # Increased timeout for production
                     headers={"User-Agent": "SGE-Monitor/1.0"}
                 )
                 duration = (time.time() - start_time) * 1000  # ms
