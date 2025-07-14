@@ -1,6 +1,6 @@
 """Health check endpoints for the application."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 from app.db.session import get_db_session
 from app.core.config import settings
@@ -13,16 +13,21 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.get("/health")
-async def health_check(db: Session = Depends(get_db_session)):
+async def health_check(response: Response):
     """
     Enhanced health check endpoint with database pool monitoring.
+    Does not require database session by default.
     """
     try:
         # Basic database health check
         db_healthy = check_db_health()
         
-        # Get database info
-        db_info = get_db_info()
+        # Get database info (without requiring session)
+        try:
+            db_info = get_db_info()
+        except Exception as e:
+            logger.warning(f"Could not get database info: {e}")
+            db_info = {"error": str(e)}
         
         # Get pool metrics
         pool_metrics = None
@@ -49,8 +54,12 @@ async def health_check(db: Session = Depends(get_db_session)):
         overall_status = "healthy"
         if not db_healthy:
             overall_status = "unhealthy"
+            response.status_code = 503  # Service Unavailable
         elif pool_metrics and pool_metrics.get("status") == "critical":
             overall_status = "degraded"
+            response.status_code = 200  # Still available but degraded
+        else:
+            response.status_code = 200  # Healthy
         
         health_response = {
             "status": overall_status,
@@ -76,6 +85,7 @@ async def health_check(db: Session = Depends(get_db_session)):
         
     except Exception as e:
         logger.error(f"Health check failed: {str(e)}")
+        response.status_code = 503  # Service Unavailable
         return {
             "status": "unhealthy",
             "error": str(e),

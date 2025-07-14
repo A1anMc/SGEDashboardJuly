@@ -58,61 +58,48 @@ def init_db() -> None:
     logger.info("Database initialization completed successfully")
 
 def get_db_info() -> dict:
-    """Get database information with enhanced error handling."""
+    """Get database information without requiring an active connection."""
     try:
-        # Use the session-based approach
-        SessionLocal = SessionLocal
-        db = SessionLocal()
+        from urllib.parse import urlparse
+        url = settings.DATABASE_URL
         
-        try:
-            # Get PostgreSQL version
-            version_result = db.execute(text("SHOW server_version"))
-            version = version_result.scalar()
-            
-            # Get connection info
-            info_result = db.execute(text("""
-                SELECT 
-                    current_database() as db_name,
-                    current_user as user,
-                    inet_server_addr() as server_ip,
-                    inet_server_port() as server_port
-            """))
-            info = info_result.fetchone()
-            
-            # Safe URL extraction
-            safe_url = "localhost"
-            try:
-                if "@" in settings.DATABASE_URL:
-                    safe_url = settings.DATABASE_URL.split("@")[1].split("/")[0]
-            except:
-                pass
-            
+        # Parse database URL safely
+        if not url:
             return {
-                "version": version,
-                "database": info.db_name if info else "unknown",
-                "user": info.user if info else "unknown",
-                "server_ip": str(info.server_ip) if info and info.server_ip else "unknown",
-                "server_port": info.server_port if info else "unknown",
-                "url": safe_url,
-                "status": "connected"
+                "error": "DATABASE_URL not configured",
+                "url": "unknown",
+                "status": "error"
             }
-        finally:
-            db.close()
-            
-    except Exception as e:
-        logger.error(f"Failed to get database info: {str(e)}")
         
-        # Safe URL extraction for error case
-        safe_url = "unknown"
+        parsed = urlparse(url)
+        
+        # Don't expose sensitive information
+        info = {
+            "type": parsed.scheme,
+            "host": parsed.hostname,
+            "port": parsed.port,
+            "database": parsed.path.lstrip("/"),
+            "url": f"{parsed.hostname}:{parsed.port}",
+            "status": "configured"
+        }
+        
+        # Try to get version info if database is accessible
         try:
-            if "@" in settings.DATABASE_URL:
-                safe_url = settings.DATABASE_URL.split("@")[1].split("/")[0]
-        except:
-            pass
+            with engine.connect() as conn:
+                result = conn.execute(text("SHOW server_version"))
+                version = result.scalar()
+                info["version"] = version
+                info["status"] = "connected"
+        except Exception as e:
+            logger.warning(f"Could not get database version: {e}")
+            info["status"] = "configured_but_unavailable"
         
+        return info
+    except Exception as e:
+        logger.error(f"Failed to get database info: {e}")
         return {
             "error": str(e),
-            "url": safe_url,
+            "url": "unknown",
             "status": "error"
         }
 
