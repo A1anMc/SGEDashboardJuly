@@ -18,7 +18,7 @@ services:
       echo "Removed any existing .env files"
       
       # Install optional security packages
-      pip install slowapi[redis] sentry-sdk[fastapi] || echo "Optional packages not installed"
+      pip install slowapi[redis] sentry-sdk[fastapi] psycopg2-binary || echo "Optional packages not installed"
       
       # Print detailed environment check
       echo "=== Environment Variable Check ==="
@@ -53,18 +53,22 @@ print('DATABASE_URL type:', os.getenv('DATABASE_URL', 'not set').split('://')[0]
 "
       alembic upgrade head || echo "Database migration failed, continuing..."
       gunicorn app.main:app \
-        --workers 1 \
+        --workers 2 \
         --worker-class uvicorn.workers.UvicornWorker \
         --bind 0.0.0.0:$PORT \
         --timeout 300 \
         --keep-alive 120 \
         --max-requests 1000 \
         --max-requests-jitter 50 \
+        --worker-tmp-dir /dev/shm \
+        --graceful-timeout 120 \
         --preload \
         --log-level debug \
         --error-logfile - \
         --access-logfile - \
-        --capture-output
+        --capture-output \
+        --statsd-host localhost:8125 \
+        --worker-connections 1000
     envVars:
       # Core Environment
       - key: RENDER
@@ -105,6 +109,10 @@ print('DATABASE_URL type:', os.getenv('DATABASE_URL', 'not set').split('://')[0]
         value: "ISO, MDY"
       - key: PGTZ
         value: "UTC"
+      - key: PGCLIENTENCODING
+        value: "UTF8"
+      - key: PGAPPNAME
+        value: "sge-dashboard-api"
       
       # Security - Generated or set manually
       - key: SECRET_KEY
@@ -121,30 +129,6 @@ print('DATABASE_URL type:', os.getenv('DATABASE_URL', 'not set').split('://')[0]
         sync: false
       - key: SUPABASE_JWT_SECRET
         sync: false
-      
-      # Environment Configuration
-      - key: DEBUG
-        value: "false"
-      - key: LOG_LEVEL
-        value: "INFO"
-      - key: PYTHONUNBUFFERED
-        value: "1"
-      
-      # Database Pool Settings (optimized for Render)
-      - key: DATABASE_POOL_SIZE
-        value: "5"  # Updated based on your environment
-      - key: DATABASE_MAX_OVERFLOW
-        value: "10"  # Updated based on your environment
-      - key: DATABASE_POOL_TIMEOUT
-        value: "30"
-      - key: DATABASE_POOL_RECYCLE
-        value: "1800"
-      - key: DATABASE_MAX_RETRIES
-        value: "3"
-      - key: DATABASE_RETRY_DELAY
-        value: "2"
-      - key: DATABASE_ECHO
-        value: "false"
       
       # CORS Configuration
       - key: FRONTEND_URL
