@@ -4,13 +4,23 @@ services:
     name: sge-dashboard-api
     env: python
     buildCommand: |
+      # Upgrade pip and install requirements
       python -m pip install --upgrade pip
       pip install -r requirements.txt
+      
+      # Remove any .env files to prevent environment variable conflicts
+      rm -f .env .envV2 || true
+      echo "Removed any existing .env files to prevent conflicts with Render environment variables"
+      
       # Install optional security packages
       pip install slowapi[redis] sentry-sdk[fastapi] || echo "Optional packages not installed"
+      
+      # Print environment check
+      echo "Checking critical environment variables..."
+      python -c "import os; print('DATABASE_URL type:', os.getenv('DATABASE_URL', 'not set').split('://')[0] if '://' in os.getenv('DATABASE_URL', '') else 'invalid')"
     startCommand: |
       echo "Starting backend deployment..."
-      echo "Database URL: $DATABASE_URL"
+      echo "Database URL type: $(echo $DATABASE_URL | cut -d':' -f1)"
       alembic upgrade head || echo "Database migration failed, continuing..."
       gunicorn app.main:app \
         --workers 1 \
@@ -32,7 +42,7 @@ services:
       
       # Security - Generated or set manually
       - key: SECRET_KEY
-        generateValue: true
+        sync: false  # Set this manually without newline characters
       - key: JWT_SECRET_KEY
         generateValue: true
       
@@ -58,9 +68,9 @@ services:
       
       # Database Pool Settings (optimized for Render)
       - key: DATABASE_POOL_SIZE
-        value: "1"
+        value: "5"  # Updated based on your environment
       - key: DATABASE_MAX_OVERFLOW
-        value: "2"
+        value: "10"  # Updated based on your environment
       - key: DATABASE_POOL_TIMEOUT
         value: "30"
       - key: DATABASE_POOL_RECYCLE
@@ -72,13 +82,13 @@ services:
       - key: DATABASE_ECHO
         value: "false"
       
-      # CORS Configuration - Set from environment
+      # CORS Configuration
       - key: FRONTEND_URL
         value: "https://sge-dashboard-web.onrender.com"
       - key: CORS_ORIGINS
-        value: '["https://sge-dashboard-web.onrender.com", "https://sge-dashboard-api.onrender.com", "https://sge-dashboard-web.onrender.com/grants"]'
+        value: '["https://sge-dashboard-web.onrender.com", "https://*.onrender.com"]'
       
-      # Rate Limiting (optional)
+      # Rate Limiting
       - key: RATE_LIMIT_ENABLED
         value: "true"
       - key: RATE_LIMIT_REQUESTS_PER_MINUTE
