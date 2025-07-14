@@ -53,10 +53,10 @@ class Settings(BaseSettings):
     TESTING: bool = os.getenv("TESTING", "false").lower() == "true"
     
     # Database Pool Settings
-    DATABASE_POOL_SIZE: int = int(os.getenv("DATABASE_POOL_SIZE", "5"))
-    DATABASE_MAX_OVERFLOW: int = int(os.getenv("DATABASE_MAX_OVERFLOW", "10"))
-    DATABASE_POOL_TIMEOUT: int = int(os.getenv("DATABASE_POOL_TIMEOUT", "30"))
-    DATABASE_POOL_RECYCLE: int = int(os.getenv("DATABASE_POOL_RECYCLE", "1800"))  # 30 minutes
+    DATABASE_POOL_SIZE: int = int(os.getenv("DATABASE_POOL_SIZE", "10"))  # Increased from 5
+    DATABASE_MAX_OVERFLOW: int = int(os.getenv("DATABASE_MAX_OVERFLOW", "20"))  # Increased from 10
+    DATABASE_POOL_TIMEOUT: int = int(os.getenv("DATABASE_POOL_TIMEOUT", "60"))  # Increased from 30
+    DATABASE_POOL_RECYCLE: int = int(os.getenv("DATABASE_POOL_RECYCLE", "900"))  # Reduced from 1800 to 15 minutes
     
     # CORS Settings - Environment-based configuration
     CORS_ORIGINS: List[str] = []
