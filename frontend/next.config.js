@@ -3,6 +3,7 @@
 const nextConfig = {
   // Production optimization
   output: 'standalone',
+  distDir: '.next',
   
   // Security: Disable powered by header
   poweredByHeader: false,
@@ -12,7 +13,6 @@ const nextConfig = {
   
   // Experimental features
   experimental: {
-    webpackBuildWorker: true,
     // Enable modern bundling
     esmExternals: true,
   },
@@ -103,8 +103,8 @@ const nextConfig = {
       "font-src 'self' data: https://fonts.gstatic.com",
       // Connections: Restrict to known domains
       isProd 
-        ? `connect-src 'self' ${backendUrl} https://*.onrender.com wss://*.onrender.com https://*.supabase.co`
-        : `connect-src 'self' ${backendUrl} http://localhost:* ws://localhost:* https://*.supabase.co`,
+        ? `connect-src 'self' https://*.onrender.com wss://*.onrender.com https://*.supabase.co`
+        : `connect-src 'self' http://localhost:* ws://localhost:* https://*.supabase.co ${backendUrl}`,
       // Frame restrictions
       "frame-ancestors 'none'",
       // Base URI restriction

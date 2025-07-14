@@ -124,7 +124,7 @@ services:
       cd frontend
       npm ci --only=production
       npm run build
-    startCommand: cd frontend && npm start
+    startCommand: cd frontend && node .next/standalone/server.js
     envVars:
       # Backend API URL
       - key: NEXT_PUBLIC_API_URL
@@ -135,6 +135,10 @@ services:
         value: production
       - key: NEXT_PUBLIC_ENV
         value: production
+      
+      # Port configuration
+      - key: PORT
+        value: "3000"
       
       # Security Settings
       - key: NEXT_PUBLIC_ENABLE_ANALYTICS
@@ -148,7 +152,7 @@ services:
       - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
         sync: false
       
-    healthCheckPath: /api/health
+    healthCheckPath: /
     autoDeploy: false  # Manual deployment for security
     scaling:
       minInstances: 1
