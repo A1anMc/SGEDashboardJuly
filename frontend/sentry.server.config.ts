@@ -1,0 +1,26 @@
+import * as Sentry from '@sentry/nextjs';
+
+Sentry.init({
+  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  
+  // Adjust this value in production, or use tracesSampler for greater control
+  tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.2 : 1.0,
+  
+  // Setting this option to true will print useful information to the console while you're setting up Sentry.
+  debug: process.env.NODE_ENV === 'development',
+
+  // Capture all errors in server-side code
+  enableTracing: true,
+  
+  // Custom error sampling based on error type
+  beforeSend(event) {
+    // Don't send errors for 404s
+    if (event.exception && event.exception.values) {
+      const error = event.exception.values[0];
+      if (error.type === 'NotFoundError') {
+        return null;
+      }
+    }
+    return event;
+  },
+}); 

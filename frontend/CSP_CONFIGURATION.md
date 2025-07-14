@@ -1,113 +1,154 @@
-# Content Security Policy (CSP) Configuration Guide
+# Content Security Policy (CSP) Configuration
 
-## Problem
-Your site is encountering a CSP error: "Content Security Policy of your site blocks the use of 'eval' in JavaScript". This happens when the CSP prevents the evaluation of arbitrary strings as JavaScript.
+## Overview
 
-## Solutions Implemented
+This document explains the Content Security Policy (CSP) and security headers configuration for the SGE Dashboard frontend.
 
-### 1. Current Configuration (next.config.js)
-The main `next.config.js` file now includes CSP headers with `unsafe-eval` allowed:
+## Security Headers
 
-```javascript
-script-src 'self' 'unsafe-eval' 'unsafe-inline'
-```
+### Content Security Policy
 
-**Pros:**
-- Quick fix that resolves the eval() blocking issue
-- Works with all libraries and development tools
-- Allows hot reloading and development features
-
-**Cons:**
-- Less secure (allows arbitrary code execution)
-- May not pass security audits
-- Increases XSS attack surface
-
-### 2. Secure Alternative (next.config.secure.js)
-A more secure configuration using nonce-based CSP:
+The application uses a dynamic CSP that adapts to the environment (development/production):
 
 ```javascript
-script-src 'self' 'nonce-${nonce}' 'strict-dynamic'
+// Base CSP directives (common to all environments)
+{
+  'default-src': ["'self'"],
+  'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+  'style-src': ["'self'", "'unsafe-inline'"],
+  'img-src': ["'self'", 'data:', 'blob:', 'https:'],
+  'font-src': ["'self'", 'data:'],
+  'connect-src': ["'self'"],
+  'frame-ancestors': ["'none'"],
+  'base-uri': ["'self'"],
+  'form-action': ["'self'"],
+  'object-src': ["'none'"],
+  'media-src': ["'self'", 'blob:']
+}
 ```
 
-**Pros:**
-- Much more secure
-- Prevents most XSS attacks
-- Complies with security best practices
+#### Production-specific additions:
+- `connect-src`: 
+  - `https://*.onrender.com` - Backend API
+  - `https://*.supabase.co` - Authentication
+  - Dynamic backend URL from environment
 
-**Cons:**
-- Requires more setup
-- May break some libraries
-- More complex to implement
+#### Development-specific additions:
+- `connect-src`:
+  - `http://localhost:*` - Local development
+  - `ws://localhost:*` - WebSocket for hot reload
+  - Dynamic backend URL from environment
 
-## Implementation Options
+### Additional Security Headers
 
-### Option A: Use Current Configuration (Recommended for Development)
-The current `next.config.js` is ready to use. Just restart your development server:
-
-```bash
-npm run dev
-```
-
-### Option B: Use Secure Configuration (Recommended for Production)
-1. Backup your current config:
-   ```bash
-   cp next.config.js next.config.backup.js
+1. **Strict-Transport-Security**
    ```
-
-2. Replace with secure config:
-   ```bash
-   cp next.config.secure.js next.config.js
+   max-age=31536000; includeSubDomains; preload
    ```
+   - Enforces HTTPS
+   - 1-year cache duration
+   - Includes subdomains
+   - Eligible for HSTS preload list
 
-3. Install uuid dependency:
-   ```bash
-   npm install uuid
-   npm install --save-dev @types/uuid
+2. **X-Frame-Options**
    ```
+   DENY
+   ```
+   - Prevents clickjacking by disabling iframe embedding
 
-### Option C: Environment-Specific Configuration
-You can create different configs for development vs production by checking NODE_ENV in your next.config.js.
+3. **X-Content-Type-Options**
+   ```
+   nosniff
+   ```
+   - Prevents MIME type sniffing
 
-## CSP Directives Explained
+4. **X-XSS-Protection**
+   ```
+   1; mode=block
+   ```
+   - Legacy XSS protection for older browsers
 
-- `default-src 'self'`: Only allow resources from the same origin
-- `script-src`: Controls where scripts can be loaded from
-- `style-src 'self' 'unsafe-inline'`: Allows inline styles (needed for CSS-in-JS)
-- `img-src 'self' data: https:`: Allows images from same origin, data URLs, and HTTPS
-- `connect-src`: Controls where you can connect to (APIs, WebSockets, etc.)
-- `frame-ancestors 'none'`: Prevents page from being embedded in iframes
+5. **Referrer-Policy**
+   ```
+   strict-origin-when-cross-origin
+   ```
+   - Controls referrer information in requests
 
-## Testing Your CSP
+6. **Permissions-Policy**
+   ```
+   camera=(), microphone=(), geolocation=(), interest-cohort=()
+   ```
+   - Disables potentially sensitive browser features
+   - Opts out of FLoC/Privacy Sandbox
 
-1. Open browser developer tools
-2. Go to the Console tab
-3. Look for CSP violation errors
-4. Adjust the policy as needed
+## Why These Choices?
+
+1. **script-src includes 'unsafe-inline' and 'unsafe-eval'**
+   - Required for Next.js functionality
+   - Required for React development tools
+   - Required for certain npm packages
+
+2. **style-src includes 'unsafe-inline'**
+   - Required for styled-components and CSS-in-JS
+   - Required for dynamic styles in React
+
+3. **connect-src configuration**
+   - Allows API calls to backend
+   - Allows authentication with Supabase
+   - Allows WebSocket in development for hot reload
+
+4. **frame-ancestors: 'none'**
+   - Stronger protection than X-Frame-Options
+   - Modern alternative to X-Frame-Options
+
+## Testing CSP Configuration
+
+1. **Development Testing**
+   ```bash
+   npm run dev
+   ```
+   - Check browser console for CSP violations
+   - Verify hot reload works
+   - Verify API calls work
+
+2. **Production Testing**
+   ```bash
+   npm run build && npm start
+   ```
+   - Verify all resources load
+   - Check for CSP violations
+   - Test all application features
 
 ## Common Issues and Solutions
 
-### Issue: "Refused to execute inline script"
-**Solution:** Add `'unsafe-inline'` to script-src or use nonces
+1. **CSP Violation: script-src**
+   - Check for dynamically loaded scripts
+   - Verify third-party script domains are allowed
+   - Consider using nonces for inline scripts
 
-### Issue: "Refused to load the font"
-**Solution:** Ensure font-src includes your font sources
+2. **CSP Violation: connect-src**
+   - Verify API endpoints are allowed
+   - Check WebSocket connections
+   - Ensure Supabase domains are allowed
 
-### Issue: "Refused to connect"
-**Solution:** Add your API endpoints to connect-src
+3. **CSP Violation: style-src**
+   - Check for dynamically added styles
+   - Verify CSS-in-JS compatibility
+   - Consider using nonces for inline styles
 
-### Issue: Libraries not working
-**Solution:** Some libraries require `'unsafe-eval'` - use the current configuration
+## Maintenance
 
-## Security Recommendations
+1. **Regular Updates**
+   - Review CSP directives quarterly
+   - Update as new features are added
+   - Monitor CSP violation reports
 
-1. **Development**: Use the current config with `unsafe-eval` for easier development
-2. **Production**: Use the secure config with nonces
-3. **Testing**: Test thoroughly in staging with production CSP settings
-4. **Monitoring**: Monitor CSP violation reports in production
+2. **Security Considerations**
+   - Keep 'unsafe-inline' and 'unsafe-eval' scoped
+   - Regularly review allowed domains
+   - Consider implementing CSP reporting
 
-## Next Steps
-
-1. Test the current configuration
-2. If it works, consider migrating to the secure version for production
-3. Set up CSP violation reporting for production monitoring
-4. Review and update CSP policies regularly
+3. **Environment Management**
+   - Keep development and production configs separate
+   - Use environment variables for dynamic values
+   - Document any environment-specific changes
