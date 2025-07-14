@@ -8,7 +8,8 @@ from app.core.config import settings
 import logging
 import time
 from contextlib import contextmanager
-from typing import Optional
+from typing import Optional, Dict, Any
+import json
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -17,6 +18,7 @@ logger = logging.getLogger(__name__)
 # Global engine variable (will be initialized lazily)
 _engine: Optional[object] = None
 _SessionLocal: Optional[sessionmaker] = None
+_last_connection_error: Optional[Dict[str, Any]] = None
 
 def resolve_database_host(url: str) -> str:
     """Resolve database hostname and return updated URL."""
@@ -39,7 +41,11 @@ def resolve_database_host(url: str) -> str:
                 parsed.hostname.replace("dpg-", "frankfurt-postgres-"),
                 f"{parsed.hostname}.render-databases.com",
                 f"{parsed.hostname}.internal-database.render.com",
-                f"{parsed.hostname}.postgres.render.com"
+                f"{parsed.hostname}.postgres.render.com",
+                # Add more specific Render domains
+                f"{parsed.hostname}.oregon.render.com",
+                f"{parsed.hostname}.frankfurt.render.com",
+                f"{parsed.hostname}.singapore.render.com"
             ]
             
             for alt_domain in alt_domains:
@@ -57,6 +63,7 @@ def resolve_database_host(url: str) -> str:
 
 def get_engine(url=None, **kwargs):
     """Create SQLAlchemy engine with retry logic and proper configuration."""
+    global _last_connection_error
     final_url = url or settings.DATABASE_URL
     
     # Validate database URL - no localhost fallbacks in production
@@ -64,6 +71,7 @@ def get_engine(url=None, **kwargs):
         if settings.ENV == "production":
             error_msg = "DATABASE_URL environment variable is required in production"
             logger.error(error_msg)
+            _last_connection_error = {"error": error_msg, "timestamp": time.time()}
             raise RuntimeError(error_msg)
         else:
             final_url = "postgresql://alanmccarthy@localhost:5432/sge_dashboard"
@@ -73,12 +81,14 @@ def get_engine(url=None, **kwargs):
     if settings.ENV == "production" and ("localhost" in final_url or "127.0.0.1" in final_url):
         error_msg = "DATABASE_URL cannot use localhost in production environment"
         logger.error(error_msg)
+        _last_connection_error = {"error": error_msg, "timestamp": time.time()}
         raise RuntimeError(error_msg)
     
     # Validate database URL format
     if not final_url.startswith("postgresql://"):
         error_msg = f"DATABASE_URL must start with postgresql:// (got: {final_url.split('://')[0] if '://' in final_url else 'invalid'})"
         logger.error(error_msg)
+        _last_connection_error = {"error": error_msg, "timestamp": time.time()}
         raise RuntimeError(error_msg)
     
     # Try to resolve hostname and get working URL
@@ -106,13 +116,18 @@ def get_engine(url=None, **kwargs):
             "keepalives_interval": 10,
             "keepalives_count": 5,
             "connect_timeout": int(os.getenv("PGCONNECT_TIMEOUT", "10")),
-            "options": "-c timezone=UTC -c datestyle=ISO,MDY"
+            "options": "-c timezone=UTC -c datestyle=ISO,MDY",
+            "client_encoding": "utf8"
         }
     })
     
     # Add SSL settings for production databases
     if settings.ENV == "production" or "supabase.co" in final_url or "render.com" in final_url:
-        engine_args["connect_args"]["sslmode"] = "require"
+        engine_args["connect_args"].update({
+            "sslmode": "require",
+            "ssl": True,
+            "ssl_cert_reqs": "CERT_REQUIRED"
+        })
     
     # Update with any additional arguments
     engine_args.update(kwargs)
@@ -121,21 +136,41 @@ def get_engine(url=None, **kwargs):
     retries = settings.DATABASE_MAX_RETRIES
     retry_delay = settings.DATABASE_RETRY_DELAY
     
+    last_error = None
     for attempt in range(retries):
         try:
             engine = create_engine(final_url, **engine_args)
             # Test the connection only if not in testing mode
             if not settings.TESTING:
                 with engine.connect() as conn:
-                    result = conn.execute(text("SELECT 1"))
-                    logger.info("Database connection test successful")
+                    # More comprehensive connection test
+                    result = conn.execute(text("""
+                        SELECT current_database() as db,
+                               current_user as user,
+                               version() as version,
+                               inet_server_addr() as server_addr
+                    """)).fetchone()
+                    logger.info(f"Database connection test successful: {dict(result)}")
+                    _last_connection_error = None  # Clear any previous error
             return engine
         except Exception as e:
+            last_error = str(e)
             if attempt == retries - 1:  # Last attempt
-                logger.error(f"Failed to connect to database after {retries} attempts: {str(e)}")
-                raise RuntimeError(f"Database connection failed: {str(e)}")
-            logger.warning(f"Database connection attempt {attempt + 1} failed: {str(e)}")
+                error_msg = f"Failed to connect to database after {retries} attempts: {last_error}"
+                logger.error(error_msg)
+                _last_connection_error = {
+                    "error": error_msg,
+                    "last_attempt": time.time(),
+                    "attempts": retries,
+                    "last_error": last_error
+                }
+                raise RuntimeError(error_msg)
+            logger.warning(f"Database connection attempt {attempt + 1} failed: {last_error}")
             time.sleep(retry_delay * (2 ** attempt))  # Exponential backoff
+
+def get_last_connection_error() -> Optional[Dict[str, Any]]:
+    """Get information about the last connection error."""
+    return _last_connection_error
 
 def get_engine_instance():
     """Get the global engine instance, creating it if necessary."""
