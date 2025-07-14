@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
     // Get the backend URL from environment
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 
                       process.env.BACKEND_URL || 
-                      'https://sge-dashboard-api.onrender.com';
+                      'http://localhost:8000';
     
     // Get query parameters from the request
     const { searchParams } = new URL(request.url);
@@ -27,6 +27,21 @@ export async function GET(request: NextRequest) {
 
     if (!response.ok) {
       console.error('[API Proxy] Backend error:', response.status, response.statusText);
+      
+      // If it's a 429 (rate limit), pass it through with more info
+      if (response.status === 429) {
+        const errorData = await response.json().catch(() => ({ error: 'Rate limit exceeded' }));
+        return NextResponse.json(
+          { 
+            error: 'Rate limit exceeded', 
+            status: 429,
+            message: 'Too many requests. Please try again later.',
+            details: errorData
+          },
+          { status: 429 }
+        );
+      }
+      
       return NextResponse.json(
         { error: 'Backend API error', status: response.status },
         { status: response.status }
@@ -50,7 +65,7 @@ export async function POST(request: NextRequest) {
   try {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 
                       process.env.BACKEND_URL || 
-                      'https://sge-dashboard-api.onrender.com';
+                      'http://localhost:8000';
     
     const body = await request.json();
     

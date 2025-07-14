@@ -1,0 +1,194 @@
+services:
+  # Backend API Service
+  - type: web
+    name: sge-dashboard-api
+    env: python
+    buildCommand: |
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+      # Install optional security packages
+      pip install slowapi[redis] sentry-sdk[fastapi] || echo "Optional packages not installed"
+    startCommand: |
+      echo "Starting backend deployment..."
+      echo "Database URL: $DATABASE_URL"
+      alembic upgrade head || echo "Database migration failed, continuing..."
+      gunicorn app.main:app \
+        --workers 1 \
+        --worker-class uvicorn.workers.UvicornWorker \
+        --bind 0.0.0.0:$PORT \
+        --timeout 300 \
+        --keep-alive 120 \
+        --max-requests 1000 \
+        --max-requests-jitter 50 \
+        --preload \
+        --log-level info \
+        --error-logfile - \
+        --access-logfile - \
+        --capture-output
+    envVars:
+      # Database - Set manually to your database URL
+      - key: DATABASE_URL
+        sync: false
+      
+      # Security - Generated or set manually
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      
+      # Supabase - Set manually from your Supabase project
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      
+      # Environment Configuration
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: LOG_LEVEL
+        value: "INFO"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      
+      # Database Pool Settings (optimized for Render)
+      - key: DATABASE_POOL_SIZE
+        value: "1"
+      - key: DATABASE_MAX_OVERFLOW
+        value: "2"
+      - key: DATABASE_POOL_TIMEOUT
+        value: "30"
+      - key: DATABASE_POOL_RECYCLE
+        value: "1800"
+      - key: DATABASE_MAX_RETRIES
+        value: "3"
+      - key: DATABASE_RETRY_DELAY
+        value: "2"
+      - key: DATABASE_ECHO
+        value: "false"
+      
+      # CORS Configuration - Set from environment
+      - key: FRONTEND_URL
+        value: "https://sge-dashboard-web.onrender.com"
+      - key: CORS_ORIGINS
+        value: '["https://sge-dashboard-web.onrender.com", "https://sge-dashboard-api.onrender.com", "https://sge-dashboard-web.onrender.com/grants"]'
+      
+      # Rate Limiting (optional)
+      - key: RATE_LIMIT_ENABLED
+        value: "true"
+      - key: RATE_LIMIT_REQUESTS_PER_MINUTE
+        value: "60"
+      - key: RATE_LIMIT_REQUESTS_PER_HOUR
+        value: "1000"
+      
+      # Monitoring (set manually if using Sentry)
+      - key: SENTRY_DSN
+        sync: false
+      - key: SENTRY_ENVIRONMENT
+        value: "production"
+      - key: SENTRY_TRACES_SAMPLE_RATE
+        value: "1.0"
+      
+      # Email Configuration (set manually if using email)
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: EMAILS_FROM_EMAIL
+        sync: false
+      - key: EMAILS_FROM_NAME
+        sync: false
+      
+    healthCheckPath: /health
+    autoDeploy: false  # Manual deployment for security
+    scaling:
+      minInstances: 1
+      maxInstances: 2  # Allow scaling for production
+      targetMemoryPercent: 70
+      targetCPUPercent: 70
+    
+  # Frontend Service
+  - type: web
+    name: sge-dashboard-web
+    env: node
+    buildCommand: |
+      cd frontend
+      npm ci --only=production
+      npm run build
+    startCommand: cd frontend && node .next/standalone/server.js
+    envVars:
+      # Backend API URL
+      - key: NEXT_PUBLIC_API_URL
+        value: "https://sge-dashboard-api.onrender.com"
+      
+      # Environment
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_ENV
+        value: production
+      
+      # Port configuration
+      - key: PORT
+        value: "3000"
+      
+      # Security Settings
+      - key: NEXT_PUBLIC_ENABLE_ANALYTICS
+        value: "false"
+      - key: NEXT_PUBLIC_DEBUG_MODE
+        value: "false"
+      
+      # Supabase Frontend Keys (public keys only)
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+      
+    healthCheckPath: /
+    autoDeploy: false  # Manual deployment for security
+    scaling:
+      minInstances: 1
+      maxInstances: 2
+      targetMemoryPercent: 70
+      targetCPUPercent: 70
+    
+    # Security Headers (additional layer)
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=31536000; includeSubDomains; preload
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=(), payment=()
+
+# Environment Groups for organized configuration
+envVarGroups:
+  - name: production-security
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: DATABASE_ECHO
+        value: "false"
+      - key: RATE_LIMIT_ENABLED
+        value: "true" 
