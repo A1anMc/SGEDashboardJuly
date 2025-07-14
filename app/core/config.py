@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
     HOST: str = "0.0.0.0"
     PORT: int = 8000
-    ENV: str = os.getenv("ENVIRONMENT", "production")  # Default to production for safety
+    ENV: str = "production" if os.getenv("RENDER", "false").lower() == "true" else os.getenv("ENVIRONMENT", "development")
     
     # Security
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
