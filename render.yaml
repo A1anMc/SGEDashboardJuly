@@ -58,7 +58,7 @@ services:
       # ✅ Copy public assets
       cp -r public .next/standalone/public || true
     startCommand: |
-      cd frontend/.next/standalone && node server.js
+      cd frontend/.next/standalone && PORT=$PORT node server.js
     envVars:
       # Backend API URL
       - key: NEXT_PUBLIC_API_URL
@@ -82,6 +82,7 @@ services:
     
     healthCheckPath: /
     autoDeploy: true
+    healthCheckTimeout: 300
     scaling:
       minInstances: 1
       maxInstances: 2
