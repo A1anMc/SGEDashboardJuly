@@ -24,7 +24,7 @@ def check_required_env_vars():
     optional_vars = {
         'FRONTEND_URL': 'Frontend URL for CORS',
         'CORS_ORIGINS': 'Allowed CORS origins',
-        'SUPABASE_URL': 'Supabase project URL',
+        # Removed Supabase references
         'SENTRY_DSN': 'Error tracking DSN',
     }
     

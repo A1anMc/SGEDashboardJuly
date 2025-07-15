@@ -11,11 +11,7 @@ def setup_test_env():
         "JWT_SECRET_KEY": "test-jwt-key",
         "JWT_ALGORITHM": "HS256",
         "ACCESS_TOKEN_EXPIRE_MINUTES": "30",
-        "SUPABASE_URL": "",
-        "SUPABASE_KEY": "",
-        "SUPABASE_SERVICE_ROLE_KEY": "",
-        "SUPABASE_ANON_KEY": "",
-        "SUPABASE_JWT_SECRET": "",
+        # Removed Supabase configuration
         # Email settings for testing
         "MAIL_USERNAME": "test@example.com",
         "MAIL_PASSWORD": "test_password",

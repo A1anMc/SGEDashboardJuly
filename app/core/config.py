@@ -75,12 +75,7 @@ class Settings(BaseSettings):
         "X-CSRF-Token"
     ]
     
-    # Supabase
-    SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
-    SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
-    SUPABASE_SERVICE_ROLE_KEY: str = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
-    SUPABASE_ANON_KEY: str = os.getenv("SUPABASE_ANON_KEY", "")
-    SUPABASE_JWT_SECRET: str = os.getenv("SUPABASE_JWT_SECRET", "")
+    # Database configuration only - using PostgreSQL
     
     # Email
     SMTP_TLS: bool = True
@@ -178,7 +173,7 @@ class Settings(BaseSettings):
         "arts.gov.au",
         "screenaustralia.gov.au",
         "creative.gov.au",  # Added for Creative Australia
-        "supabase.co",  # Required for Supabase
+        # Removed Supabase references
         "create.nsw.gov.au",  # Added for NSW state grants
         # Philanthropic foundations
         "lmcf.org.au",  # Lord Mayor's Charitable Foundation
@@ -288,16 +283,7 @@ class Settings(BaseSettings):
         if not v.startswith("postgresql://"):
             raise ValueError("DATABASE_URL must start with postgresql://")
         
-        # For Supabase URLs, ensure proper format
-        if "supabase.co" in v:
-            # Add application name for better monitoring
-            if "application_name" not in v:
-                separator = "&" if "?" in v else "?"
-                v = f"{v}{separator}application_name=sge-dashboard-api"
-            # Add SSL mode if not specified
-            if "sslmode" not in v:
-                separator = "&" if "?" in v else "?"
-                v = f"{v}{separator}sslmode=require"
+        # Removed Supabase-specific URL handling
         
         # For Render PostgreSQL URLs, ensure SSL
         if "render.com" in v and "sslmode" not in v:
@@ -306,13 +292,7 @@ class Settings(BaseSettings):
         
         return v
     
-    @field_validator("SUPABASE_URL")
-    @classmethod
-    def validate_supabase_url(cls, v: str, info) -> str:
-        """Validate Supabase URL."""
-        if not v and not info.data.get("TESTING", False):
-            return ""  # Allow empty Supabase URL in development
-        return v
+    # Removed Supabase validation
     
     @field_validator("DEBUG")
     @classmethod

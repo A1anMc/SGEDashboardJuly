@@ -61,7 +61,7 @@ def test_database_connection(database_url: str) -> bool:
         engine = create_engine(
             database_url,
             pool_pre_ping=True,
-            connect_args={"sslmode": "require"} if "supabase.co" in database_url or "render.com" in database_url else {}
+            connect_args={"sslmode": "require"} if "render.com" in database_url else {}
         )
         
         # Test connection

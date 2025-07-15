@@ -31,12 +31,7 @@ class EnvValidator:
         'database': [
             'DATABASE_URL',
         ],
-        'supabase': [
-            'SUPABASE_URL',
-            'SUPABASE_SERVICE_ROLE_KEY',
-            'SUPABASE_ANON_KEY',
-            'SUPABASE_JWT_SECRET',
-        ]
+        # Removed Supabase configuration
     }
     
     def __init__(self, env_file: str = '.env'):
@@ -71,29 +66,7 @@ class EnvValidator:
             
         return True
     
-    def validate_supabase_config(self, config: Dict[str, str]) -> bool:
-        """Validate Supabase configuration."""
-        is_valid = True
-        
-        # Validate URL
-        url = config.get('SUPABASE_URL')
-        if url:
-            if not url.startswith('https://') or not url.endswith('.supabase.co'):
-                self.errors.append("SUPABASE_URL must be in format: https://[project-ref].supabase.co")
-                is_valid = False
-        else:
-            self.errors.append("SUPABASE_URL is not set")
-            is_valid = False
-        
-        # Validate keys
-        for key in ['SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_ANON_KEY', 'SUPABASE_JWT_SECRET']:
-            if not config.get(key):
-                self.errors.append(f"{key} is not set")
-                is_valid = False
-            elif len(config[key]) < 32:
-                self.warnings.append(f"{key} seems too short")
-        
-        return is_valid
+    # Removed Supabase validation
     
     def validate_security_config(self, config: Dict[str, str]) -> bool:
         """Validate security-related configuration."""
@@ -138,8 +111,7 @@ class EnvValidator:
         if 'DATABASE_URL' in env_vars:
             self.validate_database_url(env_vars['DATABASE_URL'])
         
-        supabase_config = {k: v for k, v in env_vars.items() if k.startswith('SUPABASE_')}
-        self.validate_supabase_config(supabase_config)
+        # Removed Supabase validation
         
         self.validate_security_config(env_vars)
         

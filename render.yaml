@@ -120,15 +120,7 @@ print('DATABASE_URL type:', os.getenv('DATABASE_URL', 'not set').split('://')[0]
       - key: JWT_SECRET_KEY
         generateValue: true
       
-      # Supabase - Set manually from your Supabase project
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
-      - key: SUPABASE_ANON_KEY
-        sync: false
-      - key: SUPABASE_JWT_SECRET
-        sync: false
+      # Database configuration only - using PostgreSQL
       
       # CORS Configuration
       - key: FRONTEND_URL
@@ -220,11 +212,7 @@ print('DATABASE_URL type:', os.getenv('DATABASE_URL', 'not set').split('://')[0]
       - key: NEXT_PUBLIC_DEBUG_MODE
         value: "false"
       
-      # Supabase Frontend Keys (public keys only)
-      - key: NEXT_PUBLIC_SUPABASE_URL
-        sync: false
-      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
-        sync: false
+      # Frontend configuration only
     
     healthCheckPath: /api/health
     autoDeploy: false
