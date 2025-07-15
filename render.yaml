@@ -52,8 +52,10 @@ services:
       cd frontend
       npm ci --only=production
       npm run build
-      cp -r .next/static .next/standalone/.next/static
-      cp -r public .next/standalone/public
+      echo "Copying static assets..."
+      cp -r .next/static .next/standalone/.next/static || echo "Failed to copy static assets"
+      cp -r public .next/standalone/public || echo "Failed to copy public assets"
+      echo "Build completed"
     startCommand: |
       cd frontend
       PORT=$PORT node .next/standalone/server.js
