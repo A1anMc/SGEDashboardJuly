@@ -1,15 +1,17 @@
-/** @type {import('next').NextConfig} */
+const isProd = process.env.NODE_ENV === 'production'
 
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Production optimization
   output: 'standalone',
-  distDir: '.next',
-  
-  // Security: Disable powered by header
+  reactStrictMode: true,
   poweredByHeader: false,
-  
-  // Compression for better performance
   compress: true,
+  
+  // Helps Next.js find static files correctly in standalone
+  experimental: {
+    outputFileTracingRoot: __dirname,
+  },
+  assetPrefix: isProd ? undefined : '',
   
   // Image optimization with security
   images: {
