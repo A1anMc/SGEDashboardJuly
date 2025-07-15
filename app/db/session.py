@@ -22,6 +22,10 @@ _last_connection_error: Optional[Dict[str, Any]] = None
 
 def resolve_database_host(url: str) -> str:
     """Resolve database hostname and return updated URL."""
+    # In production, just return the URL as-is to avoid parsing issues
+    if settings.ENV == "production":
+        return url
+    
     parsed = urlparse(url)
     if not parsed.hostname:
         return url
@@ -107,19 +111,27 @@ def get_engine(url=None, **kwargs):
         "poolclass": QueuePool,
     }
     
-    # Add PostgreSQL-specific settings
-    engine_args.update({
-        "connect_args": {
-            "application_name": "sge-dashboard-api",
-            "keepalives": 1,
-            "keepalives_idle": 30,
-            "keepalives_interval": 10,
-            "keepalives_count": 5,
-            "connect_timeout": int(os.getenv("PGCONNECT_TIMEOUT", "10")),
-            "options": "-c timezone=UTC -c datestyle=ISO,MDY",
-            "client_encoding": "utf8"
-        }
-    })
+    # Add PostgreSQL-specific settings (simplified for production)
+    if settings.ENV != "production":
+        engine_args.update({
+            "connect_args": {
+                "application_name": "sge-dashboard-api",
+                "keepalives": 1,
+                "keepalives_idle": 30,
+                "keepalives_interval": 10,
+                "keepalives_count": 5,
+                "connect_timeout": int(os.getenv("PGCONNECT_TIMEOUT", "10")),
+                "options": "-c timezone=UTC -c datestyle=ISO,MDY",
+                "client_encoding": "utf8"
+            }
+        })
+    else:
+        # In production, use minimal connect_args to avoid parsing issues
+        engine_args.update({
+            "connect_args": {
+                "application_name": "sge-dashboard-api"
+            }
+        })
     
     # SSL settings are handled by the DATABASE_URL itself
     # No need to add additional SSL configuration here
