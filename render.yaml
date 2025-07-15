@@ -34,7 +34,7 @@ services:
       - key: FRONTEND_URL
         value: "https://sge-dashboard-web.onrender.com"
       - key: CORS_ORIGINS
-        value: '["https://sge-dashboard-web.onrender.com", "https://*.onrender.com"]'
+        value: '["https://sge-dashboard-web.onrender.com", "https://sge-dashboard-api.onrender.com", "https://*.onrender.com"]'
       
     healthCheckPath: /health
     autoDeploy: true
@@ -58,7 +58,7 @@ services:
     envVars:
       # Backend API URL
       - key: NEXT_PUBLIC_API_URL
-        value: "https://sge-dashboard-backend.onrender.com"
+        value: "https://sge-dashboard-api.onrender.com"
       
       # Environment
       - key: NODE_ENV
