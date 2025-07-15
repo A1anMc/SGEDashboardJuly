@@ -124,9 +124,7 @@ def get_engine(url=None, **kwargs):
     # Add SSL settings for production databases
     if settings.ENV == "production" or "render.com" in final_url:
         engine_args["connect_args"].update({
-            "sslmode": "require",
-            "ssl": True,
-            "ssl_cert_reqs": "CERT_REQUIRED"
+            "sslmode": "require"
         })
     
     # Update with any additional arguments
