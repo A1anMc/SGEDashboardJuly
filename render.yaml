@@ -52,6 +52,8 @@ services:
       cd frontend
       npm ci --only=production
       npm run build
+      cp -r .next/static .next/standalone/.next/static
+      cp -r public .next/standalone/public
     startCommand: |
       cd frontend
       PORT=$PORT node .next/standalone/server.js
