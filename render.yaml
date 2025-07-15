@@ -4,71 +4,9 @@ services:
     name: sge-dashboard-backend
     env: python
     buildCommand: |
-      # Print initial environment state
-      echo "Current working directory: $(pwd)"
-      echo "Listing all .env files:"
-      find . -name ".env*" -type f
-      
-      # Upgrade pip and install requirements
-      python -m pip install --upgrade pip
       pip install -r requirements.txt
-      
-      # Remove any .env files to prevent environment variable conflicts
-      find . -name ".env*" -type f -delete
-      echo "Removed any existing .env files"
-      
-      # Install optional security packages
-      pip install slowapi[redis] sentry-sdk[fastapi] psycopg2-binary || echo "Optional packages not installed"
-      
-      # Print detailed environment check
-      echo "=== Environment Variable Check ==="
-      python -c "
-import os
-import json
-import socket
-
-def check_env():
-    print('ENVIRONMENT:', os.getenv('ENVIRONMENT', 'not set'))
-    print('RENDER:', os.getenv('RENDER', 'not set'))
-    db_url = os.getenv('DATABASE_URL', 'not set')
-    print('DATABASE_URL type:', db_url.split('://')[0] if '://' in db_url else 'invalid')
-    if '@' in db_url:
-        host = db_url.split('@')[1].split('/')[0]
-        try:
-            ip = socket.gethostbyname(host)
-            print(f'Database host {host} resolves to {ip}')
-        except:
-            print(f'Could not resolve database host {host}')
-
-check_env()
-"
     startCommand: |
-      echo "=== Starting backend deployment ==="
-      echo "Environment check:"
-      python -c "
-import os
-print('ENVIRONMENT:', os.getenv('ENVIRONMENT', 'not set'))
-print('RENDER:', os.getenv('RENDER', 'not set'))
-print('DATABASE_URL type:', os.getenv('DATABASE_URL', 'not set').split('://')[0] if '://' in os.getenv('DATABASE_URL', '') else 'invalid')
-"
-      alembic upgrade head || echo "Database migration failed, continuing..."
-      gunicorn app.main:app \
-        --workers 2 \
-        --worker-class uvicorn.workers.UvicornWorker \
-        --bind 0.0.0.0:$PORT \
-        --timeout 300 \
-        --keep-alive 120 \
-        --max-requests 1000 \
-        --max-requests-jitter 50 \
-        --worker-tmp-dir /dev/shm \
-        --graceful-timeout 120 \
-        --preload \
-        --log-level debug \
-        --error-logfile - \
-        --access-logfile - \
-        --capture-output \
-        --statsd-host localhost:8125 \
-        --worker-connections 1000
+      gunicorn app.main:app --bind 0.0.0.0:$PORT --workers 2
     envVars:
       # Core Environment
       - key: RENDER
@@ -85,34 +23,6 @@ print('DATABASE_URL type:', os.getenv('DATABASE_URL', 'not set').split('://')[0]
       # Database Configuration
       - key: DATABASE_URL
         sync: false  # Set this manually in the dashboard
-      - key: DATABASE_SSL_MODE
-        value: "require"
-      - key: DATABASE_POOL_SIZE
-        value: "2"  # Reduced for stability
-      - key: DATABASE_MAX_OVERFLOW
-        value: "5"  # Reduced for stability
-      - key: DATABASE_POOL_TIMEOUT
-        value: "30"
-      - key: DATABASE_POOL_RECYCLE
-        value: "1800"
-      - key: DATABASE_MAX_RETRIES
-        value: "5"  # Increased retries
-      - key: DATABASE_RETRY_DELAY
-        value: "5"  # Increased delay
-      - key: DATABASE_ECHO
-        value: "false"
-      - key: PGCONNECT_TIMEOUT
-        value: "10"
-      - key: PGSSLMODE
-        value: "require"
-      - key: PGDATESTYLE
-        value: "ISO, MDY"
-      - key: PGTZ
-        value: "UTC"
-      - key: PGCLIENTENCODING
-        value: "UTF8"
-      - key: PGAPPNAME
-        value: "sge-dashboard-backend"
       
       # Security - Generated or set manually
       - key: SECRET_KEY
@@ -120,49 +30,17 @@ print('DATABASE_URL type:', os.getenv('DATABASE_URL', 'not set').split('://')[0]
       - key: JWT_SECRET_KEY
         generateValue: true
       
-      # Database configuration only - using PostgreSQL
-      
       # CORS Configuration
       - key: FRONTEND_URL
         value: "https://sge-dashboard-web.onrender.com"
       - key: CORS_ORIGINS
         value: '["https://sge-dashboard-web.onrender.com", "https://*.onrender.com"]'
       
-      # Rate Limiting
-      - key: RATE_LIMIT_ENABLED
-        value: "true"
-      - key: RATE_LIMIT_REQUESTS_PER_MINUTE
-        value: "60"
-      - key: RATE_LIMIT_REQUESTS_PER_HOUR
-        value: "1000"
-      
-      # Monitoring (set manually if using Sentry)
-      - key: SENTRY_DSN
-        sync: false
-      - key: SENTRY_ENVIRONMENT
-        value: "production"
-      - key: SENTRY_TRACES_SAMPLE_RATE
-        value: "1.0"
-      
-      # Email Configuration (set manually if using email)
-      - key: SMTP_HOST
-        sync: false
-      - key: SMTP_PORT
-        sync: false
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASSWORD
-        sync: false
-      - key: EMAILS_FROM_EMAIL
-        sync: false
-      - key: EMAILS_FROM_NAME
-        sync: false
-      
     healthCheckPath: /health
-    autoDeploy: false  # Manual deployment for security
+    autoDeploy: true
     scaling:
       minInstances: 1
-      maxInstances: 2  # Allow scaling for production
+      maxInstances: 2
       targetMemoryPercent: 70
       targetCPUPercent: 70
     
@@ -174,22 +52,8 @@ print('DATABASE_URL type:', os.getenv('DATABASE_URL', 'not set').split('://')[0]
       cd frontend
       npm ci --only=production
       npm run build
-      # Ensure standalone directory exists
-      mkdir -p .next/standalone
-      # Copy all necessary files
-      cp -r .next/static .next/standalone/.next/
-      cp -r public .next/standalone/
-      # Copy static files from all subdirectories
-      find .next/static -type d -exec mkdir -p .next/standalone/{} \;
-      find .next/static -type f -exec cp {} .next/standalone/{} \;
-      # Copy server.js and required files
-      cp .next/standalone/server.js .next/standalone/
-      cp -r .next/standalone/.next/static .next/standalone/.next/
-      cp package.json .next/standalone/
     startCommand: |
       cd frontend/.next/standalone
-      export PORT=$PORT
-      export NODE_ENV=production
       node server.js
     envVars:
       # Backend API URL
@@ -211,11 +75,9 @@ print('DATABASE_URL type:', os.getenv('DATABASE_URL', 'not set').split('://')[0]
         value: "false"
       - key: NEXT_PUBLIC_DEBUG_MODE
         value: "false"
-      
-      # Frontend configuration only
     
     healthCheckPath: /api/health
-    autoDeploy: false
+    autoDeploy: true
     scaling:
       minInstances: 1
       maxInstances: 2
