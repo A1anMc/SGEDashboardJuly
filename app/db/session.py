@@ -12,7 +12,7 @@ _engine = None
 _SessionLocal = None
 
 def get_engine():
-    """Create SQLAlchemy engine with minimal configuration."""
+    """Create SQLAlchemy engine with absolute minimal configuration."""
     global _engine
     
     if _engine is not None:
@@ -29,16 +29,8 @@ def get_engine():
     
     logger.info(f"Connecting to database: {database_url.split('@')[0] if '@' in database_url else database_url.split('://')[0]}://***")
     
-    # Create engine with minimal configuration
-    _engine = create_engine(
-        database_url,
-        pool_pre_ping=True,
-        pool_size=5,
-        max_overflow=10,
-        pool_timeout=30,
-        pool_recycle=900,
-        echo=False
-    )
+    # Create engine with absolute minimal configuration - no pool settings, no SSL, nothing
+    _engine = create_engine(database_url)
     
     return _engine
 
