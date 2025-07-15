@@ -29,7 +29,7 @@ from app.models.task_comment import TaskComment  # noqa: F401
 from app.models.time_entry import TimeEntry  # noqa: F401
 
 from app.api.v1.api import api_router
-from app.db.session import get_engine_instance, close_database
+from app.db.session import get_engine, close_database
 from app.core.config import settings
 from app.core.error_handlers import setup_error_handlers
 from app.db.init_db import init_db, get_db_info, validate_database_config
@@ -121,7 +121,7 @@ async def lifespan(app: FastAPI):
             init_db()
             
             # Create tables if they don't exist
-            engine = get_engine_instance()
+            engine = get_engine()
             Base.metadata.create_all(bind=engine)
             logger.info("Database initialization completed")
             
