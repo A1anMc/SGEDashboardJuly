@@ -283,13 +283,7 @@ class Settings(BaseSettings):
         if not v.startswith("postgresql://"):
             raise ValueError("DATABASE_URL must start with postgresql://")
         
-        # Removed Supabase-specific URL handling
-        
-        # For Render PostgreSQL URLs, ensure SSL
-        if "render.com" in v and "sslmode" not in v:
-            separator = "&" if "?" in v else "?"
-            v = f"{v}{separator}sslmode=require"
-        
+        # Return the URL as-is - let SQLAlchemy handle SSL configuration
         return v
     
     # Removed Supabase validation
