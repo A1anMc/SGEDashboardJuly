@@ -100,19 +100,30 @@ def get_engine(url=None, **kwargs):
     
     logger.info(f"Connecting to database: {final_url.split('@')[0] if '@' in final_url else final_url.split('://')[0]}://***")
     
-    # Default engine arguments
-    engine_args = {
-        "pool_pre_ping": True,
-        "pool_size": settings.DATABASE_POOL_SIZE,
-        "max_overflow": settings.DATABASE_MAX_OVERFLOW,
-        "pool_timeout": settings.DATABASE_POOL_TIMEOUT,
-        "pool_recycle": settings.DATABASE_POOL_RECYCLE,
-        "echo": settings.DATABASE_ECHO,
-        "poolclass": QueuePool,
-    }
-    
-    # Add PostgreSQL-specific settings (simplified for production)
-    if settings.ENV != "production":
+    # Create engine with minimal configuration for production
+    if settings.ENV == "production":
+        # Use absolute minimal configuration to avoid parsing issues
+        engine_args = {
+            "pool_pre_ping": True,
+            "pool_size": 5,
+            "max_overflow": 10,
+            "pool_timeout": 30,
+            "pool_recycle": 900,
+            "echo": False,
+        }
+    else:
+        # Default engine arguments for development
+        engine_args = {
+            "pool_pre_ping": True,
+            "pool_size": settings.DATABASE_POOL_SIZE,
+            "max_overflow": settings.DATABASE_MAX_OVERFLOW,
+            "pool_timeout": settings.DATABASE_POOL_TIMEOUT,
+            "pool_recycle": settings.DATABASE_POOL_RECYCLE,
+            "echo": settings.DATABASE_ECHO,
+            "poolclass": QueuePool,
+        }
+        
+        # Add PostgreSQL-specific settings for development
         engine_args.update({
             "connect_args": {
                 "application_name": "sge-dashboard-api",
@@ -125,16 +136,6 @@ def get_engine(url=None, **kwargs):
                 "client_encoding": "utf8"
             }
         })
-    else:
-        # In production, use minimal connect_args to avoid parsing issues
-        engine_args.update({
-            "connect_args": {
-                "application_name": "sge-dashboard-api"
-            }
-        })
-    
-    # SSL settings are handled by the DATABASE_URL itself
-    # No need to add additional SSL configuration here
     
     # Update with any additional arguments
     engine_args.update(kwargs)
@@ -150,14 +151,9 @@ def get_engine(url=None, **kwargs):
             # Test the connection only if not in testing mode
             if not settings.TESTING:
                 with engine.connect() as conn:
-                    # More comprehensive connection test
-                    result = conn.execute(text("""
-                        SELECT current_database() as db,
-                               current_user as user,
-                               version() as version,
-                               inet_server_addr() as server_addr
-                    """)).fetchone()
-                    logger.info(f"Database connection test successful: {dict(result)}")
+                    # Simple connection test
+                    result = conn.execute(text("SELECT 1"))
+                    logger.info("Database connection test successful")
                     _last_connection_error = None  # Clear any previous error
             return engine
         except Exception as e:
