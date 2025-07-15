@@ -76,7 +76,7 @@ services:
       - key: NEXT_PUBLIC_DEBUG_MODE
         value: "false"
     
-    healthCheckPath: /api/health
+    healthCheckPath: /
     autoDeploy: true
     scaling:
       minInstances: 1
