@@ -19,7 +19,7 @@ const nextConfig = {
   // Image optimization with security
   images: {
     domains: process.env.NODE_ENV === 'production' 
-      ? ['sge-dashboard-web.onrender.com', 'sge-dashboard-api.onrender.com']
+      ? ['sge-dashboard-web.onrender.com', 'sge-dashboard-backend.onrender.com']
       : ['localhost', '127.0.0.1'],
     dangerouslyAllowSVG: false,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
@@ -29,7 +29,7 @@ const nextConfig = {
   env: {
     BACKEND_URL: process.env.NEXT_PUBLIC_API_URL || (
       process.env.NODE_ENV === 'production' 
-        ? 'https://sge-dashboard-api.onrender.com'
+        ? 'https://sge-dashboard-backend.onrender.com'
         : 'http://localhost:8000'
     ),
     ENVIRONMENT: process.env.NODE_ENV || 'development',
@@ -39,7 +39,7 @@ const nextConfig = {
   headers: async () => {
     const isProd = process.env.NODE_ENV === 'production';
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 
-      (isProd ? 'https://sge-dashboard-api.onrender.com' : 'http://localhost:8000');
+      (isProd ? 'https://sge-dashboard-backend.onrender.com' : 'http://localhost:8000');
     
     // Base CSP directives
     const baseCSP = {

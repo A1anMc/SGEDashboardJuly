@@ -1,7 +1,7 @@
 services:
   # Backend API Service
   - type: web
-    name: sge-dashboard-api
+    name: sge-dashboard-backend
     env: python
     buildCommand: |
       # Print initial environment state
@@ -112,7 +112,7 @@ print('DATABASE_URL type:', os.getenv('DATABASE_URL', 'not set').split('://')[0]
       - key: PGCLIENTENCODING
         value: "UTF8"
       - key: PGAPPNAME
-        value: "sge-dashboard-api"
+        value: "sge-dashboard-backend"
       
       # Security - Generated or set manually
       - key: SECRET_KEY
@@ -202,7 +202,7 @@ print('DATABASE_URL type:', os.getenv('DATABASE_URL', 'not set').split('://')[0]
     envVars:
       # Backend API URL
       - key: NEXT_PUBLIC_API_URL
-        value: "https://sge-dashboard-api.onrender.com"
+        value: "https://sge-dashboard-backend.onrender.com"
       
       # Environment
       - key: NODE_ENV

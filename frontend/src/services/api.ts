@@ -50,7 +50,7 @@ interface UpdateProjectRequest extends Partial<CreateProjectRequest> {
 // Get the API URL from environment variables with a production fallback
 const baseURL = process.env.NEXT_PUBLIC_API_URL || (
   process.env.NODE_ENV === 'production' 
-    ? 'https://sge-dashboard-api.onrender.com'
+    ? 'https://sge-dashboard-backend.onrender.com'
     : 'http://localhost:8000'
 );
 

@@ -9,7 +9,7 @@ export async function GET() {
     // Check backend connectivity
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 
                       process.env.BACKEND_URL || 
-                      'https://sge-dashboard-api.onrender.com';
+                      'https://sge-dashboard-backend.onrender.com';
     console.log('Attempting backend health check at:', backendUrl);
     
     const backendHealth = await fetch(`${backendUrl}/health`, {
