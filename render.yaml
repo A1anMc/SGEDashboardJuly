@@ -53,8 +53,8 @@ services:
       npm ci --only=production
       npm run build
     startCommand: |
-      cd frontend/.next/standalone
-      node server.js
+      cd frontend
+      PORT=$PORT node .next/standalone/server.js
     envVars:
       # Backend API URL
       - key: NEXT_PUBLIC_API_URL
