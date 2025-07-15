@@ -32,7 +32,8 @@ from app.api.v1.api import api_router
 from app.db.session import get_engine_instance, close_database
 from app.core.config import settings
 from app.core.error_handlers import setup_error_handlers
-from app.db.init_db import init_db, check_db_health, get_db_info, validate_database_config
+from app.db.init_db import init_db, get_db_info, validate_database_config
+from app.db.session import check_db_health
 
 # Configure logging with production-safe format
 logging.basicConfig(
@@ -358,6 +359,29 @@ def create_app() -> FastAPI:
             "environment": settings.ENV,
             "status": "operational"
         }
+    
+    @app.get("/health")
+    async def health_check():
+        """Health check endpoint for Render deployment."""
+        try:
+            db_healthy = check_db_health()
+            return {
+                "status": "healthy" if db_healthy else "degraded",
+                "database": "connected" if db_healthy else "disconnected",
+                "environment": settings.ENV,
+                "version": "1.0.0",
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        except Exception as e:
+            logger.error(f"Health check failed: {str(e)}")
+            return {
+                "status": "unhealthy",
+                "database": "error",
+                "environment": settings.ENV,
+                "version": "1.0.0",
+                "timestamp": datetime.utcnow().isoformat(),
+                "error": str(e) if settings.DEBUG else "Health check failed"
+            }
     
 
     

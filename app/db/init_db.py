@@ -106,8 +106,12 @@ def get_db_info() -> dict:
 def check_db_health() -> bool:
     """Check database health with enhanced error handling."""
     try:
-        # Use the session-based health check
-        return True # No direct session_check_db_health function exposed here
+        # Test database connection with a simple query
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT 1"))
+            result.scalar()
+            logger.info("Database health check passed")
+            return True
     except Exception as e:
         logger.error(f"Database health check failed: {str(e)}")
         return False
