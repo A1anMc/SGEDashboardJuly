@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
     // Get the backend URL from environment
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 
                       process.env.BACKEND_URL || 
-                      'https://sge-dashboard-backend.onrender.com';
+                      'https://sge-dashboard-api.onrender.com';
     
     // Get query parameters from the request
     const { searchParams } = new URL(request.url);
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     // Get the backend URL from environment
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 
                       process.env.BACKEND_URL || 
-                      'https://sge-dashboard-backend.onrender.com';
+                      'https://sge-dashboard-api.onrender.com';
     
     // Get the request body
     const body = await request.json();
