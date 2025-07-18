@@ -1,19 +1,19 @@
-import type { NextConfig } from "next";
-import path from "path";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   output: 'standalone',
   reactStrictMode: true,
   poweredByHeader: false,
   
   // File tracing configuration for standalone builds
-  outputFileTracingRoot: path.join(__dirname, '../'),
-  outputFileTracingExcludes: {
-    '*': [
-      'node_modules/@swc/core-linux-x64-gnu',
-      'node_modules/@swc/core-linux-x64-musl',
-      'node_modules/@esbuild/linux-x64',
-    ],
+  experimental: {
+    outputFileTracingRoot: require('path').join(__dirname, '../'),
+    outputFileTracingExcludes: {
+      '*': [
+        'node_modules/@swc/core-linux-x64-gnu',
+        'node_modules/@swc/core-linux-x64-musl',
+        'node_modules/@esbuild/linux-x64',
+      ],
+    },
   },
   
   // Environment variables
@@ -51,4 +51,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

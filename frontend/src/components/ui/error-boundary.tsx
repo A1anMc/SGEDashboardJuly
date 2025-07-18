@@ -44,7 +44,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 </h3>
                 <div className="mt-2">
                   <p className="text-sm text-gray-500">
-                    We've been notified and are looking into the issue.
+                    We&apos;ve been notified and are looking into the issue.
                   </p>
                 </div>
                 <div className="mt-6">

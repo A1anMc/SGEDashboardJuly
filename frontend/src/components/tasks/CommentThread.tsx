@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { format } from 'date-fns';
+import Image from 'next/image';
 
 interface Comment {
   id: string;
@@ -70,9 +71,11 @@ export function CommentThread({ taskId, comments, onCommentAdded }: CommentThrea
           <div key={comment.id} className="bg-gray-50 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
               {comment.user.avatar_url ? (
-                <img
+                <Image
                   src={comment.user.avatar_url}
                   alt={comment.user.name}
+                  width={24}
+                  height={24}
                   className="w-6 h-6 rounded-full"
                 />
               ) : (

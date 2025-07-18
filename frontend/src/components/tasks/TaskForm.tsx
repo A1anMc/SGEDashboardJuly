@@ -91,6 +91,8 @@ export default function TaskForm({ task, users, projects, onSubmit, onCancel }: 
           } else {
         const createData: CreateTaskRequest = {
           ...processedData,
+          title: processedData.title || '',
+          priority: processedData.priority || 'medium',
           project_id: processedData.project_id || '',
         };
         onSubmit(createData);
