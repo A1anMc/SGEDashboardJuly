@@ -46,7 +46,7 @@ services:
     
   # Frontend Service
   - type: web
-    name: sge-dashboard-web-new
+    name: sge-dashboard-web
     env: node
     buildCommand: |
       npm ci --only=production
@@ -73,7 +73,6 @@ services:
     
     healthCheckPath: /
     autoDeploy: true
-    healthCheckTimeout: 300
     scaling:
       minInstances: 1
       maxInstances: 2

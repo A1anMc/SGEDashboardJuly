@@ -3,7 +3,7 @@
 
 services:
   - type: web
-    name: sge-dashboard-web-new
+    name: sge-dashboard-web
     env: node
     plan: starter
     region: oregon
