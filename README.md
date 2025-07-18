@@ -14,16 +14,15 @@ Strategic Grant Evaluation Dashboard - A comprehensive platform for managing gra
 
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd sge-dashboard
+git clone https://github.com/A1anMc/SGEDashboardJuly.git
+cd SGEDashboardJuly
 
 # Backend Setup
-cd backend
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 
 # Frontend Setup  
-cd ../frontend
+cd frontend
 npm install
 npm run dev
 ```
@@ -33,30 +32,33 @@ npm run dev
 The application is deployed on Render with the following services:
 
 - **Backend API**: `https://sge-dashboard-api.onrender.com`
-- **Frontend**: `https://sge-dashboard-web-new.onrender.com`
+- **Frontend**: `https://sge-dashboard-web-new.onrender.com` (to be deployed)
 
 ## 📁 Project Structure
 
 ```
-sge-dashboard/
-├── backend/                 # FastAPI backend
-│   ├── app/
-│   │   ├── api/            # API endpoints
-│   │   ├── core/           # Core configuration
-│   │   ├── models/         # Database models
-│   │   ├── services/       # Business logic
-│   │   └── main.py         # FastAPI app
-│   └── requirements.txt
-├── frontend/               # Next.js frontend
+SGEDashboardJuly/
+├── app/                    # FastAPI backend
+│   ├── api/               # API endpoints
+│   ├── core/              # Core configuration
+│   ├── models/            # Database models
+│   ├── services/          # Business logic
+│   └── main.py            # FastAPI app
+├── frontend/              # Next.js frontend
 │   ├── src/
-│   │   ├── app/           # App router pages
-│   │   ├── components/    # React components
-│   │   ├── services/      # API services
-│   │   ├── hooks/         # Custom hooks
-│   │   ├── types/         # TypeScript types
-│   │   └── utils/         # Utility functions
+│   │   ├── app/          # App router pages
+│   │   ├── components/   # React components
+│   │   ├── services/     # API services
+│   │   ├── hooks/        # Custom hooks
+│   │   ├── types/        # TypeScript types
+│   │   ├── lib/          # Configuration & utilities
+│   │   └── utils/        # Utility functions
 │   └── package.json
-└── docs/                  # Documentation
+├── alembic/               # Database migrations
+├── tests/                 # Backend tests
+├── scripts/               # Utility scripts
+├── docs/                  # Documentation
+└── ARCHIVE/               # Archived old versions
 ```
 
 ## 🛠️ Technology Stack
@@ -67,6 +69,7 @@ sge-dashboard/
 - **ORM**: SQLAlchemy
 - **Authentication**: JWT
 - **Deployment**: Render
+- **Migrations**: Alembic
 
 ### Frontend
 - **Framework**: Next.js 15
@@ -78,10 +81,12 @@ sge-dashboard/
 
 ## 📚 Documentation
 
-- [Architecture Overview](./docs/architecture/README.md)
+- [Architecture Overview](./docs/architecture.md)
 - [API Documentation](./docs/api/README.md)
 - [Development Guide](./docs/development/README.md)
 - [Deployment Guide](./docs/deployment/README.md)
+- [Task Management](./docs/task_management.md)
+- [Strategic Handoff](./docs/strategic_handoff.md)
 
 ## 🔧 Environment Variables
 
@@ -91,22 +96,46 @@ DATABASE_URL=postgresql://user:password@localhost:5432/sge_dashboard
 SECRET_KEY=your-secret-key
 JWT_SECRET_KEY=your-jwt-secret
 FRONTEND_URL=https://sge-dashboard-web-new.onrender.com
+ENV=production
+DEBUG=false
 ```
 
 ### Frontend
 ```env
 NEXT_PUBLIC_API_URL=https://sge-dashboard-api.onrender.com
+NEXT_PUBLIC_APP_NAME=SGE Dashboard
 NODE_ENV=production
 ```
 
 ## 🚀 Features
 
-- **Grant Management**: Track and manage grant opportunities
-- **Task Management**: Organize tasks and workflows
+- **Grant Management**: Track and manage grant opportunities with full CRUD operations
+- **Task Management**: Organize tasks and workflows with comments and tags
 - **Impact Metrics**: Monitor success rates and outcomes
 - **Media Investments**: Track media campaigns
 - **Real-time Updates**: Live data synchronization
 - **Responsive Design**: Works on all devices
+- **Database Integration**: Full PostgreSQL integration with migrations
+- **API-First Design**: RESTful API with comprehensive endpoints
+
+## 🔄 Current Status
+
+### ✅ Completed
+- **Backend**: Fully functional FastAPI with all endpoints restored
+- **Database**: PostgreSQL configured with Alembic migrations
+- **Frontend**: Next.js 15 app with direct backend integration
+- **API Communication**: Frontend connects directly to backend API
+- **Project Structure**: Cleaned up and organized
+
+### 🚧 In Progress
+- **Frontend Deployment**: Ready for Render deployment
+- **Production Testing**: End-to-end testing of complete system
+
+### 📋 Next Steps
+1. Deploy frontend to Render
+2. Test complete system integration
+3. Add authentication system
+4. Implement advanced features
 
 ## 🤝 Contributing
 
@@ -123,3 +152,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🆘 Support
 
 For support, email support@sgedashboard.com or create an issue in this repository.
+
+## 🔗 Quick Links
+
+- **Live Backend**: https://sge-dashboard-api.onrender.com/health
+- **API Documentation**: https://sge-dashboard-api.onrender.com/api/docs
+- **GitHub Repository**: https://github.com/A1anMc/SGEDashboardJuly

@@ -1,311 +1,400 @@
 # API Documentation
 
-This document describes the SGE Dashboard API endpoints and their usage.
+This document provides comprehensive information about the SGE Dashboard API endpoints, authentication, and usage.
 
-## 🚀 Base URL
+## 🔗 Base URL
 
-- **Development**: `http://localhost:8000`
-- **Production**: `https://sge-dashboard-api.onrender.com`
+**Production**: `https://sge-dashboard-api.onrender.com`  
+**Development**: `http://localhost:8000`
 
-## 📚 API Documentation
+## 📋 API Overview
 
-- **Interactive Docs**: `/docs` (Swagger UI)
-- **ReDoc**: `/redoc` (Alternative documentation)
+The SGE Dashboard API is built with FastAPI and provides RESTful endpoints for managing grants, tasks, users, and other resources.
+
+### API Version
+All endpoints are prefixed with `/api/v1/`
+
+### Content Type
+All requests and responses use `application/json`
 
 ## 🔐 Authentication
 
+### JWT Authentication
 The API uses JWT (JSON Web Tokens) for authentication.
 
-### Authentication Flow
+#### Login
+```http
+POST /api/v1/auth/login
+Content-Type: application/json
 
-1. **Login**: POST `/api/v1/auth/login`
-2. **Use Token**: Include in Authorization header: `Bearer <token>`
-
-### Example Request
-```bash
-curl -H "Authorization: Bearer <your-jwt-token>" \
-     https://sge-dashboard-api.onrender.com/api/v1/grants
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
 ```
 
-## 📋 API Endpoints
+#### Response
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer",
+  "user": {
+    "id": "123",
+    "email": "user@example.com",
+    "full_name": "John Doe",
+    "role": "admin"
+  }
+}
+```
 
-### Health Check
+#### Using the Token
+Include the token in the Authorization header:
+```http
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
 
-#### GET `/health`
-Check API health status.
+## 📊 Health Check
+
+### Get System Health
+```http
+GET /health
+```
 
 **Response:**
 ```json
 {
   "status": "healthy",
-  "timestamp": "2025-07-15T06:13:45.716287",
+  "database": "healthy",
+  "timestamp": "2025-07-18T03:48:19.040Z",
   "environment": "production",
   "version": "1.0.0"
 }
 ```
 
-### Authentication
+## 🎯 Grants API
 
-#### POST `/api/v1/auth/login`
-Authenticate user and get JWT token.
-
-**Request Body:**
-```json
-{
-  "username": "user@example.com",
-  "password": "password123"
-}
+### List Grants
+```http
+GET /api/v1/grants/
 ```
-
-**Response:**
-```json
-{
-  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
-  "token_type": "bearer",
-  "user": {
-    "id": 1,
-    "email": "user@example.com",
-    "full_name": "John Doe"
-  }
-}
-```
-
-### Grants
-
-#### GET `/api/v1/grants`
-Get all grants with optional filtering.
 
 **Query Parameters:**
-- `page`: Page number (default: 1)
-- `size`: Items per page (default: 20)
-- `status`: Filter by status
-- `tag`: Filter by tag
-- `search`: Search in title and description
+- `skip` (integer): Number of records to skip (default: 0)
+- `limit` (integer): Number of records to return (default: 10)
+- `search` (string): Search term for title or description
+- `status` (string): Filter by status (open, closed, pending)
+- `category` (string): Filter by category
 
 **Response:**
 ```json
 {
   "items": [
     {
-      "id": 1,
-      "title": "Media Investment Grant",
-      "description": "Grant for media projects",
+      "id": "123",
+      "title": "Innovation Grant 2025",
+      "description": "Funding for innovative projects",
       "amount": 50000,
-      "status": "active",
-      "deadline": "2025-12-31",
-      "tags": ["media", "investment"],
-      "created_at": "2025-07-15T06:13:45.716287"
+      "deadline": "2025-12-31T23:59:59Z",
+      "status": "open",
+      "category": "innovation",
+      "created_at": "2025-07-18T03:48:19.040Z",
+      "updated_at": "2025-07-18T03:48:19.040Z"
     }
   ],
   "total": 1,
-  "page": 1,
-  "size": 20,
-  "pages": 1
+  "skip": 0,
+  "limit": 10
 }
 ```
 
-#### POST `/api/v1/grants`
-Create a new grant.
+### Get Grant by ID
+```http
+GET /api/v1/grants/{grant_id}/
+```
 
-**Request Body:**
-```json
+### Create Grant
+```http
+POST /api/v1/grants/
+Content-Type: application/json
+
 {
-  "title": "New Grant",
-  "description": "Grant description",
+  "title": "New Grant Opportunity",
+  "description": "Description of the grant",
   "amount": 25000,
-  "deadline": "2025-12-31",
-  "tags": ["media", "investment"]
+  "deadline": "2025-12-31T23:59:59Z",
+  "status": "open",
+  "category": "research"
 }
 ```
 
-#### GET `/api/v1/grants/{grant_id}`
-Get a specific grant by ID.
+### Update Grant
+```http
+PUT /api/v1/grants/{grant_id}/
+Content-Type: application/json
 
-#### PUT `/api/v1/grants/{grant_id}`
-Update a grant.
+{
+  "title": "Updated Grant Title",
+  "status": "closed"
+}
+```
 
-#### DELETE `/api/v1/grants/{grant_id}`
-Delete a grant.
+### Delete Grant
+```http
+DELETE /api/v1/grants/{grant_id}/
+```
 
-### Tasks
+## 📝 Tasks API
 
-#### GET `/api/v1/tasks`
-Get all tasks.
+### List Tasks
+```http
+GET /api/v1/tasks/
+```
 
 **Query Parameters:**
-- `page`: Page number
-- `size`: Items per page
-- `status`: Filter by status
-- `priority`: Filter by priority
-- `assigned_to`: Filter by assigned user
+- `skip` (integer): Number of records to skip
+- `limit` (integer): Number of records to return
+- `status` (string): Filter by status
+- `assigned_to` (string): Filter by assigned user
 
 **Response:**
 ```json
 {
   "items": [
     {
-      "id": 1,
+      "id": "456",
       "title": "Review Grant Application",
       "description": "Review and evaluate grant application",
       "status": "in_progress",
       "priority": "high",
-      "assigned_to": "user@example.com",
-      "due_date": "2025-07-20",
-      "created_at": "2025-07-15T06:13:45.716287"
+      "assigned_to": "user123",
+      "due_date": "2025-07-25T23:59:59Z",
+      "created_at": "2025-07-18T03:48:19.040Z",
+      "updated_at": "2025-07-18T03:48:19.040Z"
     }
   ],
   "total": 1,
-  "page": 1,
-  "size": 20,
-  "pages": 1
+  "skip": 0,
+  "limit": 10
 }
 ```
 
-#### POST `/api/v1/tasks`
-Create a new task.
+### Get Task by ID
+```http
+GET /api/v1/tasks/{task_id}/
+```
 
-**Request Body:**
-```json
+### Create Task
+```http
+POST /api/v1/tasks/
+Content-Type: application/json
+
 {
   "title": "New Task",
   "description": "Task description",
+  "status": "todo",
   "priority": "medium",
-  "due_date": "2025-07-20",
-  "assigned_to": "user@example.com"
+  "assigned_to": "user123",
+  "due_date": "2025-07-25T23:59:59Z"
 }
 ```
 
-#### GET `/api/v1/tasks/{task_id}`
-Get a specific task by ID.
+### Update Task
+```http
+PUT /api/v1/tasks/{task_id}/
+Content-Type: application/json
 
-#### PUT `/api/v1/tasks/{task_id}`
-Update a task.
-
-#### DELETE `/api/v1/tasks/{task_id}`
-Delete a task.
-
-### Comments
-
-#### GET `/api/v1/tasks/{task_id}/comments`
-Get comments for a task.
-
-#### POST `/api/v1/tasks/{task_id}/comments`
-Add a comment to a task.
-
-**Request Body:**
-```json
 {
-  "content": "This is a comment"
+  "status": "completed",
+  "priority": "high"
 }
 ```
 
-### Tags
+### Delete Task
+```http
+DELETE /api/v1/tasks/{task_id}/
+```
 
-#### GET `/api/v1/tags`
-Get all tags.
+## 👥 Users API
+
+### List Users
+```http
+GET /api/v1/users/
+```
 
 **Response:**
 ```json
-[
-  {
-    "id": 1,
-    "name": "media",
-    "color": "#3B82F6",
-    "parent_id": null
-  },
-  {
-    "id": 2,
-    "name": "investment",
-    "color": "#10B981",
-    "parent_id": null
-  }
-]
+{
+  "items": [
+    {
+      "id": "user123",
+      "email": "user@example.com",
+      "full_name": "John Doe",
+      "role": "admin",
+      "created_at": "2025-07-18T03:48:19.040Z",
+      "updated_at": "2025-07-18T03:48:19.040Z"
+    }
+  ],
+  "total": 1,
+  "skip": 0,
+  "limit": 10
+}
 ```
 
-#### POST `/api/v1/tags`
-Create a new tag.
+### Get User by ID
+```http
+GET /api/v1/users/{user_id}/
+```
 
-**Request Body:**
+### Create User
+```http
+POST /api/v1/users/
+Content-Type: application/json
+
+{
+  "email": "newuser@example.com",
+  "full_name": "Jane Smith",
+  "password": "securepassword123",
+  "role": "user"
+}
+```
+
+### Update User
+```http
+PUT /api/v1/users/{user_id}/
+Content-Type: application/json
+
+{
+  "full_name": "Jane Doe",
+  "role": "admin"
+}
+```
+
+### Delete User
+```http
+DELETE /api/v1/users/{user_id}/
+```
+
+## 🏷️ Tags API
+
+### List Tags
+```http
+GET /api/v1/tags/
+```
+
+**Response:**
 ```json
 {
-  "name": "new-tag",
-  "color": "#EF4444",
+  "items": [
+    {
+      "id": "tag123",
+      "name": "innovation",
+      "color": "#3B82F6",
+      "created_at": "2025-07-18T03:48:19.040Z"
+    }
+  ],
+  "total": 1,
+  "skip": 0,
+  "limit": 10
+}
+```
+
+### Create Tag
+```http
+POST /api/v1/tags/
+Content-Type: application/json
+
+{
+  "name": "research",
+  "color": "#10B981"
+}
+```
+
+## 💬 Comments API
+
+### List Comments for Task
+```http
+GET /api/v1/tasks/{task_id}/comments/
+```
+
+### Create Comment
+```http
+POST /api/v1/tasks/{task_id}/comments/
+Content-Type: application/json
+
+{
+  "content": "This is a comment on the task",
   "parent_id": null
 }
 ```
 
-### Users
+## 📈 Projects API
 
-#### GET `/api/v1/users/me`
-Get current user profile.
+### List Projects
+```http
+GET /api/v1/projects/
+```
+
+### Get Project by ID
+```http
+GET /api/v1/projects/{project_id}/
+```
+
+### Create Project
+```http
+POST /api/v1/projects/
+Content-Type: application/json
+
+{
+  "title": "New Project",
+  "description": "Project description",
+  "start_date": "2025-07-18T00:00:00Z",
+  "end_date": "2025-12-31T23:59:59Z"
+}
+```
+
+## 🔍 Search API
+
+### Search Grants
+```http
+GET /api/v1/search/grants?q=innovation
+```
+
+### Search Tasks
+```http
+GET /api/v1/search/tasks?q=review
+```
+
+## 📊 Analytics API
+
+### Get Dashboard Stats
+```http
+GET /api/v1/analytics/dashboard
+```
 
 **Response:**
 ```json
 {
-  "id": 1,
-  "email": "user@example.com",
-  "full_name": "John Doe",
-  "is_active": true,
-  "created_at": "2025-07-15T06:13:45.716287"
+  "total_grants": 25,
+  "open_grants": 15,
+  "total_tasks": 50,
+  "completed_tasks": 30,
+  "total_users": 10,
+  "total_projects": 5
 }
 ```
 
-#### PUT `/api/v1/users/me`
-Update current user profile.
-
-**Request Body:**
-```json
-{
-  "full_name": "John Smith",
-  "email": "john.smith@example.com"
-}
-```
-
-## 🔄 Pagination
-
-Most list endpoints support pagination with the following parameters:
-
-- `page`: Page number (1-based)
-- `size`: Items per page (default: 20, max: 100)
-
-**Response Format:**
-```json
-{
-  "items": [...],
-  "total": 100,
-  "page": 1,
-  "size": 20,
-  "pages": 5
-}
-```
-
-## 🔍 Filtering
-
-Many endpoints support filtering with query parameters:
-
-- `search`: Text search across multiple fields
-- `status`: Filter by status
-- `created_at`: Filter by creation date
-- `updated_at`: Filter by update date
-
-**Example:**
-```
-GET /api/v1/grants?search=media&status=active&page=1&size=10
-```
-
-## 📊 Error Handling
+## ⚠️ Error Handling
 
 ### Error Response Format
 ```json
 {
   "detail": "Error message",
   "error_code": "VALIDATION_ERROR",
-  "timestamp": "2025-07-15T06:13:45.716287"
+  "timestamp": "2025-07-18T03:48:19.040Z"
 }
 ```
 
 ### Common HTTP Status Codes
-
 - `200 OK`: Request successful
 - `201 Created`: Resource created successfully
 - `400 Bad Request`: Invalid request data
@@ -315,117 +404,85 @@ GET /api/v1/grants?search=media&status=active&page=1&size=10
 - `422 Unprocessable Entity`: Validation error
 - `500 Internal Server Error`: Server error
 
-### Validation Errors
-```json
-{
-  "detail": [
-    {
-      "loc": ["body", "title"],
-      "msg": "field required",
-      "type": "value_error.missing"
-    }
-  ]
-}
-```
-
-## 🔒 Rate Limiting
+## 🔄 Rate Limiting
 
 The API implements rate limiting to prevent abuse:
-
-- **Anonymous**: 100 requests per hour
-- **Authenticated**: 1000 requests per hour
-- **Premium**: 5000 requests per hour
+- **Default**: 100 requests per minute per IP
+- **Authenticated**: 1000 requests per minute per user
 
 Rate limit headers are included in responses:
 ```
-X-RateLimit-Limit: 1000
-X-RateLimit-Remaining: 999
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
 X-RateLimit-Reset: 1640995200
 ```
 
-## 📝 Examples
+## 📚 Interactive Documentation
 
-### Using cURL
+### Swagger UI
+Visit `https://sge-dashboard-api.onrender.com/api/docs` for interactive API documentation.
 
-```bash
-# Get all grants
-curl -H "Authorization: Bearer <token>" \
-     https://sge-dashboard-api.onrender.com/api/v1/grants
+### ReDoc
+Visit `https://sge-dashboard-api.onrender.com/redoc` for alternative documentation format.
 
-# Create a new grant
-curl -X POST \
-     -H "Authorization: Bearer <token>" \
-     -H "Content-Type: application/json" \
-     -d '{"title":"New Grant","description":"Description","amount":25000}' \
-     https://sge-dashboard-api.onrender.com/api/v1/grants
+## 🧪 Testing
 
-# Update a grant
-curl -X PUT \
-     -H "Authorization: Bearer <token>" \
-     -H "Content-Type: application/json" \
-     -d '{"title":"Updated Grant"}' \
-     https://sge-dashboard-api.onrender.com/api/v1/grants/1
+### Test Endpoints
+```http
+GET /api/v1/test/health
+GET /api/v1/test/database
+GET /api/v1/test/email
 ```
 
-### Using JavaScript
+## 🔗 SDKs and Libraries
 
+### JavaScript/TypeScript
 ```javascript
-// Get grants
-const response = await fetch('https://sge-dashboard-api.onrender.com/api/v1/grants', {
+// Using fetch
+const response = await fetch('https://sge-dashboard-api.onrender.com/api/v1/grants/', {
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+
+// Using axios
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: 'https://sge-dashboard-api.onrender.com/api/v1',
   headers: {
     'Authorization': `Bearer ${token}`
   }
 });
-const grants = await response.json();
-
-// Create grant
-const newGrant = await fetch('https://sge-dashboard-api.onrender.com/api/v1/grants', {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    title: 'New Grant',
-    description: 'Description',
-    amount: 25000
-  })
-});
 ```
-
-## 🔗 SDKs and Libraries
 
 ### Python
 ```python
 import requests
 
-# Get grants
+headers = {
+    'Authorization': f'Bearer {token}',
+    'Content-Type': 'application/json'
+}
+
 response = requests.get(
-    'https://sge-dashboard-api.onrender.com/api/v1/grants',
-    headers={'Authorization': f'Bearer {token}'}
+    'https://sge-dashboard-api.onrender.com/api/v1/grants/',
+    headers=headers
 )
-grants = response.json()
-```
-
-### JavaScript/TypeScript
-```typescript
-// Using axios
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: 'https://sge-dashboard-api.onrender.com',
-  headers: {
-    'Authorization': `Bearer ${token}`
-  }
-});
-
-const grants = await api.get('/api/v1/grants');
 ```
 
 ## 📞 Support
 
 For API support:
-- Check the interactive documentation at `/docs`
-- Review error messages and status codes
-- Contact support team for assistance
-- Create an issue in the repository 
+1. Check the interactive documentation
+2. Review error messages and status codes
+3. Test with Postman or similar tools
+4. Create an issue in the repository
+
+## 🔗 Quick Links
+
+- **Live API**: https://sge-dashboard-api.onrender.com
+- **Health Check**: https://sge-dashboard-api.onrender.com/health
+- **Interactive Docs**: https://sge-dashboard-api.onrender.com/api/docs
+- **GitHub Repository**: https://github.com/A1anMc/SGEDashboardJuly 
