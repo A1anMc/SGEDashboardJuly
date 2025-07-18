@@ -16,24 +16,24 @@ import os
 import sys
 import traceback
 
-# Import Base and models - commented out for now
-# from app.db.base import Base  # noqa: F401
-# from app.models.user import User  # noqa: F401
-# from app.models.team_member import TeamMember  # noqa: F401
-# from app.models.project import Project  # noqa: F401
-# from app.models.metric import Metric  # noqa: F401
-# from app.models.program_logic import ProgramLogic  # noqa: F401
-# from app.models.grant import Grant  # noqa: F401
-# from app.models.task import Task  # noqa: F401
-# from app.models.task_comment import TaskComment  # noqa: F401
-# from app.models.time_entry import TimeEntry  # noqa: F401
+# Import Base and models
+from app.db.base import Base  # noqa: F401
+from app.models.user import User  # noqa: F401
+from app.models.team_member import TeamMember  # noqa: F401
+from app.models.project import Project  # noqa: F401
+from app.models.metric import Metric  # noqa: F401
+from app.models.program_logic import ProgramLogic  # noqa: F401
+from app.models.grant import Grant  # noqa: F401
+from app.models.task import Task  # noqa: F401
+from app.models.task_comment import TaskComment  # noqa: F401
+from app.models.time_entry import TimeEntry  # noqa: F401
 
-# from app.api.v1.api import api_router
-# from app.db.session import get_engine, close_database
+from app.api.v1.api import api_router
+from app.db.session import get_engine, close_database
 from app.core.config import settings
-# from app.core.error_handlers import setup_error_handlers
-# from app.db.init_db import init_db, get_db_info, validate_database_config
-# from app.db.session import check_db_health
+from app.core.error_handlers import setup_error_handlers
+from app.db.init_db import init_db, get_db_info, validate_database_config
+from app.db.session import check_db_health
 
 # Configure logging with production-safe format
 logging.basicConfig(
@@ -105,8 +105,27 @@ async def lifespan(app: FastAPI):
             logger.error("DEBUG mode is enabled in production! This is a security risk.")
             raise RuntimeError("DEBUG mode must be disabled in production")
         
-        # Skip all database operations for now
-        logger.info("Skipping all database operations to get app running")
+        # Initialize database
+        logger.info("Initializing database...")
+        engine = get_engine(settings.DATABASE_URL)
+        app.state.engine = engine
+        await init_db(engine)
+        logger.info("Database initialized successfully.")
+        
+        # Validate database configuration
+        logger.info("Validating database configuration...")
+        await validate_database_config(engine)
+        logger.info("Database configuration validated.")
+        
+        # Check database health
+        logger.info("Checking database health...")
+        await check_db_health(engine)
+        logger.info("Database health check passed.")
+        
+        # Setup error handlers
+        logger.info("Setting up error handlers...")
+        setup_error_handlers(app)
+        logger.info("Error handlers setup.")
         
     except Exception as e:
         logger.error(f"Failed to initialize application: {str(e)}")
@@ -123,6 +142,9 @@ async def lifespan(app: FastAPI):
     
     # Shutdown: Clean up resources
     logger.info("Shutting down Shadow Goose Entertainment API...")
+    if 'engine' in app.state and app.state.engine:
+        await close_database(app.state.engine)
+        logger.info("Database connection closed.")
 
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application with comprehensive security."""
@@ -238,9 +260,19 @@ def create_app() -> FastAPI:
     async def health_check():
         """Health check endpoint."""
         try:
-            # Basic health check without database
+            # Check database health if available
+            db_status = "unknown"
+            if hasattr(app.state, 'engine') and app.state.engine:
+                try:
+                    await check_db_health(app.state.engine)
+                    db_status = "healthy"
+                except Exception as db_error:
+                    logger.error(f"Database health check failed: {str(db_error)}")
+                    db_status = "unhealthy"
+            
             return {
                 "status": "healthy",
+                "database": db_status,
                 "timestamp": datetime.utcnow().isoformat(),
                 "environment": settings.ENV,
                 "version": "1.0.0"
@@ -256,8 +288,8 @@ def create_app() -> FastAPI:
                 }
             )
     
-    # Include API router (commented out for now)
-    # app.include_router(api_router, prefix=settings.API_V1_STR)
+    # Include API router
+    app.include_router(api_router, prefix=settings.API_V1_STR)
     
     return app
 

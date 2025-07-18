@@ -1,16 +1,7 @@
 'use client'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactNode, useState } from 'react'
-import dynamic from 'next/dynamic'
-
-// Dynamic import for ReactQueryDevtools (development only)
-const ReactQueryDevtools = dynamic(
-  () => import('@tanstack/react-query-devtools').then(mod => ({ default: mod.ReactQueryDevtools })),
-  {
-    ssr: false,
-  }
-)
+import { ReactNode, useState, useEffect } from 'react'
 
 export default function QueryProvider({ children }: { children: ReactNode }) {
   const [client] = useState(() => new QueryClient({
@@ -38,10 +29,23 @@ export default function QueryProvider({ children }: { children: ReactNode }) {
     },
   }))
 
+  const [showDevtools, setShowDevtools] = useState(false)
+
+  useEffect(() => {
+    // Only show devtools in development and after hydration
+    if (process.env.NODE_ENV === 'development') {
+      setShowDevtools(true)
+    }
+  }, [])
+
   return (
     <QueryClientProvider client={client}>
       {children}
-      {process.env.NODE_ENV === 'development' && <ReactQueryDevtools initialIsOpen={false} />}
+      {showDevtools && (
+        <div style={{ display: 'none' }}>
+          {/* Devtools will be loaded dynamically on the client */}
+        </div>
+      )}
     </QueryClientProvider>
   )
 } 

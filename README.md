@@ -1,149 +1,125 @@
-# Shadow Goose Entertainment Dashboard
+# SGE Dashboard
 
-A comprehensive grant management and project tracking system for the entertainment industry.
+Strategic Grant Evaluation Dashboard - A comprehensive platform for managing grants, tasks, and impact metrics.
 
-## Features
-
-- **Grant Management**: Track and manage grant opportunities with automated scraping from multiple sources
-- **Tag System**: Hierarchical tag management with synonyms for better organization
-- **Project Tracking**: Monitor project progress and resource allocation
-- **Task Management**: Organize and track tasks with priority and status tracking
-
-## Tech Stack
-
-- **Backend**: Python/FastAPI
-- **Frontend**: Next.js/React with TypeScript
-- **Database**: PostgreSQL
-- **Authentication**: JWT-based auth system
-
-## Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
+- Node.js 18+ 
+- Python 3.8+
+- PostgreSQL
+- npm or yarn
 
-- Python 3.11 or higher
-- Node.js 18 or higher
-- PostgreSQL 15 or higher (or Supabase account)
-- Git
+### Development Setup
 
-### Installation
-
-1. Clone the repository:
 ```bash
-git clone https://github.com/A1anMc/SGEDashboardJuly.git
-cd SGEDashboardJuly
-```
+# Clone the repository
+git clone <repository-url>
+cd sge-dashboard
 
-2. Install backend dependencies:
-```bash
-python -m venv venv
-source venv/bin/activate  # Windows: .\venv\Scripts\activate
+# Backend Setup
+cd backend
 pip install -r requirements.txt
-```
-
-3. Install frontend dependencies:
-```bash
-cd frontend
-npm install
-```
-
-4. Set up environment variables:
-```bash
-cp .env.template .env
-# Edit .env with your configuration
-```
-
-### Environment Variables
-
-Create two `.env` files:
-
-1. Backend `.env` (in root directory):
-```env
-# Server
-DEBUG=True
-HOST=0.0.0.0
-PORT=8000
-
-# Database
-DATABASE_URL=postgresql://user:password@localhost:5432/sge_dashboard
-
-# Supabase
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_key
-
-# Authentication
-JWT_SECRET_KEY=your_jwt_secret_key
-JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-
-# Airtable Integration
-AIRTABLE_API_KEY=your_airtable_api_key
-AIRTABLE_BASE_ID=your_airtable_base_id
-
-# External APIs
-BUSINESS_GOV_API_KEY=your_business_gov_api_key
-GRANTS_GOV_API_KEY=your_grants_gov_api_key
-
-# Logging
-LOG_LEVEL=INFO
-```
-
-2. Frontend `.env.local` (in `/frontend` directory):
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-### Starting the Development Servers
-
-1. Start the backend server:
-```bash
 uvicorn app.main:app --reload
-```
 
-2. Start the frontend server:
-```bash
-cd frontend
+# Frontend Setup  
+cd ../frontend
+npm install
 npm run dev
 ```
 
-## Development
+### Production Deployment
 
-- Frontend runs on `http://localhost:3000`
-- Backend API runs on `http://localhost:8000`
-- API documentation available at `http://localhost:8000/docs`
+The application is deployed on Render with the following services:
 
-### VSCode Setup
+- **Backend API**: `https://sge-dashboard-api.onrender.com`
+- **Frontend**: `https://sge-dashboard-web-new.onrender.com`
 
-Recommended extensions:
-- Python
-- Pylance
-- ESLint
-- Prettier
-- Tailwind CSS IntelliSense
-- GitLens
+## 📁 Project Structure
 
-## Project Structure
+```
+sge-dashboard/
+├── backend/                 # FastAPI backend
+│   ├── app/
+│   │   ├── api/            # API endpoints
+│   │   ├── core/           # Core configuration
+│   │   ├── models/         # Database models
+│   │   ├── services/       # Business logic
+│   │   └── main.py         # FastAPI app
+│   └── requirements.txt
+├── frontend/               # Next.js frontend
+│   ├── src/
+│   │   ├── app/           # App router pages
+│   │   ├── components/    # React components
+│   │   ├── services/      # API services
+│   │   ├── hooks/         # Custom hooks
+│   │   ├── types/         # TypeScript types
+│   │   └── utils/         # Utility functions
+│   └── package.json
+└── docs/                  # Documentation
+```
 
-The project is organized into the following main directories:
+## 🛠️ Technology Stack
 
-* `/app` - Main FastAPI backend application
-* `/frontend` - Next.js frontend application
-* `/tests` - Backend test suite
-* `/docs` - Project documentation
+### Backend
+- **Framework**: FastAPI
+- **Database**: PostgreSQL
+- **ORM**: SQLAlchemy
+- **Authentication**: JWT
+- **Deployment**: Render
 
-## Overview
+### Frontend
+- **Framework**: Next.js 15
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **State Management**: TanStack Query
+- **UI Components**: Radix UI, Headless UI
+- **Deployment**: Render
 
-The Shadow Goose Entertainment Dashboard is a centralized platform designed to streamline operations for media projects. It provides robust tools for tracking project progress, mapping program logic against the Impact Compass framework, discovering and managing Australian grant opportunities, and visualizing key impact metrics. This dashboard aims to enhance efficiency and provide clear insights into project performance and funding avenues.
+## 📚 Documentation
 
-## Error Handling
+- [Architecture Overview](./docs/architecture/README.md)
+- [API Documentation](./docs/api/README.md)
+- [Development Guide](./docs/development/README.md)
+- [Deployment Guide](./docs/deployment/README.md)
 
-The SGE Dashboard implements a comprehensive error handling system. For detailed information, see:
+## 🔧 Environment Variables
 
-- [Error Handling Architecture](docs/architecture/error-handling.md) - System design and implementation details
-- [Error Handling Guidelines](docs/CONTRIBUTING.md#error-handling-guidelines) - Guidelines for contributors
-- [Error Handling Examples](README.dev.md#error-handling) - Code examples and best practices
+### Backend
+```env
+DATABASE_URL=postgresql://user:password@localhost:5432/sge_dashboard
+SECRET_KEY=your-secret-key
+JWT_SECRET_KEY=your-jwt-secret
+FRONTEND_URL=https://sge-dashboard-web-new.onrender.com
+```
 
-## License
+### Frontend
+```env
+NEXT_PUBLIC_API_URL=https://sge-dashboard-api.onrender.com
+NODE_ENV=production
+```
 
-This project is private and confidential.
+## 🚀 Features
+
+- **Grant Management**: Track and manage grant opportunities
+- **Task Management**: Organize tasks and workflows
+- **Impact Metrics**: Monitor success rates and outcomes
+- **Media Investments**: Track media campaigns
+- **Real-time Updates**: Live data synchronization
+- **Responsive Design**: Works on all devices
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+For support, email support@sgedashboard.com or create an issue in this repository.

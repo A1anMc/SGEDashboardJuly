@@ -46,19 +46,16 @@ services:
     
   # Frontend Service
   - type: web
-    name: sge-dashboard-web
+    name: sge-dashboard-web-new
     env: node
     buildCommand: |
-      cd frontend
       npm ci --only=production
       npm run build
-      # ✅ Copy static assets into standalone
-      mkdir -p .next/standalone/.next
-      cp -r .next/static .next/standalone/.next/
-      # ✅ Copy public assets
-      cp -r public .next/standalone/public || true
+      # Copy static assets to standalone
+      cp -r .next/static .next/standalone/.next/ || true
+      cp -r public .next/standalone/ || true
     startCommand: |
-      cd frontend/.next/standalone && PORT=$PORT node server.js
+      cd .next/standalone && PORT=$PORT node server.js
     envVars:
       # Backend API URL
       - key: NEXT_PUBLIC_API_URL
@@ -73,12 +70,6 @@ services:
       # Port configuration
       - key: PORT
         value: "3000"
-      
-      # Security Settings
-      - key: NEXT_PUBLIC_ENABLE_ANALYTICS
-        value: "false"
-      - key: NEXT_PUBLIC_DEBUG_MODE
-        value: "false"
     
     healthCheckPath: /
     autoDeploy: true
