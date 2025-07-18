@@ -51,11 +51,8 @@ services:
     buildCommand: |
       npm ci --only=production
       npm run build
-      # Copy static assets to standalone
-      cp -r .next/static .next/standalone/.next/ || true
-      cp -r public .next/standalone/ || true
     startCommand: |
-      cd .next/standalone && PORT=$PORT node server.js
+      npm start
     envVars:
       # Backend API URL
       - key: NEXT_PUBLIC_API_URL
