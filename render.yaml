@@ -48,6 +48,7 @@ services:
   - type: web
     name: sge-dashboard-web
     env: node
+    rootDir: frontend
     buildCommand: |
       npm ci --only=production
       npm run build
