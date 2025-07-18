@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Dict
 from datetime import datetime
 
-from app.db.session import get_db_session
+from app.db.session import get_db
 from app.models.task import Task, TaskStatus, TaskPriority
 from app.models.task_comment import TaskComment
 from app.models.reaction import Reaction
@@ -18,7 +18,7 @@ router = APIRouter()
 @router.post("/", response_model=TaskResponse)
 async def create_task(
     task: TaskCreate,
-    db: Session = Depends(get_db_session),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Create a new task."""
@@ -62,7 +62,7 @@ async def create_task(
 
 @router.get("/")
 async def list_tasks(
-    db: Session = Depends(get_db_session)
+    db: Session = Depends(get_db)
 ):
     """List tasks endpoint."""
     # Placeholder for list tasks logic
@@ -71,7 +71,7 @@ async def list_tasks(
 @router.get("/{task_id}")
 async def get_task(
     task_id: int,
-    db: Session = Depends(get_db_session)
+    db: Session = Depends(get_db)
 ):
     """Get task by ID endpoint."""
     # Placeholder for get task logic
@@ -83,7 +83,7 @@ async def get_task(
 async def add_reaction(
     comment_id: int,
     emoji: str,
-    db: Session = Depends(get_db_session),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Add a reaction to a comment."""
@@ -130,7 +130,7 @@ async def add_reaction(
 async def remove_reaction(
     comment_id: int,
     emoji: str,
-    db: Session = Depends(get_db_session),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Remove a reaction from a comment."""

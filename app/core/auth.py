@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from app.core.config import settings
-from app.db.session import get_db_session
+from app.db.session import get_db
 from app.models.user import User
 
 # Use consistent token URL with API version prefix
@@ -50,7 +50,7 @@ def verify_token(token: str) -> dict:
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db_session)
+    db: Session = Depends(get_db)
 ) -> User:
     """Get the current authenticated user."""
     try:

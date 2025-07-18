@@ -60,31 +60,40 @@ class ApiClient {
       limit: params.limit?.toString() || '10'
     } : undefined;
     
-    return this.request(buildApiUrl(config.endpoints.grants, queryParams));
+    return this.request<any>(buildApiUrl(config.endpoints.grants, queryParams));
   }
 
   async getGrant(id: string) {
-    return this.request(`${config.endpoints.grants}${id}/`);
+    return this.request<any>(`${config.endpoints.grants}${id}/`);
   }
 
   async createGrant(data: any) {
-    return this.request(config.endpoints.grants, {
+    return this.request<any>(config.endpoints.grants, {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
   async updateGrant(id: string, data: any) {
-    return this.request(`${config.endpoints.grants}${id}/`, {
+    return this.request<any>(`${config.endpoints.grants}${id}/`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   }
 
   async deleteGrant(id: string) {
-    return this.request(`${config.endpoints.grants}${id}/`, {
+    return this.request<void>(`${config.endpoints.grants}${id}/`, {
       method: 'DELETE',
     });
+  }
+
+  async getGrantsBySource(source: string, params?: { skip?: number; limit?: number }) {
+    const queryParams = params ? {
+      skip: params.skip?.toString() || '0',
+      limit: params.limit?.toString() || '10'
+    } : undefined;
+    
+    return this.request<any>(buildApiUrl(`${config.endpoints.grants}source/${source}/`, queryParams));
   }
 
   // Tasks
@@ -94,29 +103,29 @@ class ApiClient {
       limit: params.limit?.toString() || '10'
     } : undefined;
     
-    return this.request(buildApiUrl(config.endpoints.tasks, queryParams));
+    return this.request<any>(buildApiUrl(config.endpoints.tasks, queryParams));
   }
 
   async getTask(id: string) {
-    return this.request(`${config.endpoints.tasks}${id}/`);
+    return this.request<any>(`${config.endpoints.tasks}${id}/`);
   }
 
   async createTask(data: any) {
-    return this.request(config.endpoints.tasks, {
+    return this.request<any>(config.endpoints.tasks, {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
   async updateTask(id: string, data: any) {
-    return this.request(`${config.endpoints.tasks}${id}/`, {
+    return this.request<any>(`${config.endpoints.tasks}${id}/`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   }
 
   async deleteTask(id: string) {
-    return this.request(`${config.endpoints.tasks}${id}/`, {
+    return this.request<void>(`${config.endpoints.tasks}${id}/`, {
       method: 'DELETE',
     });
   }
@@ -128,12 +137,17 @@ class ApiClient {
       limit: params.limit?.toString() || '10'
     } : undefined;
     
-    return this.request(buildApiUrl(config.endpoints.projects, queryParams));
+    return this.request<any>(buildApiUrl(config.endpoints.projects, queryParams));
   }
 
   // Tags
   async getTags() {
-    return this.request(config.endpoints.tags);
+    return this.request<any>(config.endpoints.tags);
+  }
+
+  // Generic request method for custom endpoints
+  async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    return this.request<T>(endpoint, options);
   }
 }
 

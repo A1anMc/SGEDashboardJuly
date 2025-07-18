@@ -37,8 +37,8 @@ export default function GrantsPage() {
       const response = await getGrants({ skip: 0, limit: 50 });
       console.log('Grants response:', response);
       
-      // Handle different response formats
-      const grantsData = response.items || response.data || response || [];
+      // Handle different response formats with proper typing
+      const grantsData = (response as any)?.items || (response as any)?.data || response || [];
       setGrants(grantsData);
     } catch (err) {
       console.error('Error fetching grants:', err);

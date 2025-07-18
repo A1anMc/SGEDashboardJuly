@@ -33,7 +33,7 @@ from app.db.session import get_engine, close_database
 from app.core.config import settings
 from app.core.error_handlers import setup_error_handlers
 from app.db.init_db import init_db, get_db_info, validate_database_config
-from app.db.session import check_db_health
+from app.db.init_db import check_db_health
 
 # Configure logging with production-safe format
 logging.basicConfig(
@@ -107,25 +107,23 @@ async def lifespan(app: FastAPI):
         
         # Initialize database
         logger.info("Initializing database...")
-        engine = get_engine(settings.DATABASE_URL)
+        engine = get_engine()
         app.state.engine = engine
-        await init_db(engine)
+        init_db()
         logger.info("Database initialized successfully.")
         
         # Validate database configuration
         logger.info("Validating database configuration...")
-        await validate_database_config(engine)
+        validate_database_config()
         logger.info("Database configuration validated.")
         
         # Check database health
         logger.info("Checking database health...")
-        await check_db_health(engine)
+        check_db_health()
         logger.info("Database health check passed.")
         
-        # Setup error handlers
-        logger.info("Setting up error handlers...")
-        setup_error_handlers(app)
-        logger.info("Error handlers setup.")
+        # Error handlers are set up during app creation, not during startup
+        logger.info("Application startup completed successfully.")
         
     except Exception as e:
         logger.error(f"Failed to initialize application: {str(e)}")
@@ -142,9 +140,9 @@ async def lifespan(app: FastAPI):
     
     # Shutdown: Clean up resources
     logger.info("Shutting down Shadow Goose Entertainment API...")
-    if 'engine' in app.state and app.state.engine:
-        await close_database(app.state.engine)
-        logger.info("Database connection closed.")
+    # Close database connections
+    close_database()
+    logger.info("Database connection closed.")
 
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application with comprehensive security."""
@@ -163,6 +161,9 @@ def create_app() -> FastAPI:
         # Security: Don't expose server info in production
         servers=[{"url": "/", "description": "SGE API Server"}] if settings.ENV == 'production' else None,
     )
+    
+    # Setup error handlers
+    setup_error_handlers(app)
     
     # === SECURITY MIDDLEWARE STACK (Order matters!) ===
     

@@ -1,9 +1,20 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   output: 'standalone',
   reactStrictMode: true,
   poweredByHeader: false,
+  
+  // File tracing configuration for standalone builds
+  outputFileTracingRoot: path.join(__dirname, '../'),
+  outputFileTracingExcludes: {
+    '*': [
+      'node_modules/@swc/core-linux-x64-gnu',
+      'node_modules/@swc/core-linux-x64-musl',
+      'node_modules/@esbuild/linux-x64',
+    ],
+  },
   
   // Environment variables
   env: {
@@ -13,10 +24,13 @@ const nextConfig: NextConfig = {
   // Image optimization
   images: {
     domains: ['sge-dashboard-web.onrender.com', 'sge-dashboard-api.onrender.com'],
+    unoptimized: true, // For better standalone compatibility
   },
   
-  // Security headers - Remove CSP for now to fix the eval issue
+  // Security headers with development-friendly CSP
   async headers() {
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    
     return [
       {
         source: '/:path*',
@@ -24,8 +38,13 @@ const nextConfig: NextConfig = {
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          // Temporarily remove CSP to fix eval issues
-          // { key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline';" }
+          // Development-friendly CSP that allows unsafe-eval for hot reloading
+          {
+            key: 'Content-Security-Policy',
+            value: isDevelopment
+              ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://sge-dashboard-api.onrender.com ws: wss:;"
+              : "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://sge-dashboard-api.onrender.com;"
+          }
         ],
       },
     ];

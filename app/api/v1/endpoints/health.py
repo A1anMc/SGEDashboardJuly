@@ -1,7 +1,7 @@
 """Health check endpoints for the application."""
 
 from fastapi import APIRouter
-from app.db.session import check_db_health
+from app.db.session import health_check as check_db_health
 from datetime import datetime
 
 router = APIRouter()

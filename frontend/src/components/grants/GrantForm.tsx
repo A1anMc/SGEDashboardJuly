@@ -1,9 +1,8 @@
 import React from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { grantsApi } from '../../services/grants';
-import { CreateGrantInput, Grant } from '../../types/models';
 import { toast } from 'react-hot-toast';
-import { format } from 'date-fns';
+import { Grant } from '@/types/models';
+import { useCreateGrant, useUpdateGrant } from '@/hooks/useGrants';
 
 interface GrantFormProps {
   grant?: Grant;
@@ -12,6 +11,9 @@ interface GrantFormProps {
 
 export function GrantForm({ grant, onClose }: GrantFormProps) {
   const queryClient = useQueryClient();
+  const createGrantMutation = useCreateGrant();
+  const updateGrantMutation = useUpdateGrant();
+
   const defaultValues = {
     title: grant?.title || '',
     description: grant?.description || '',
@@ -19,41 +21,24 @@ export function GrantForm({ grant, onClose }: GrantFormProps) {
     source_url: grant?.source_url || '',
     application_url: grant?.application_url || '',
     contact_email: grant?.contact_email || '',
-    min_amount: grant?.min_amount || 0,
-    max_amount: grant?.max_amount || 0,
-    open_date: grant?.open_date ? format(new Date(grant.open_date), 'yyyy-MM-dd') : '',
-    deadline: grant?.deadline ? format(new Date(grant.deadline), 'yyyy-MM-dd') : '',
+    min_amount: grant?.min_amount || '',
+    max_amount: grant?.max_amount || '',
+    open_date: grant?.open_date ? new Date(grant.open_date).toISOString().split('T')[0] : '',
+    deadline: grant?.deadline ? new Date(grant.deadline).toISOString().split('T')[0] : '',
     industry_focus: grant?.industry_focus || '',
     location_eligibility: grant?.location_eligibility || '',
-    org_type_eligible: grant?.org_type_eligible || [],
-    funding_purpose: grant?.funding_purpose || [],
-    audience_tags: grant?.audience_tags || [],
+    org_type_eligible: grant?.org_type_eligible?.join(', ') || '',
+    funding_purpose: grant?.funding_purpose?.join(', ') || '',
+    audience_tags: grant?.audience_tags?.join(', ') || '',
     status: grant?.status || 'draft',
     notes: grant?.notes || '',
-    tags: grant?.tags || [],
+    tags: grant?.tags?.map(tag => tag.name).join(', ') || '',
   };
-
-  const mutation = useMutation({
-    mutationFn: (data: CreateGrantInput) => {
-      return grant
-        ? grantsApi.updateGrant(grant.id, data)
-        : grantsApi.createGrant(data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['grants'] });
-      toast.success(grant ? 'Grant updated successfully' : 'Grant created successfully');
-      onClose();
-    },
-    onError: (error) => {
-      toast.error('Failed to save grant');
-      console.error('Error saving grant:', error);
-    },
-  });
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const data: CreateGrantInput = {
+    const data = {
       title: formData.get('title') as string,
       description: formData.get('description') as string,
       source: formData.get('source') as string,
@@ -85,8 +70,33 @@ export function GrantForm({ grant, onClose }: GrantFormProps) {
         .map(tag => tag.trim())
         .filter(Boolean),
     };
-    mutation.mutate(data);
+
+    if (grant) {
+      updateGrantMutation.mutate({ id: grant.id.toString(), grantInput: data });
+    } else {
+      createGrantMutation.mutate(data);
+    }
   };
+
+  // Handle success/error for both mutations
+  React.useEffect(() => {
+    if (createGrantMutation.isSuccess) {
+      toast.success('Grant created successfully');
+      onClose();
+    }
+    if (updateGrantMutation.isSuccess) {
+      toast.success('Grant updated successfully');
+      onClose();
+    }
+    if (createGrantMutation.isError) {
+      toast.error('Failed to create grant');
+    }
+    if (updateGrantMutation.isError) {
+      toast.error('Failed to update grant');
+    }
+  }, [createGrantMutation.isSuccess, updateGrantMutation.isSuccess, createGrantMutation.isError, updateGrantMutation.isError, onClose]);
+
+  const isLoading = createGrantMutation.isPending || updateGrantMutation.isPending;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -241,7 +251,7 @@ export function GrantForm({ grant, onClose }: GrantFormProps) {
         <input
           type="text"
           name="org_type_eligible"
-          defaultValue={defaultValues.org_type_eligible.join(', ')}
+          defaultValue={defaultValues.org_type_eligible}
           placeholder="startup, sme, enterprise, nonprofit, government, academic, any"
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
         />
@@ -254,7 +264,7 @@ export function GrantForm({ grant, onClose }: GrantFormProps) {
         <input
           type="text"
           name="funding_purpose"
-          defaultValue={defaultValues.funding_purpose.join(', ')}
+          defaultValue={defaultValues.funding_purpose}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
         />
       </div>
@@ -266,7 +276,7 @@ export function GrantForm({ grant, onClose }: GrantFormProps) {
         <input
           type="text"
           name="audience_tags"
-          defaultValue={defaultValues.audience_tags.join(', ')}
+          defaultValue={defaultValues.audience_tags}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
         />
       </div>
@@ -302,7 +312,7 @@ export function GrantForm({ grant, onClose }: GrantFormProps) {
         <input
           type="text"
           name="tags"
-          defaultValue={defaultValues.tags.join(', ')}
+          defaultValue={defaultValues.tags}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
         />
       </div>
@@ -317,10 +327,10 @@ export function GrantForm({ grant, onClose }: GrantFormProps) {
         </button>
         <button
           type="submit"
-          disabled={mutation.isPending}
+          disabled={isLoading}
           className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50"
         >
-          {mutation.isPending ? 'Saving...' : grant ? 'Update Grant' : 'Create Grant'}
+          {isLoading ? 'Saving...' : grant ? 'Update Grant' : 'Create Grant'}
         </button>
       </div>
     </form>

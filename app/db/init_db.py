@@ -4,7 +4,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from app.core.config import settings
 from app.db.base import Base
-from app.db.session import engine, SessionLocal
+from app.db.session import get_engine, get_session_local
 import time
 
 logger = logging.getLogger(__name__)
@@ -15,10 +15,11 @@ def init_db() -> None:
         logger.info("Starting database initialization...")
         
         # Create all tables
+        engine = get_engine()
         Base.metadata.create_all(bind=engine)
         
         # Initialize PostgreSQL extensions and settings
-        db = SessionLocal()
+        db = get_session_local()
         try:
             # Create required extensions
             extensions = [
@@ -85,6 +86,7 @@ def get_db_info() -> dict:
         
         # Try to get version info if database is accessible
         try:
+            engine = get_engine()
             with engine.connect() as conn:
                 result = conn.execute(text("SHOW server_version"))
                 version = result.scalar()
@@ -107,6 +109,7 @@ def check_db_health() -> bool:
     """Check database health with enhanced error handling."""
     try:
         # Test database connection with a simple query
+        engine = get_engine()
         with engine.connect() as conn:
             result = conn.execute(text("SELECT 1"))
             result.scalar()

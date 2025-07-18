@@ -1,0 +1,67 @@
+# Render Frontend Service Configuration
+# This file contains the optimal settings for deploying the SGE Dashboard frontend
+
+services:
+  - type: web
+    name: sge-dashboard-web-new
+    env: node
+    plan: starter
+    region: oregon
+    branch: main
+    rootDir: frontend
+    
+    # Build Configuration
+    buildCommand: |
+      chmod +x scripts/build-for-render.sh
+      ./scripts/build-for-render.sh
+    
+    # Start Configuration
+    startCommand: |
+      cd .next/standalone
+      PORT=$PORT node server.js
+    
+    # Health Check Configuration
+    healthCheckPath: /api/health
+    healthCheckTimeout: 180
+    
+    # Environment Variables
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        value: https://sge-dashboard-api.onrender.com
+      - key: NEXT_PUBLIC_APP_NAME
+        value: SGE Dashboard
+      - key: NEXT_PUBLIC_ENV
+        value: production
+    
+    # Auto-Deploy Settings
+    autoDeploy: true
+    
+    # Resource Configuration
+    instanceType: starter
+    
+    # Advanced Settings
+    buildFilter:
+      paths:
+        - frontend/**
+    routes:
+      - type: rewrite
+        source: /api/(.*)
+        destination: /api/$1
+      - type: rewrite
+        source: /(.*)
+        destination: /$1
+
+# Environment-specific overrides
+environments:
+  production:
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        value: https://sge-dashboard-api.onrender.com
+      - key: NEXT_PUBLIC_APP_NAME
+        value: SGE Dashboard
+      - key: NEXT_PUBLIC_ENV
+        value: production 

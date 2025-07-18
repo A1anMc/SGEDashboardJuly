@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Dict
 from datetime import datetime
 
-from app.db.session import get_db_session
+from app.db.session import get_db
 from app.models.task_comment import TaskComment
 from app.models.reaction import Reaction
 from app.models.task import Task
@@ -16,7 +16,7 @@ router = APIRouter()
 @router.post("/", response_model=TaskCommentResponse)
 async def create_comment(
     comment: TaskCommentCreate,
-    db: Session = Depends(get_db_session),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Create a new comment."""
@@ -72,7 +72,7 @@ async def create_comment(
 @router.get("/task/{task_id}", response_model=List[TaskCommentResponse])
 async def get_task_comments(
     task_id: int,
-    db: Session = Depends(get_db_session),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get all comments for a task."""
@@ -96,7 +96,7 @@ async def get_task_comments(
 async def update_comment(
     comment_id: int,
     comment_update: TaskCommentUpdate,
-    db: Session = Depends(get_db_session),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Update a comment."""
@@ -134,7 +134,7 @@ async def update_comment(
 @router.delete("/{comment_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_comment(
     comment_id: int,
-    db: Session = Depends(get_db_session),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Delete a comment."""
@@ -158,7 +158,7 @@ async def delete_comment(
 async def add_reaction(
     comment_id: int,
     emoji: str,
-    db: Session = Depends(get_db_session),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Add a reaction to a comment."""
@@ -197,7 +197,7 @@ async def add_reaction(
 async def remove_reaction(
     comment_id: int,
     emoji: str,
-    db: Session = Depends(get_db_session),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Remove a reaction from a comment."""

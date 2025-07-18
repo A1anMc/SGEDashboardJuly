@@ -27,7 +27,7 @@ from app.models.program_logic import ProgramLogic
 from app.core.auth import create_access_token, get_current_user
 from app.core.config import settings
 from app.main import app
-from app.db.session import get_db_session
+from app.db.session import get_db
 
 # Create test database engine
 test_engine = create_engine(
@@ -119,7 +119,7 @@ def client(db):
         finally:
             pass  # Session cleanup is handled by db fixture
     
-    app.dependency_overrides[get_db_session] = override_get_db
+    app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()

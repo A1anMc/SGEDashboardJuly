@@ -1,69 +1,56 @@
-import { api } from './api';
-import { Tag, TagFormData, TagCategory } from '../types/models';
+import { apiClient } from './api';
+import { Tag, CreateTagRequest, UpdateTagRequest } from '@/types/models';
 
-export interface TagsResponse {
-  items: Tag[];
-  total: number;
-  page: number;
-  size: number;
-}
-
-export interface TagFilters {
-  category?: TagCategory;
-  search?: string;
-  page?: number;
-  size?: number;
-}
-
+// Tags API service
 export const tagsApi = {
-  getTags: async (filters?: TagFilters) => {
-    const params = new URLSearchParams();
-    if (filters?.category) params.append('category', filters.category);
-    if (filters?.search) params.append('search', filters.search);
-    if (filters?.page) params.append('page', filters.page.toString());
-    if (filters?.size) params.append('size', filters.size.toString());
-    
-    const response = await api.get<TagsResponse>(`/tags/?${params.toString()}`);
-    return response.data;
+  // Get all tags
+  async getTags(): Promise<Tag[]> {
+    try {
+      const response = await apiClient.getTags();
+      return response;
+    } catch (error) {
+      console.error('[tagsApi.getTags] Error:', error);
+      throw error;
+    }
   },
-  
-  getTag: async (id: number) => {
-    const response = await api.get<Tag>(`/tags/${id}/`);
-    return response.data;
+
+  // Create a new tag
+  async createTag(tagData: CreateTagRequest): Promise<Tag> {
+    try {
+      const response = await apiClient.makeRequest<Tag>('/api/v1/tags/', {
+        method: 'POST',
+        body: JSON.stringify(tagData),
+      });
+      return response;
+    } catch (error) {
+      console.error('[tagsApi.createTag] Error:', error);
+      throw error;
+    }
   },
-  
-  createTag: async (data: TagFormData) => {
-    const response = await api.post<Tag>('/tags/', data);
-    return response.data;
+
+  // Update an existing tag
+  async updateTag(id: string, tagData: UpdateTagRequest): Promise<Tag> {
+    try {
+      const response = await apiClient.makeRequest<Tag>(`/api/v1/tags/${id}/`, {
+        method: 'PUT',
+        body: JSON.stringify(tagData),
+      });
+      return response;
+    } catch (error) {
+      console.error('[tagsApi.updateTag] Error:', error);
+      throw error;
+    }
   },
-  
-  updateTag: async (id: number, data: Partial<TagFormData>) => {
-    const response = await api.put<Tag>(`/tags/${id}/`, data);
-    return response.data;
+
+  // Delete a tag
+  async deleteTag(id: string): Promise<void> {
+    try {
+      await apiClient.makeRequest(`/api/v1/tags/${id}/`, {
+        method: 'DELETE',
+      });
+    } catch (error) {
+      console.error('[tagsApi.deleteTag] Error:', error);
+      throw error;
+    }
   },
-  
-  deleteTag: async (id: number) => {
-    await api.delete(`/tags/${id}/`);
-  },
-  
-  getTagsByCategory: async (category: TagCategory) => {
-    const response = await api.get<Tag[]>(`/tags/category/${category}/`);
-    return response.data;
-  },
-  
-  searchTags: async (query: string, category?: TagCategory) => {
-    const params = new URLSearchParams({ q: query });
-    if (category) params.append('category', category);
-    
-    const response = await api.get<Tag[]>(`/tags/search/?${params.toString()}`);
-    return response.data;
-  },
-  
-  validateTagName: async (name: string, excludeId?: number) => {
-    const params = new URLSearchParams({ name });
-    if (excludeId) params.append('exclude_id', excludeId.toString());
-    
-    const response = await api.get<boolean>(`/tags/validate/${name}/?${params.toString()}`);
-    return response.data;
-  }
 }; 
