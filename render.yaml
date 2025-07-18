@@ -78,24 +78,6 @@ services:
       maxInstances: 2
       targetMemoryPercent: 70
       targetCPUPercent: 70
-    
-    # Security Headers (additional layer)
-    headers:
-      - path: /*
-        name: X-Frame-Options
-        value: DENY
-      - path: /*
-        name: X-Content-Type-Options
-        value: nosniff
-      - path: /*
-        name: Referrer-Policy
-        value: strict-origin-when-cross-origin
-      - path: /*
-        name: Strict-Transport-Security
-        value: max-age=31536000; includeSubDomains; preload
-      - path: /*
-        name: Permissions-Policy
-        value: camera=(), microphone=(), geolocation=(), payment=()
 
 # Environment Groups for organized configuration
 envVarGroups:
