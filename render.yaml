@@ -55,19 +55,12 @@ services:
     startCommand: |
       npm start
     envVars:
-      # Backend API URL
-      - key: NEXT_PUBLIC_API_URL
-        value: "https://sge-dashboard-api.onrender.com"
-      
       # Environment
       - key: NODE_ENV
         value: production
-      - key: NEXT_PUBLIC_ENV
-        value: production
-      
-      # Port configuration
-      - key: PORT
-        value: "3000"
+      # Backend API URL
+      - key: NEXT_PUBLIC_API_URL
+        value: "https://sge-dashboard-api.onrender.com"
     
     healthCheckPath: /
     autoDeploy: true
