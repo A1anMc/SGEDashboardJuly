@@ -28,7 +28,7 @@ print("Final DATABASE_URL:", os.getenv("DATABASE_URL", "not set"))
 
 class Settings:
     # Core
-    PROJECT_NAME: str = "NavImpact"
+    PROJECT_NAME: str = "SGE Dashboard"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
@@ -43,8 +43,8 @@ class Settings:
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
     
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://navimpact@localhost:5432/navimpact")
-    TEST_DATABASE_URL: str = "postgresql://navimpact@localhost:5432/navimpact_test"
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://alanmccarthy@localhost:5432/sge_dashboard")
+    TEST_DATABASE_URL: str = "postgresql://alanmccarthy@localhost:5432/sge_dashboard_test"
     DATABASE_MAX_RETRIES: int = int(os.getenv("DATABASE_MAX_RETRIES", "5"))
     DATABASE_RETRY_DELAY: int = int(os.getenv("DATABASE_RETRY_DELAY", "1"))
     DATABASE_ECHO: bool = os.getenv("DATABASE_ECHO", "false").lower() == "true"
@@ -100,7 +100,7 @@ class Settings:
     
     # Trusted Hosts (for production)
     TRUSTED_HOSTS: List[str] = [
-        "navimpact-api.onrender.com",
+        "sge-dashboard-api.onrender.com",
         "localhost",
         "127.0.0.1"
     ]
@@ -126,9 +126,9 @@ class Settings:
             # Default CORS origins based on environment
             if self.ENV == "production":
                 self.CORS_ORIGINS = [
-                    "https://navimpact.onrender.com",
-                    "https://navimpact-frontend.onrender.com",
-                    "https://navimpact-api.onrender.com"
+                    "https://sge-dashboard-web.onrender.com",
+                    "https://sge-dashboard-web-new.onrender.com",
+                    "https://sge-dashboard-api.onrender.com"
                 ]
             else:
                 self.CORS_ORIGINS = [

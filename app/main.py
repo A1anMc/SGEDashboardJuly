@@ -1,5 +1,5 @@
 """
-NavImpact API - Production Ready
+SGE Dashboard API - Production Ready
 Enhanced with comprehensive security measures for production deployment.
 """
 
@@ -96,7 +96,7 @@ async def lifespan(app: FastAPI):
     """
     # Startup: Initialize database and security checks
     try:
-        logger.info(f"Starting NavImpact API in {settings.ENV} environment")
+        logger.info(f"Starting SGE Dashboard API in {settings.ENV} environment")
         logger.info(f"Debug mode: {settings.DEBUG}")
         
         # Security check: Ensure we're not in debug mode in production
@@ -141,7 +141,7 @@ async def lifespan(app: FastAPI):
     yield
     
     # Shutdown: Clean up resources
-    logger.info("Shutting down NavImpact API...")
+    logger.info("Shutting down SGE Dashboard API...")
     try:
         close_database()
     except Exception as e:
@@ -155,13 +155,13 @@ def create_app() -> FastAPI:
     openapi_url = "/api/openapi.json" if settings.DEBUG else None
     
     app = FastAPI(
-        title="NavImpact API",
-        description="API for managing NavImpact projects and resources - Production Ready",
+        title="SGE Dashboard API",
+        description="API for managing SGE Dashboard projects and resources - Production Ready",
         version="1.0.0",
         lifespan=lifespan,
         docs_url=docs_url,
         openapi_url=openapi_url,
-        servers=[{"url": "/", "description": "NavImpact API Server"}] if settings.ENV == 'production' else None,
+        servers=[{"url": "/", "description": "SGE Dashboard API Server"}] if settings.ENV == 'production' else None,
     )
     
     # Setup error handlers
@@ -253,7 +253,7 @@ def create_app() -> FastAPI:
     async def read_root():
         """Root endpoint with basic information."""
         return {
-            "message": "NavImpact API",
+            "message": "SGE Dashboard API",
             "version": "1.0.0",
             "environment": settings.ENV,
             "status": "running"
