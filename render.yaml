@@ -10,7 +10,7 @@ services:
     startCommand: |
       echo "Starting backend deployment..."
       echo "Database URL: $DATABASE_URL"
-      alembic upgrade head || echo "Migration failed, continuing..."
+      echo "Skipping migrations - database already initialized"
       gunicorn app.main:app --bind 0.0.0.0:$PORT --workers 2 --worker-class uvicorn.workers.UvicornWorker --timeout 300 --preload
     envVars:
       - key: PYTHON_VERSION
