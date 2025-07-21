@@ -42,9 +42,11 @@ async def database_test():
             "timestamp": datetime.utcnow().isoformat()
         }
     except Exception as e:
+        import traceback
         return {
             "status": "error",
             "error": str(e),
+            "traceback": traceback.format_exc(),
             "timestamp": datetime.utcnow().isoformat()
         }
 
@@ -72,8 +74,10 @@ async def session_test():
             "timestamp": datetime.utcnow().isoformat()
         }
     except Exception as e:
+        import traceback
         return {
             "status": "error",
             "error": str(e),
+            "traceback": traceback.format_exc(),
             "timestamp": datetime.utcnow().isoformat()
         } 
