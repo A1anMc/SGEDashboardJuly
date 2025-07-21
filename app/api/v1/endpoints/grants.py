@@ -108,4 +108,29 @@ def get_available_sources(db: Session = Depends(get_db)):
         "total": 0,
         "status": "disabled",
         "message": "Grant scraping sources are currently disabled to reduce dependencies"
-    } 
+    }
+
+@router.get("/test")
+def test_grants():
+    """Test endpoint that doesn't use dependency injection."""
+    try:
+        from app.db.session import get_engine
+        from sqlalchemy import text
+        
+        engine = get_engine()
+        with engine.connect() as conn:
+            # Check if grants table exists
+            result = conn.execute(text("SELECT COUNT(*) FROM grants"))
+            count = result.scalar()
+            
+        return {
+            "status": "success",
+            "grants_count": count,
+            "message": "Direct database access working"
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "message": "Direct database access failed"
+        } 
