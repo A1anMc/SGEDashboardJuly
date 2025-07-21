@@ -4,7 +4,7 @@ services:
     name: navimpact-api
     env: python
     buildCommand: |
-      pip install -r requirements.txt
+      pip install --prefer-binary --no-cache-dir -r requirements.txt
     startCommand: |
       echo "Starting backend deployment..."
       echo "Database URL: $DATABASE_URL"
