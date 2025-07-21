@@ -16,4 +16,33 @@ async def health_check():
         "environment": "production",
         "version": "1.0.0",
         "timestamp": datetime.utcnow().isoformat()
-    } 
+    }
+
+@router.get("/db-test")
+async def database_test():
+    """Detailed database connection test."""
+    try:
+        from app.db.session import get_engine
+        from app.core.config import settings
+        
+        engine = get_engine()
+        with engine.connect() as conn:
+            result = conn.execute("SELECT 1 as test, current_database() as db_name, current_user as user")
+            row = result.fetchone()
+            
+        return {
+            "status": "success",
+            "database": {
+                "test": row[0],
+                "database_name": row[1],
+                "user": row[2],
+                "url": settings.DATABASE_URL[:20] + "..." if settings.DATABASE_URL else "not set"
+            },
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.utcnow().isoformat()
+        } 

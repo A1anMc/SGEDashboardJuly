@@ -36,13 +36,13 @@ services:
       - key: MAX_REQUESTS_PER_MINUTE
         value: "60"
       - key: DATABASE_POOL_SIZE
-        value: "10"
+        value: "1"
       - key: DATABASE_MAX_OVERFLOW
-        value: "20"
+        value: "2"
       - key: DATABASE_POOL_TIMEOUT
         value: "30"
       - key: DATABASE_POOL_RECYCLE
-        value: "3600"
+        value: "1800"
 
   # Frontend Service
   - type: web
