@@ -16,12 +16,18 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login
 def get_db() -> Generator:
     """Get SQLAlchemy database session with enhanced error handling."""
     try:
+        logger.info("Creating database session...")
         SessionLocal = get_session_local()
+        logger.info("Session factory created successfully")
+        
         db = SessionLocal()
+        logger.info("Database session created successfully")
         
         # Test the connection
         try:
+            logger.info("Testing database connection...")
             db.execute("SELECT 1")
+            logger.info("Database connection test successful")
         except SQLAlchemyError as e:
             logger.error(f"Database connection test failed: {str(e)}")
             conn_error = get_last_connection_error()
@@ -50,6 +56,7 @@ def get_db() -> Generator:
     finally:
         try:
             db.close()
+            logger.info("Database session closed successfully")
         except Exception as e:
             logger.warning(f"Error closing database session: {str(e)}")
 
