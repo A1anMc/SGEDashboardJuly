@@ -3,115 +3,67 @@ services:
   - type: web
     name: navimpact-api
     env: python
-    plan: starter
     pythonVersion: "3.11.9"
     buildCommand: |
       pip install --prefer-binary --no-cache-dir -r requirements.txt
     startCommand: |
       echo "Starting backend deployment..."
       echo "Database URL: $DATABASE_URL"
-      alembic upgrade head || echo "Database migration failed, continuing..."
-      gunicorn app.main:app \
-        --workers 1 \
-        --worker-class uvicorn.workers.UvicornWorker \
-        --bind 0.0.0.0:$PORT \
-        --timeout 300 \
-        --keep-alive 120 \
-        --max-requests 1000 \
-        --max-requests-jitter 50 \
-        --preload \
-        --log-level info \
-        --error-logfile - \
-        --access-logfile - \
-        --capture-output
+      alembic upgrade head || echo "Migration failed, continuing..."
+      gunicorn app.main:app --bind 0.0.0.0:$PORT --workers 2 --worker-class uvicorn.workers.UvicornWorker --timeout 300 --preload
     envVars:
-      # Core Environment
-      - key: RENDER
-        value: "true"
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: navimpact-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
       - key: ENVIRONMENT
         value: production
-      - key: DEBUG
-        value: "false"
-      - key: LOG_LEVEL
-        value: "INFO"
-      - key: PYTHONUNBUFFERED
-        value: "1"
-      
-      # Database Configuration
-      - key: DATABASE_URL
-        sync: false  # Set this manually in the dashboard
-      
-      # Security - Generated or set manually
-      - key: SECRET_KEY
-        sync: false
-      - key: JWT_SECRET_KEY
-        generateValue: true
-      
-      # CORS Configuration
-      - key: FRONTEND_URL
-        value: "https://navimpact-web.onrender.com"
       - key: CORS_ORIGINS
-        value: '["https://navimpact-web.onrender.com", "https://navimpact-api.onrender.com", "https://*.onrender.com"]'
-      
-      # Database Pool Settings (optimized for Render)
+        value: "https://navimpact.onrender.com,https://navimpact-frontend.onrender.com"
+      - key: ALLOWED_HOSTS
+        value: "navimpact-api.onrender.com,localhost,127.0.0.1"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: EMAIL_ENABLED
+        value: "false"
+      - key: RATE_LIMIT_ENABLED
+        value: "true"
+      - key: MAX_REQUESTS_PER_MINUTE
+        value: "60"
       - key: DATABASE_POOL_SIZE
-        value: "1"
+        value: "10"
       - key: DATABASE_MAX_OVERFLOW
-        value: "2"
+        value: "20"
       - key: DATABASE_POOL_TIMEOUT
         value: "30"
       - key: DATABASE_POOL_RECYCLE
-        value: "1800"
-      - key: DATABASE_MAX_RETRIES
-        value: "3"
-      - key: DATABASE_RETRY_DELAY
-        value: "2"
-      
-    healthCheckPath: /health
-    autoDeploy: true
-    scaling:
-      minInstances: 1
-      maxInstances: 2
-      targetMemoryPercent: 70
-      targetCPUPercent: 70
-    
+        value: "3600"
+
   # Frontend Service
   - type: web
-    name: navimpact-web
+    name: navimpact-frontend
     env: node
-    rootDir: frontend
+    nodeVersion: "20.x"
     buildCommand: |
+      cd frontend
       npm ci --only=production
       npm run build
     startCommand: |
+      cd frontend
       npm start
     envVars:
-      # Environment
-      - key: NODE_ENV
-        value: production
-      # Backend API URL
       - key: NEXT_PUBLIC_API_URL
-        value: "https://navimpact-api.onrender.com"
-    
-    healthCheckPath: /
-    autoDeploy: true
-    scaling:
-      minInstances: 1
-      maxInstances: 2
-      targetMemoryPercent: 70
-      targetCPUPercent: 70
-
-# Environment Groups for organized configuration
-envVarGroups:
-  - name: production-security
-    envVars:
+        value: https://navimpact-api.onrender.com
       - key: NODE_ENV
         value: production
-      - key: ENVIRONMENT
-        value: production
-      - key: DEBUG
-        value: "false"
-      - key: DATABASE_ECHO
-        value: "false"
-      - key: RATE_LIMIT_ENABLED
-        value: "true" 
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+
+databases:
+  - name: navimpact-db
+    databaseName: navimpact
+    user: navimpact 
