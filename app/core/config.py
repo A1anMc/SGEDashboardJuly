@@ -1,7 +1,7 @@
 import os
 from typing import Optional, List, Dict, Union
 from pydantic_settings import BaseSettings
-from pydantic import field_validator, ConfigDict
+from pydantic import validator
 from dotenv import load_dotenv
 import json
 
@@ -203,7 +203,7 @@ class Settings(BaseSettings):
         "stan.com.au"  # Stan Entertainment
     ]
     
-    @field_validator("CORS_ORIGINS", mode="before")
+    @validator("CORS_ORIGINS", pre=True)
     @classmethod
     def validate_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
         """Validate and parse CORS origins from environment."""
@@ -242,31 +242,31 @@ class Settings(BaseSettings):
         # Remove duplicates while preserving order
         return list(dict.fromkeys(origins))
     
-    @field_validator("SECRET_KEY")
+    @validator("SECRET_KEY")
     @classmethod
-    def validate_secret_key(cls, v: str, info) -> str:
+    def validate_secret_key(cls, v: str, values) -> str:
         """Ensure secret key is secure in production."""
-        env = info.data.get("ENV", "development")
+        env = values.get("ENV", "development")
         if env == "production" and v == "your-secret-key-change-in-production":
             raise ValueError("SECRET_KEY must be changed from default value in production")
         if env == "production" and len(v) < 32:
             raise ValueError("SECRET_KEY must be at least 32 characters in production")
         return v
     
-    @field_validator("DATABASE_URL")
+    @validator("DATABASE_URL")
     @classmethod
-    def validate_database_url(cls, v: str, info) -> str:
+    def validate_database_url(cls, v: str, values) -> str:
         """Validate database URL based on environment."""
         # Print debug info about the database URL
         print(f"Validating DATABASE_URL: {v.split('://')[0] if '://' in v else 'invalid'}")
-        print(f"Environment: {info.data.get('ENV', 'unknown')}")
+        print(f"Environment: {values.get('ENV', 'unknown')}")
         
         # If we're testing, use the test database URL
-        if info.data.get("TESTING", False):
-            return info.data.get("TEST_DATABASE_URL")
+        if values.get("TESTING", False):
+            return values.get("TEST_DATABASE_URL")
         
         # DATABASE_URL is required in production
-        env = info.data.get("ENV", "development")
+        env = values.get("ENV", "development")
         if env == "production":
             if not v:
                 raise ValueError("DATABASE_URL environment variable is required in production")
@@ -288,23 +288,22 @@ class Settings(BaseSettings):
     
     # Removed Supabase validation
     
-    @field_validator("DEBUG")
+    @validator("DEBUG")
     @classmethod
-    def validate_debug_mode(cls, v: bool, info) -> bool:
+    def validate_debug_mode(cls, v: bool, values) -> bool:
         """Ensure debug is disabled in production."""
-        env = info.data.get("ENV", "development")
+        env = values.get("ENV", "development")
         if env == "production" and v:
             # Log warning but don't fail - let the app handle this
             import logging
             logging.warning("DEBUG mode should be disabled in production")
         return v
     
-    model_config = ConfigDict(
-        case_sensitive=True,
-        env_file=".envV2",
-        env_file_encoding="utf-8",
-        extra="ignore"  # Ignore extra fields from environment
-    )
+    class Config:
+        case_sensitive = True
+        env_file = ".envV2"
+        env_file_encoding = "utf-8"
+        extra = "ignore"  # Ignore extra fields from environment
 
 # Create settings instance
 settings = Settings() 

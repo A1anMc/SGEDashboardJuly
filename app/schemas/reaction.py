@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 from datetime import datetime
 
 class ReactionBase(BaseModel):
@@ -15,4 +15,5 @@ class ReactionResponse(ReactionBase):
     user_id: int
     comment_id: int
     
-    model_config = ConfigDict(from_attributes=True) 
+    class Config:
+        from_attributes = True 

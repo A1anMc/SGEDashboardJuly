@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field
 from app.models.tag import TagCategory
 
 class TagBase(BaseModel):
@@ -31,9 +31,9 @@ class Tag(TagBase):
     created_by_id: Optional[int] = None
     children: List["Tag"] = []
     
-    model_config = ConfigDict(
-        from_attributes=True,
-        json_schema_extra={
+    class Config:
+        from_attributes = True
+        schema_extra = {
             "example": {
                 "id": 1,
                 "name": "Media Production",
@@ -47,7 +47,6 @@ class Tag(TagBase):
                 "children": []
             }
         }
-    )
 
 class TagWithRelations(Tag):
     """Schema for tag with related entities."""

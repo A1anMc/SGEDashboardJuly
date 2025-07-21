@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, Dict
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 class ScraperLogBase(BaseModel):
     source_name: str
@@ -23,4 +23,5 @@ class ScraperLog(ScraperLogBase):
     end_time: Optional[datetime] = None
     duration_seconds: Optional[int] = None
 
-    model_config = ConfigDict(from_attributes=True) 
+    class Config:
+        from_attributes = True 

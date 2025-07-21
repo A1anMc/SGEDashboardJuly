@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List, Optional, Dict, Union
-from pydantic import BaseModel, Field, EmailStr, HttpUrl, ConfigDict
+from pydantic import BaseModel, Field, EmailStr, HttpUrl
 
 class GrantBase(BaseModel):
     """Base schema for grant data."""
@@ -22,7 +22,8 @@ class GrantBase(BaseModel):
     status: str = Field(default="active", pattern="^(active|inactive|expired)$")
     notes: Optional[str] = None
 
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        from_attributes = True
 
 class GrantCreate(GrantBase):
     """Schema for creating a new grant."""
@@ -41,7 +42,8 @@ class GrantResponse(GrantBase):
     updated_at: datetime
     created_by_id: Optional[int] = None
     
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        from_attributes = True
 
 class GrantFilters(BaseModel):
     """Schema for grant filtering parameters."""
@@ -98,7 +100,8 @@ class DeadlineGroup(BaseModel):
     total_amount: float
     count: int
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    class Config:
+        arbitrary_types_allowed = True
 
 class GrantTimeline(BaseModel):
     """Schema for grant timeline view."""
@@ -128,7 +131,8 @@ class MatchingInsights(BaseModel):
     common_mismatches: List[str]
     suggested_improvements: List[str]
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    class Config:
+        arbitrary_types_allowed = True
 
 class GrantDashboard(BaseModel):
     """Schema for comprehensive grant dashboard."""
@@ -145,7 +149,8 @@ class ScraperStatus(BaseModel):
     next_scheduled: Optional[datetime] = None
     available_sources: List[str]
 
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        from_attributes = True
 
 class ScraperRunRequest(BaseModel):
     """Schema for scraper run requests."""

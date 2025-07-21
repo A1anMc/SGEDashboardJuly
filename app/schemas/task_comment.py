@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
 from datetime import datetime
 
@@ -26,14 +26,11 @@ class TaskCommentResponse(TaskCommentBase):
     updated_at: datetime
     reactions: Dict[str, List[int]] = {}
     
-    model_config = ConfigDict(
-        from_attributes=True,
-        json_schema_extra={
-            "json_encoders": {
-                "datetime": lambda v: v.isoformat()
-            }
+    class Config:
+        from_attributes = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
         }
-    )
     
     @property
     def reaction_count(self) -> int:
