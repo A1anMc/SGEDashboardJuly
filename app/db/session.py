@@ -50,14 +50,14 @@ def get_engine():
         raise RuntimeError(error_msg)
 
 def get_session_local():
-    """Get database session."""
+    """Get database session factory."""
     global _SessionLocal
     
     if _SessionLocal is None:
         engine = get_engine()
         _SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     
-    return _SessionLocal()
+    return _SessionLocal
 
 def close_database():
     """Close database connections."""

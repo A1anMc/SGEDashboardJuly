@@ -16,15 +16,42 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login
 def get_db() -> Generator:
     """Get SQLAlchemy database session with enhanced error handling."""
     try:
-        # Use the correct get_db function from session.py
-        from app.db.session import get_db as get_db_session
-        yield from get_db_session()
+        SessionLocal = get_session_local()
+        db = SessionLocal()
+        
+        # Test the connection
+        try:
+            db.execute("SELECT 1")
+        except SQLAlchemyError as e:
+            logger.error(f"Database connection test failed: {str(e)}")
+            conn_error = get_last_connection_error()
+            if conn_error:
+                raise HTTPException(
+                    status_code=503,
+                    detail={
+                        "message": "Database connection error",
+                        "error": str(conn_error.get("error")),
+                        "last_attempt": datetime.fromtimestamp(conn_error.get("last_attempt", 0)).isoformat() if conn_error.get("last_attempt") else None,
+                        "attempts": conn_error.get("attempts", 1)
+                    }
+                )
+            raise HTTPException(
+                status_code=503,
+                detail=f"Database connection error: {str(e)}"
+            )
+        
+        yield db
     except Exception as e:
         logger.error(f"Error creating database session: {str(e)}")
         raise HTTPException(
             status_code=503,
             detail="Database service unavailable"
         )
+    finally:
+        try:
+            db.close()
+        except Exception as e:
+            logger.warning(f"Error closing database session: {str(e)}")
 
 async def get_current_user(
     db: Session = Depends(get_db),
