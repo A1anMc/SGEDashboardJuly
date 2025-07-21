@@ -1,11 +1,11 @@
 // Frontend configuration
 export const config = {
   // API Configuration
-  apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://sge-dashboard-api.onrender.com',
+  apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://navimpact-api.onrender.com',
   apiVersion: 'v1',
   
   // App Configuration
-  appName: process.env.NEXT_PUBLIC_APP_NAME || 'SGE Dashboard',
+  appName: process.env.NEXT_PUBLIC_APP_NAME || 'NavImpact',
   appVersion: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
   
   // Environment

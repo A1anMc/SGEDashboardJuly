@@ -12,7 +12,7 @@ import {
   CogIcon,
 } from '@heroicons/react/24/outline';
 
-// Custom SGE dashboard navigation, built by Alan – not boilerplate
+// Custom NavImpact dashboard navigation, built by Alan – not boilerplate
 const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon },
   { name: 'Projects', href: '/projects', icon: FolderIcon },
@@ -30,7 +30,7 @@ const Sidebar: FC = () => {
     <div className="flex h-full w-64 flex-col bg-gray-900">
       <div className="flex h-16 items-center px-4">
         <Link href="/" className="flex items-center space-x-2">
-          <span className="text-xl font-bold text-white">SGE Dashboard</span>
+          <span className="text-xl font-bold text-white">NavImpact</span>
         </Link>
       </div>
       

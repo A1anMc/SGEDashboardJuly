@@ -10,7 +10,7 @@ interface DashboardLayoutProps {
   children: ReactNode;
 }
 
-// Custom SGE dashboard layout, built by Alan – not boilerplate
+// Custom NavImpact dashboard layout, built by Alan – not boilerplate
 const DashboardLayout: FC<DashboardLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 

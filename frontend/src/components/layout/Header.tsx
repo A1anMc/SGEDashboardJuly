@@ -5,7 +5,7 @@ import { BellIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-// Custom SGE dashboard header, built by Alan – not boilerplate
+// Custom NavImpact dashboard header, built by Alan – not boilerplate
 const userNavigation = [
   { name: 'Your Profile', href: '/profile' },
   { name: 'Time Logs', href: '/time-logs' },
