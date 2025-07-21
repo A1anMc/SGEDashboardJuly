@@ -33,7 +33,6 @@ from app.db.session import get_engine, close_database
 from app.core.config import settings
 from app.core.error_handlers import setup_error_handlers
 from app.db.init_db import init_db, get_db_info, validate_database_config
-from app.db.init_db import check_db_health
 
 # Configure logging with production-safe format
 logging.basicConfig(
@@ -119,8 +118,11 @@ async def lifespan(app: FastAPI):
         
         # Check database health
         logger.info("Checking database health...")
-        check_db_health()
-        logger.info("Database health check passed.")
+        from app.db.session import health_check
+        if health_check():
+            logger.info("Database health check passed.")
+        else:
+            logger.warning("Database health check failed.")
         
         # Error handlers are set up during app creation, not during startup
         logger.info("Application startup completed successfully.")
