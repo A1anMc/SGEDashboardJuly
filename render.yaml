@@ -6,7 +6,7 @@ services:
     pythonVersion: "3.11.9"
     buildCommand: |
       pip install --upgrade pip
-      pip install --prefer-binary --no-cache-dir -r requirements.txt
+      pip install --no-cache-dir --only-binary=:all: --prefer-binary -r requirements.txt
     startCommand: |
       echo "Starting backend deployment..."
       echo "Database URL: $DATABASE_URL"
