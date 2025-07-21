@@ -3,7 +3,7 @@ services:
   - type: web
     name: navimpact-api
     env: python
-    pythonVersion: "3.11.7"
+    pythonVersion: "3.11.9"
     buildCommand: |
       pip install --prefer-binary --no-cache-dir -r requirements.txt
     startCommand: |
@@ -13,7 +13,7 @@ services:
       gunicorn app.main:app --bind 0.0.0.0:$PORT --workers 2 --worker-class uvicorn.workers.UvicornWorker --timeout 300 --preload
     envVars:
       - key: PYTHON_VERSION
-        value: "3.11.7"
+        value: "3.11.9"
       - key: DATABASE_URL
         fromDatabase:
           name: navimpact-db
