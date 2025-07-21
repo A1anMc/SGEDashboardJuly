@@ -1,44 +1,26 @@
-# --- MINIMAL PRODUCTION REQUIREMENTS ---
-# Only essential packages with guaranteed pre-compiled wheels
-
-# --- Core Framework ---
+# Core FastAPI and dependencies (pre-compiled versions)
 fastapi==0.95.2
+uvicorn[standard]==0.22.0
+gunicorn==20.1.0
+
+# Database (pre-compiled)
+sqlalchemy==1.4.41
+psycopg2-binary==2.9.6
+alembic==1.10.4
+
+# Pydantic (v1.x to avoid Rust compilation)
 pydantic==1.10.9
-pydantic-settings==0.2.5
-starlette==0.27.0
+pydantic-settings==1.2.0
 
-# --- ASGI Server ---
-uvicorn==0.22.0
-gunicorn==21.2.0
+# Security and auth
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
 
-# --- Database (Essential Only) ---
-sqlalchemy==2.0.29
-psycopg2-binary==2.9.7
-alembic==1.13.1
+# HTTP and async
+httpx==0.24.1
+aiofiles==23.1.0
 
-# --- Auth (Essential Only) ---
-python-jose==3.3.0
-passlib==1.7.4
-itsdangerous==2.1.2
-
-# --- File Handling ---
-python-multipart==0.0.9
-
-# --- Environment ---
-python-dotenv==1.1.1
-
-# --- Templates ---
-jinja2==3.0.3
-
-# --- Basic Networking ---
-httpx==0.21.3
-
-# --- Basic Email ---
-sendgrid==6.12.4
-email-validator==2.2.0
-
-# --- Basic Monitoring ---
-sentry-sdk[fastapi]==2.33.0
-
-# --- Basic Testing ---
-pytest==7.3.1 
+# Utilities (pre-compiled)
+python-dotenv==1.0.0
+pydantic==1.10.9 
