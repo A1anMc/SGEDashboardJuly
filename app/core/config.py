@@ -28,8 +28,8 @@ print("Final DATABASE_URL:", os.getenv("DATABASE_URL", "not set"))
 
 class Settings:
     # Core
-    PROJECT_NAME: str = "SGE Dashboard"
-    VERSION: str = "0.1.0"
+    PROJECT_NAME: str = "NavImpact"
+    VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
     HOST: str = "0.0.0.0"
@@ -43,18 +43,18 @@ class Settings:
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
     
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://alanmccarthy@localhost:5432/sge_dashboard")
-    TEST_DATABASE_URL: str = "postgresql://alanmccarthy@localhost:5432/sge_dashboard_test"
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://navimpact@localhost:5432/navimpact")
+    TEST_DATABASE_URL: str = "postgresql://navimpact@localhost:5432/navimpact_test"
     DATABASE_MAX_RETRIES: int = int(os.getenv("DATABASE_MAX_RETRIES", "5"))
     DATABASE_RETRY_DELAY: int = int(os.getenv("DATABASE_RETRY_DELAY", "1"))
     DATABASE_ECHO: bool = os.getenv("DATABASE_ECHO", "false").lower() == "true"
     TESTING: bool = os.getenv("TESTING", "false").lower() == "true"
     
     # Database Pool Settings
-    DATABASE_POOL_SIZE: int = int(os.getenv("DATABASE_POOL_SIZE", "10"))  # Increased from 5
-    DATABASE_MAX_OVERFLOW: int = int(os.getenv("DATABASE_MAX_OVERFLOW", "20"))  # Increased from 10
-    DATABASE_POOL_TIMEOUT: int = int(os.getenv("DATABASE_POOL_TIMEOUT", "60"))  # Increased from 30
-    DATABASE_POOL_RECYCLE: int = int(os.getenv("DATABASE_POOL_RECYCLE", "900"))  # Reduced from 1800 to 15 minutes
+    DATABASE_POOL_SIZE: int = int(os.getenv("DATABASE_POOL_SIZE", "10"))
+    DATABASE_MAX_OVERFLOW: int = int(os.getenv("DATABASE_MAX_OVERFLOW", "20"))
+    DATABASE_POOL_TIMEOUT: int = int(os.getenv("DATABASE_POOL_TIMEOUT", "60"))
+    DATABASE_POOL_RECYCLE: int = int(os.getenv("DATABASE_POOL_RECYCLE", "900"))
     
     # CORS Settings - Environment-based configuration
     CORS_ORIGINS: List[str] = []
@@ -78,7 +78,7 @@ class Settings:
     SMTP_PORT: Optional[int] = int(os.getenv("SMTP_PORT")) if os.getenv("SMTP_PORT") else None
     SMTP_HOST: Optional[str] = os.getenv("SMTP_HOST")
     SMTP_USER: Optional[str] = os.getenv("SMTP_USER")
-    SMTP_PASSWORD: Optional[str] = os.getenv("SMTP_PASSWORD")  # From environment only
+    SMTP_PASSWORD: Optional[str] = os.getenv("SMTP_PASSWORD")
     EMAILS_FROM_EMAIL: Optional[str] = os.getenv("EMAILS_FROM_EMAIL")
     EMAILS_FROM_NAME: Optional[str] = os.getenv("EMAILS_FROM_NAME")
     EMAIL_TEMPLATES_DIR: str = "app/email-templates"
@@ -87,7 +87,7 @@ class Settings:
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     
-    # Sentry - Only from environment variables
+    # Sentry
     SENTRY_DSN: Optional[str] = os.getenv("SENTRY_DSN")
     SENTRY_ENVIRONMENT: str = os.getenv("SENTRY_ENVIRONMENT", "development")
     SENTRY_TRACES_SAMPLE_RATE: float = float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "1.0"))
@@ -96,90 +96,23 @@ class Settings:
     RATE_LIMIT_ENABLED: bool = os.getenv("RATE_LIMIT_ENABLED", "false" if os.getenv("ENVIRONMENT", "development") == "development" else "true").lower() == "true"
     RATE_LIMIT_REQUESTS_PER_MINUTE: int = int(os.getenv("RATE_LIMIT_REQUESTS_PER_MINUTE", "100" if os.getenv("ENVIRONMENT", "development") == "development" else "60"))
     RATE_LIMIT_REQUESTS_PER_HOUR: int = int(os.getenv("RATE_LIMIT_REQUESTS_PER_HOUR", "10000" if os.getenv("ENVIRONMENT", "development") == "development" else "1000"))
-    REDIS_URL: Optional[str] = os.getenv("REDIS_URL")  # For rate limiting backend
+    REDIS_URL: Optional[str] = os.getenv("REDIS_URL")
     
     # Trusted Hosts (for production)
     TRUSTED_HOSTS: List[str] = [
-        "sge-dashboard-api.onrender.com",
+        "navimpact-api.onrender.com",
         "localhost",
         "127.0.0.1"
     ]
     
-    # Frontend URL (for CORS and security)
+    # Frontend URL
     FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
-    
-    # Scraper Configuration
-    ALLOWED_SCRAPER_SOURCES: Dict[str, Dict[str, str]] = {
-        "business.gov.au": {
-            "base_url": "https://business.gov.au",
-            "grants_path": "/grants-and-programs",
-            "description": "Australian Government Business Grants"
-        },
-        "grants.gov.au": {
-            "base_url": "https://www.grants.gov.au",
-            "api_path": "/api/v1/grants",
-            "description": "GrantConnect Portal"
-        },
-        "arts.gov.au": {
-            "base_url": "https://www.arts.gov.au",
-            "grants_path": "/funding-and-support",
-            "description": "Australian Arts Grants"
-        },
-        "screenaustralia.gov.au": {
-            "base_url": "https://www.screenaustralia.gov.au",
-            "grants_path": "/funding-and-support",
-            "description": "Screen Australia Funding"
-        },
-        "australian_grants": {
-            "base_url": "https://www.screenaustralia.gov.au",  # Default to Screen Australia as primary source
-            "grants_path": "/funding-and-support",
-            "description": "Australian Grants Aggregator"
-        },
-        "current_grants": {
-            "base_url": "https://business.gov.au",
-            "grants_path": "/grants-and-programs",
-            "description": "Current Verified Australian Grants"
-        },
-        "philanthropic": {
-            "base_url": "https://www.lmcf.org.au",
-            "grants_path": "/grants",
-            "description": "Philanthropic Foundations and Trusts"
-        },
-        "councils": {
-            "base_url": "https://www.melbourne.vic.gov.au",
-            "grants_path": "/community/grants-and-funding",
-            "description": "Local Council Grants"
-        },
-        "media_investment": {
-            "base_url": "https://www.abc.net.au",
-            "grants_path": "/innovation",
-            "description": "Media Company Investment Opportunities"
-        },
-        "dummy": {
-            "base_url": "https://example.com",
-            "grants_path": "/dummy",
-            "description": "Dummy scraper for testing"
-        }
-    }
-    
-    # External Domain Security
-    ALLOWED_EXTERNAL_DOMAINS: List[str] = [
-        "business.gov.au",
-        "www.grants.gov.au",
-        "www.arts.gov.au",
-        "www.screenaustralia.gov.au",
-        "www.lmcf.org.au",
-        "www.melbourne.vic.gov.au",
-        "www.abc.net.au",
-        "example.com"  # For testing
-    ]
     
     def __init__(self):
         # Parse CORS origins from environment
         cors_origins_str = os.getenv("CORS_ORIGINS", "")
         if cors_origins_str:
             if isinstance(cors_origins_str, str):
-                # Handle both comma-separated and JSON array formats
                 if cors_origins_str.startswith("["):
                     try:
                         self.CORS_ORIGINS = json.loads(cors_origins_str)

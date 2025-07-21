@@ -1,5 +1,5 @@
 """
-Shadow Goose Entertainment API - Production Hardened
+NavImpact API - Production Ready
 Enhanced with comprehensive security measures for production deployment.
 """
 
@@ -96,7 +96,7 @@ async def lifespan(app: FastAPI):
     """
     # Startup: Initialize database and security checks
     try:
-        logger.info(f"Starting Shadow Goose Entertainment API in {settings.ENV} environment")
+        logger.info(f"Starting NavImpact API in {settings.ENV} environment")
         logger.info(f"Debug mode: {settings.DEBUG}")
         
         # Security check: Ensure we're not in debug mode in production
@@ -141,10 +141,11 @@ async def lifespan(app: FastAPI):
     yield
     
     # Shutdown: Clean up resources
-    logger.info("Shutting down Shadow Goose Entertainment API...")
-    # Close database connections
-    close_database()
-    logger.info("Database connection closed.")
+    logger.info("Shutting down NavImpact API...")
+    try:
+        close_database()
+    except Exception as e:
+        logger.error(f"Error during shutdown: {str(e)}")
 
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application with comprehensive security."""
@@ -155,13 +156,12 @@ def create_app() -> FastAPI:
     
     app = FastAPI(
         title="NavImpact API",
-        description="API for managing NavImpact projects and resources - Production Hardened",
+        description="API for managing NavImpact projects and resources - Production Ready",
         version="1.0.0",
         lifespan=lifespan,
         docs_url=docs_url,
         openapi_url=openapi_url,
-        # Security: Don't expose server info in production
-        servers=[{"url": "/", "description": "SGE API Server"}] if settings.ENV == 'production' else None,
+        servers=[{"url": "/", "description": "NavImpact API Server"}] if settings.ENV == 'production' else None,
     )
     
     # Setup error handlers
@@ -290,5 +290,5 @@ def create_app() -> FastAPI:
     
     return app
 
-# Create the application instance
+# Create the app
 app = create_app() 
