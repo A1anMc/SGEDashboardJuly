@@ -1,59 +1,44 @@
+# --- MINIMAL PRODUCTION REQUIREMENTS ---
+# Only essential packages with guaranteed pre-compiled wheels
+
 # --- Core Framework ---
 fastapi==0.95.2
 pydantic==1.10.9
 pydantic-settings==0.2.5
-starlette==0.27.0  # Compatible with FastAPI 0.95.x
+starlette==0.27.0
 
 # --- ASGI Server ---
 uvicorn==0.22.0
 gunicorn==21.2.0
 
-# --- Database ---
+# --- Database (Essential Only) ---
 sqlalchemy==2.0.29
 psycopg2-binary==2.9.7
 alembic==1.13.1
 
-# --- Pre-compiled packages (avoid Cython compilation) ---
-# Using binary wheels to avoid compilation issues on Render
-
-# --- Auth & Security ---
+# --- Auth (Essential Only) ---
 python-jose==3.3.0
 passlib==1.7.4
-bcrypt==4.0.1
 itsdangerous==2.1.2
 
 # --- File Handling ---
 python-multipart==0.0.9
 
-# --- Networking ---
-httpx==0.21.3    # Even more conservative for FastAPI 0.95.x
-aiohttp==3.7.4   # Even more conservative for Starlette 0.27.x
-
-# --- Email ---
-sendgrid==6.12.4
-fastapi-mail==1.4.1
-email-validator==2.2.0
+# --- Environment ---
+python-dotenv==1.1.1
 
 # --- Templates ---
 jinja2==3.0.3
 
-# --- Environment ---
-python-dotenv==1.1.1
+# --- Basic Networking ---
+httpx==0.21.3
 
-# --- Web Scraping ---
-beautifulsoup4==4.9.3
+# --- Basic Email ---
+sendgrid==6.12.4
+email-validator==2.2.0
 
-# --- Cache & Queue ---
-redis==5.0.1
-
-# --- Monitoring ---
+# --- Basic Monitoring ---
 sentry-sdk[fastapi]==2.33.0
 
-# --- Rate Limiting ---
-slowapi==0.1.9
-
-# --- Retry Logic ---
-backoff==2.2.1
-
-# --- Dev & Testing ---
-pytest==7.3.1    # Conservative version for stability 
+# --- Basic Testing ---
+pytest==7.3.1 
