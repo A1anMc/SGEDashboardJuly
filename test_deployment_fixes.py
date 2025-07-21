@@ -19,8 +19,8 @@ def test_database_config():
         print(f"Environment: {settings.ENV}")
         print(f"Database URL type: {settings.DATABASE_URL.split('://')[0] if settings.DATABASE_URL and '://' in settings.DATABASE_URL else 'not set'}")
         
-        from app.db.session import check_db_health
-        health = check_db_health()
+        from app.db.session import health_check
+        health = health_check()
         print(f"Database health: {health}")
         
     except Exception as e:
