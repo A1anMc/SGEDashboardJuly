@@ -10,21 +10,24 @@ gunicorn==21.2.0
 
 # --- Database ---
 sqlalchemy==2.0.29
-psycopg2-binary==2.9.9
+psycopg2-binary==2.9.7
 alembic==1.13.1
+
+# --- Pre-compiled packages (avoid Cython compilation) ---
+# Using binary wheels to avoid compilation issues on Render
 
 # --- Auth & Security ---
 python-jose==3.3.0
 passlib==1.7.4
-bcrypt==4.1.3
+bcrypt==4.0.1
 itsdangerous==2.1.2
 
 # --- File Handling ---
 python-multipart==0.0.9
 
 # --- Networking ---
-httpx==0.22.0    # Conservative version for FastAPI 0.95.x
-aiohttp==3.8.6   # Conservative version for Starlette 0.27.x
+httpx==0.21.3    # Even more conservative for FastAPI 0.95.x
+aiohttp==3.7.4   # Even more conservative for Starlette 0.27.x
 
 # --- Email ---
 sendgrid==6.12.4
