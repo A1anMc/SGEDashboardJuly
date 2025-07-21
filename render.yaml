@@ -55,7 +55,7 @@ services:
       npm run build
     startCommand: |
       cd frontend
-      node .next/standalone/server.js
+      npm start
     envVars:
       - key: NEXT_PUBLIC_API_URL
         value: https://navimpact-api.onrender.com
