@@ -261,19 +261,13 @@ def create_app() -> FastAPI:
     async def health_check():
         """Health check endpoint."""
         try:
-            # Check database health if available
-            db_status = "unknown"
-            if hasattr(app.state, 'engine') and app.state.engine:
-                try:
-                    await check_db_health(app.state.engine)
-                    db_status = "healthy"
-                except Exception as db_error:
-                    logger.error(f"Database health check failed: {str(db_error)}")
-                    db_status = "unhealthy"
+            # Check database health using the correct function
+            from app.db.session import health_check as check_db_health
+            db_healthy = check_db_health()
             
             return {
                 "status": "healthy",
-                "database": db_status,
+                "database": "connected" if db_healthy else "disconnected",
                 "timestamp": datetime.utcnow().isoformat(),
                 "environment": settings.ENV,
                 "version": "1.0.0"

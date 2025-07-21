@@ -3,7 +3,8 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   
-
+  // Production build configuration
+  output: 'standalone',
   
   // Environment variables
   env: {
