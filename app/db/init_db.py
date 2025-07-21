@@ -31,7 +31,8 @@ def init_db() -> None:
             Base.metadata.create_all(bind=engine)
         
         # Initialize PostgreSQL extensions and settings
-        db = get_session_local()
+        SessionLocal = get_session_local()
+        db = SessionLocal()
         try:
             # Create required extensions
             extensions = [
