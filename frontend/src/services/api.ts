@@ -23,7 +23,7 @@ class ApiClient {
     this.baseUrl = config.apiUrl;
   }
 
-  private async request<T>(
+  async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
