@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getGrants } from '@/services/api';
 
 interface Grant {
   id: string;
@@ -15,27 +16,22 @@ interface Grant {
 
 export default function GrantsPage() {
   const [grants, setGrants] = useState<Grant[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Temporarily disabled API call for testing
-  // useEffect(() => {
-  //   fetchGrants();
-  // }, []);
+  useEffect(() => {
+    fetchGrants();
+  }, []);
 
   const fetchGrants = async () => {
     try {
       setLoading(true);
       setError(null);
-      // Temporarily commented out API call
-      // const response = await getGrants({ skip: 0, limit: 50 });
-      // console.log('Grants response:', response);
-      
-      // const grantsData = (response as any)?.items || [];
-      // setGrants(grantsData);
-      
-      // For testing, set some dummy data
-      setGrants([]);
+      const response = await getGrants({ skip: 0, limit: 50 });
+      console.log('Grants response:', response);
+
+      const grantsData = (response as any)?.items || [];
+      setGrants(grantsData);
     } catch (err) {
       console.error('Error fetching grants:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch grants');
@@ -69,15 +65,15 @@ export default function GrantsPage() {
       <h1 className="text-3xl font-bold text-gray-900 mb-4">Grants</h1>
       <p className="text-gray-600 mb-6">Browse available funding opportunities</p>
       
-      <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-        <p>✅ Grants page is working! API temporarily disabled for testing.</p>
+      <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+        <p>✅ API integration working! Found {grants.length} grants.</p>
         <p className="mt-2 text-sm">
           API Status: <a href="https://navimpact-api.onrender.com/api/v1/grants/" target="_blank" className="underline">Check API</a>
         </p>
       </div>
       
       {grants.length === 0 ? (
-        <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mt-4">
+        <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
           <p>No grants found. Add some sample grants to get started!</p>
         </div>
       ) : (

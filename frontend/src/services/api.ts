@@ -25,9 +25,10 @@ class ApiClient {
 
   async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    queryParams?: Record<string, string>
   ): Promise<T> {
-    const url = buildApiUrl(endpoint);
+    const url = buildApiUrl(endpoint, queryParams);
     
     const defaultOptions: RequestInit = {
       headers: {
@@ -60,7 +61,7 @@ class ApiClient {
       limit: params.limit?.toString() || '10'
     } : undefined;
     
-    return this.request<any>(buildApiUrl(config.endpoints.grants, queryParams));
+    return this.request<any>(config.endpoints.grants, {}, queryParams);
   }
 
   async getGrant(id: string) {
@@ -93,7 +94,7 @@ class ApiClient {
       limit: params.limit?.toString() || '10'
     } : undefined;
     
-    return this.request<any>(buildApiUrl(`${config.endpoints.grants}source/${source}/`, queryParams));
+    return this.request<any>(`${config.endpoints.grants}source/${source}/`, {}, queryParams);
   }
 
   // Tasks
@@ -103,7 +104,7 @@ class ApiClient {
       limit: params.limit?.toString() || '10'
     } : undefined;
     
-    return this.request<any>(buildApiUrl(config.endpoints.tasks, queryParams));
+    return this.request<any>(buildApiUrl(config.endpoints.tasks, {}, queryParams));
   }
 
   async getTask(id: string) {
@@ -137,7 +138,7 @@ class ApiClient {
       limit: params.limit?.toString() || '10'
     } : undefined;
     
-    return this.request<any>(buildApiUrl(config.endpoints.projects, queryParams));
+    return this.request<any>(buildApiUrl(config.endpoints.projects, {}, queryParams));
   }
 
   // Tags
