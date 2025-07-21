@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter
 from app.db.session import health_check as check_db_health
+from sqlalchemy import text
 from datetime import datetime
 
 router = APIRouter()
@@ -27,7 +28,7 @@ async def database_test():
         
         engine = get_engine()
         with engine.connect() as conn:
-            result = conn.execute("SELECT 1 as test, current_database() as db_name, current_user as user")
+            result = conn.execute(text("SELECT 1 as test, current_database() as db_name, current_user as user"))
             row = result.fetchone()
             
         return {
@@ -59,7 +60,7 @@ async def session_test():
         db = next(db_gen)
         
         # Test a simple query
-        result = db.execute("SELECT 1 as test")
+        result = db.execute(text("SELECT 1 as test"))
         row = result.fetchone()
         
         # Close the session
