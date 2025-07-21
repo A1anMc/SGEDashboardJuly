@@ -7,12 +7,12 @@ const nextConfig = {
   
   // Environment variables
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://sge-dashboard-api.onrender.com',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://navimpact-api.onrender.com',
   },
   
   // Image optimization
   images: {
-    domains: ['sge-dashboard-web.onrender.com', 'sge-dashboard-api.onrender.com'],
+    domains: ['navimpact-frontend.onrender.com', 'navimpact-api.onrender.com'],
     unoptimized: true, // For better standalone compatibility
   },
   
@@ -31,8 +31,8 @@ const nextConfig = {
           {
             key: 'Content-Security-Policy',
             value: isDevelopment
-              ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://sge-dashboard-api.onrender.com ws: wss:;"
-              : "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://sge-dashboard-api.onrender.com;"
+              ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://navimpact-api.onrender.com ws: wss:;"
+              : "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://navimpact-api.onrender.com;"
           }
         ],
       },
