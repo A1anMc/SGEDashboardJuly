@@ -151,8 +151,8 @@ def create_app() -> FastAPI:
     """Create and configure the FastAPI application with comprehensive security."""
     
     # Enable docs for testing and development
-    docs_url = "/api/docs"
-    openapi_url = "/api/openapi.json"
+    docs_url = "/docs"
+    openapi_url = "/openapi.json"
     
     app = FastAPI(
         title="NavImpact API",
