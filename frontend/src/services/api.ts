@@ -104,7 +104,7 @@ class ApiClient {
       limit: params.limit?.toString() || '10'
     } : undefined;
     
-    return this.request<any>(buildApiUrl(config.endpoints.tasks, {}, queryParams));
+    return this.request<any>(config.endpoints.tasks, {}, queryParams);
   }
 
   async getTask(id: string) {
@@ -138,7 +138,7 @@ class ApiClient {
       limit: params.limit?.toString() || '10'
     } : undefined;
     
-    return this.request<any>(buildApiUrl(config.endpoints.projects, {}, queryParams));
+    return this.request<any>(config.endpoints.projects, {}, queryParams);
   }
 
   // Tags
