@@ -150,9 +150,9 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application with comprehensive security."""
     
-    # Disable docs in production for security
-    docs_url = "/api/docs" if settings.DEBUG else None
-    openapi_url = "/api/openapi.json" if settings.DEBUG else None
+    # Enable docs for testing and development
+    docs_url = "/api/docs"
+    openapi_url = "/api/openapi.json"
     
     app = FastAPI(
         title="NavImpact API",
