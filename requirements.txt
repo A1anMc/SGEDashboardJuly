@@ -1,12 +1,8 @@
-# Python 3.11.9 compatible requirements - pre-compiled packages only
-pip>=25.1.1
+# Ultra-minimal requirements - only guaranteed pre-compiled packages
 fastapi==0.104.1
-uvicorn[standard]==0.24.0
+uvicorn==0.24.0
 gunicorn==21.2.0
 sqlalchemy==2.0.23
 psycopg2-binary==2.9.9
 alembic==1.12.1
-pydantic==1.10.13
-pydantic-settings==0.2.5
-python-dotenv==1.0.0
-itsdangerous==2.1.2 
+python-dotenv==1.0.0 
