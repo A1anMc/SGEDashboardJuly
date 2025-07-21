@@ -23,10 +23,11 @@ def get_db() -> Generator:
         db = SessionLocal()
         logger.info("Database session created successfully")
         
-        # Test the connection
+        # Test the connection using text() for proper SQL execution
         try:
             logger.info("Testing database connection...")
-            db.execute("SELECT 1")
+            from sqlalchemy import text
+            db.execute(text("SELECT 1"))
             logger.info("Database connection test successful")
         except SQLAlchemyError as e:
             logger.error(f"Database connection test failed: {str(e)}")
