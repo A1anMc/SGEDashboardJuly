@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.deps import get_db
 from app.models.grant import Grant
 from app.schemas.grant import GrantResponse, GrantList
-from app.services.scrapers.scraper_service import ScraperService
+# from app.services.scrapers.scraper_service import ScraperService  # Disabled - requires bs4
 
 router = APIRouter()
 
@@ -82,22 +82,11 @@ async def scrape_all_sources(
     db: Session = Depends(get_db)
 ):
     """Trigger scraping of all available grant sources."""
-    try:
-        scraper_service = ScraperService(db)
-        
-        # Start scraping in the background
-        background_tasks.add_task(scraper_service.scrape_all)
-        
-        return {
-            "status": "started",
-            "message": "Grant scraping has been initiated",
-            "available_sources": scraper_service.get_available_sources()
-        }
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to start scraper: {str(e)}"
-        )
+    return {
+        "status": "disabled",
+        "message": "Grant scraping is currently disabled to reduce dependencies",
+        "available_sources": []
+    }
 
 @router.post("/scrape/{source}")
 async def scrape_specific_source(
@@ -106,46 +95,17 @@ async def scrape_specific_source(
     db: Session = Depends(get_db)
 ):
     """Trigger scraping of a specific grant source."""
-    try:
-        scraper_service = ScraperService(db)
-        
-        # Validate source
-        available_sources = scraper_service.get_available_sources()
-        if source not in available_sources:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Source '{source}' not found. Available sources: {available_sources}"
-            )
-        
-        # Start scraping in the background
-        background_tasks.add_task(scraper_service.scrape_source, source)
-        
-        return {
-            "status": "started",
-            "message": f"Scraping initiated for source: {source}"
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to start scraper for {source}: {str(e)}"
-        )
+    return {
+        "status": "disabled",
+        "message": f"Grant scraping for {source} is currently disabled to reduce dependencies"
+    }
 
 @router.get("/sources")
 def get_available_sources(db: Session = Depends(get_db)):
     """Get list of available grant sources with their status."""
-    try:
-        scraper_service = ScraperService(db)
-        sources = scraper_service.get_available_sources()
-        
-        return {
-            "sources": sources,
-            "total": len(sources),
-            "status": "active"
-        }
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error fetching sources: {str(e)}"
-        ) 
+    return {
+        "sources": [],
+        "total": 0,
+        "status": "disabled",
+        "message": "Grant scraping sources are currently disabled to reduce dependencies"
+    } 
