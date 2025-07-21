@@ -6,6 +6,6 @@ sqlalchemy==2.0.29
 psycopg2-binary==2.9.6
 alembic==1.10.4
 pydantic==1.10.9
-pydantic-settings==0.2.5
+pydantic-settings==0.1.2b0
 python-dotenv==1.0.0
 itsdangerous==2.1.2 
