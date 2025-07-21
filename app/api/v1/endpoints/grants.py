@@ -174,6 +174,59 @@ def test_grants():
             "message": "Direct database access failed"
         }
 
+@router.post("/add-test")
+def add_test_grant():
+    """Add a single test grant to the database."""
+    try:
+        from app.db.session import get_engine
+        from sqlalchemy.orm import sessionmaker
+        from app.models.grant import Grant
+        from datetime import datetime, timedelta
+        
+        engine = get_engine()
+        SessionLocal = sessionmaker(bind=engine)
+        db = SessionLocal()
+        
+        try:
+            # Create a simple test grant
+            test_grant = Grant(
+                title="Test Community Grant",
+                description="A test grant for community development",
+                source="Test Foundation",
+                source_url="https://example.com/test",
+                application_url="https://example.com/apply",
+                contact_email="test@example.com",
+                min_amount=1000.00,
+                max_amount=10000.00,
+                open_date=datetime.now(),
+                deadline=datetime.now() + timedelta(days=30),
+                industry_focus="community",
+                location_eligibility="local",
+                org_type_eligible=["nonprofit"],
+                funding_purpose=["community development"],
+                audience_tags=["community organizations"],
+                status="open"
+            )
+            
+            db.add(test_grant)
+            db.commit()
+            
+            return {
+                "status": "success",
+                "message": "Added test grant",
+                "grant_id": test_grant.id
+            }
+            
+        finally:
+            db.close()
+            
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "message": "Failed to add test grant"
+        }
+
 @router.post("/seed")
 def seed_sample_grants():
     """Add sample grants to the database for testing."""
