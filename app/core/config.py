@@ -1,7 +1,5 @@
 import os
 from typing import Optional, List, Dict, Union
-from pydantic_settings import BaseSettings
-from pydantic import validator
 from dotenv import load_dotenv
 import json
 
@@ -28,7 +26,7 @@ else:
 print("Final environment:", os.getenv("ENVIRONMENT", "not set"))
 print("Final DATABASE_URL:", os.getenv("DATABASE_URL", "not set"))
 
-class Settings(BaseSettings):
+class Settings:
     # Core
     PROJECT_NAME: str = "SGE Dashboard"
     VERSION: str = "0.1.0"
@@ -75,8 +73,6 @@ class Settings(BaseSettings):
         "X-CSRF-Token"
     ]
     
-    # Database configuration only - using PostgreSQL
-    
     # Email
     SMTP_TLS: bool = True
     SMTP_PORT: Optional[int] = int(os.getenv("SMTP_PORT")) if os.getenv("SMTP_PORT") else None
@@ -98,7 +94,7 @@ class Settings(BaseSettings):
     
     # Rate Limiting
     RATE_LIMIT_ENABLED: bool = os.getenv("RATE_LIMIT_ENABLED", "false" if os.getenv("ENVIRONMENT", "development") == "development" else "true").lower() == "true"
-    RATE_LIMIT_REQUESTS_PER_MINUTE: int = int(os.getenv("RATE_LIMIT_REQUESTS_PER_MINUTE", "600" if os.getenv("ENVIRONMENT", "development") == "development" else "60"))
+    RATE_LIMIT_REQUESTS_PER_MINUTE: int = int(os.getenv("RATE_LIMIT_REQUESTS_PER_MINUTE", "100" if os.getenv("ENVIRONMENT", "development") == "development" else "60"))
     RATE_LIMIT_REQUESTS_PER_HOUR: int = int(os.getenv("RATE_LIMIT_REQUESTS_PER_HOUR", "10000" if os.getenv("ENVIRONMENT", "development") == "development" else "1000"))
     REDIS_URL: Optional[str] = os.getenv("REDIS_URL")  # For rate limiting backend
     
@@ -169,141 +165,45 @@ class Settings(BaseSettings):
     # External Domain Security
     ALLOWED_EXTERNAL_DOMAINS: List[str] = [
         "business.gov.au",
-        "grants.gov.au",
-        "arts.gov.au",
-        "screenaustralia.gov.au",
-        "creative.gov.au",  # Added for Creative Australia
-        # Removed Supabase references
-        "create.nsw.gov.au",  # Added for NSW state grants
-        # Philanthropic foundations
-        "lmcf.org.au",  # Lord Mayor's Charitable Foundation
-        "myerfoundation.org.au",  # Myer Foundation
-        "hmstrust.org.au",  # Helen Macpherson Smith Trust
-        "perpetual.com.au",  # Susan Green Fund
-        "australiacouncil.gov.au",  # Australia Council for the Arts
-        "ianpotter.org.au",  # Ian Potter Foundation
-        # Local councils
-        "melbourne.vic.gov.au",  # City of Melbourne
-        "cityofsydney.nsw.gov.au",  # City of Sydney
-        "brisbane.qld.gov.au",  # Brisbane City Council
-        "cityofadelaide.com.au",  # City of Adelaide
-        "perth.wa.gov.au",  # City of Perth
-        "yarracity.vic.gov.au",  # City of Yarra
-        "innerwest.nsw.gov.au",  # Inner West Council
-        "moreland.vic.gov.au",  # Moreland City Council
-        # Media companies
-        "abc.net.au",  # ABC
-        "sbs.com.au",  # SBS
-        "nineentertainment.com.au",  # Nine Entertainment
-        "sevenwestmedia.com.au",  # Seven West Media
-        "10play.com.au",  # Network 10
-        "foxtel.com.au",  # Foxtel
-        "newscorpaustralia.com",  # News Corp Australia
-        "southerncrossaustereo.com.au",  # Southern Cross Austereo
-        "stan.com.au"  # Stan Entertainment
+        "www.grants.gov.au",
+        "www.arts.gov.au",
+        "www.screenaustralia.gov.au",
+        "www.lmcf.org.au",
+        "www.melbourne.vic.gov.au",
+        "www.abc.net.au",
+        "example.com"  # For testing
     ]
     
-    @validator("CORS_ORIGINS", pre=True)
-    @classmethod
-    def validate_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
-        """Validate and parse CORS origins from environment."""
-        if isinstance(v, str):
-            # Handle JSON string from environment variable
-            try:
-                parsed = json.loads(v)
-                if isinstance(parsed, list):
-                    return parsed
-            except json.JSONDecodeError:
-                # Handle comma-separated string
-                return [origin.strip() for origin in v.split(",") if origin.strip()]
-        
-        # Get environment and frontend URL
-        env = os.getenv("ENVIRONMENT", "development")
-        frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
-        
-        # Always include production domains for robustness
-        origins = [
-            "https://sge-dashboard-web.onrender.com",
-            "https://sge-dashboard-api.onrender.com"
-        ]
-        
-        # Add environment-specific origins
-        if env == "production":
-            origins.append(frontend_url)
+    def __init__(self):
+        # Parse CORS origins from environment
+        cors_origins_str = os.getenv("CORS_ORIGINS", "")
+        if cors_origins_str:
+            if isinstance(cors_origins_str, str):
+                # Handle both comma-separated and JSON array formats
+                if cors_origins_str.startswith("["):
+                    try:
+                        self.CORS_ORIGINS = json.loads(cors_origins_str)
+                    except json.JSONDecodeError:
+                        self.CORS_ORIGINS = [origin.strip() for origin in cors_origins_str.split(",") if origin.strip()]
+                else:
+                    self.CORS_ORIGINS = [origin.strip() for origin in cors_origins_str.split(",") if origin.strip()]
+            else:
+                self.CORS_ORIGINS = cors_origins_str
         else:
-            # Development origins
-            origins.extend([
-                "http://localhost:3000",
-                "http://localhost:8000",
-                "http://127.0.0.1:3000",
-                "http://127.0.0.1:8000"
-            ])
-        
-        # Remove duplicates while preserving order
-        return list(dict.fromkeys(origins))
-    
-    @validator("SECRET_KEY")
-    @classmethod
-    def validate_secret_key(cls, v: str, values) -> str:
-        """Ensure secret key is secure in production."""
-        env = values.get("ENV", "development")
-        if env == "production" and v == "your-secret-key-change-in-production":
-            raise ValueError("SECRET_KEY must be changed from default value in production")
-        if env == "production" and len(v) < 32:
-            raise ValueError("SECRET_KEY must be at least 32 characters in production")
-        return v
-    
-    @validator("DATABASE_URL")
-    @classmethod
-    def validate_database_url(cls, v: str, values) -> str:
-        """Validate database URL based on environment."""
-        # Print debug info about the database URL
-        print(f"Validating DATABASE_URL: {v.split('://')[0] if '://' in v else 'invalid'}")
-        print(f"Environment: {values.get('ENV', 'unknown')}")
-        
-        # If we're testing, use the test database URL
-        if values.get("TESTING", False):
-            return values.get("TEST_DATABASE_URL")
-        
-        # DATABASE_URL is required in production
-        env = values.get("ENV", "development")
-        if env == "production":
-            if not v:
-                raise ValueError("DATABASE_URL environment variable is required in production")
-            if not v.startswith("postgresql://"):
-                raise ValueError("DATABASE_URL must start with postgresql://")
-            if "localhost" in v or "127.0.0.1" in v:
-                raise ValueError("DATABASE_URL cannot use localhost in production environment")
-        
-        # For development, allow empty (will be handled by session.py)
-        if not v:
-            return v
-        
-        # For PostgreSQL URLs, basic validation
-        if not v.startswith("postgresql://"):
-            raise ValueError("DATABASE_URL must start with postgresql://")
-        
-        # Return the URL as-is - let SQLAlchemy handle SSL configuration
-        return v
-    
-    # Removed Supabase validation
-    
-    @validator("DEBUG")
-    @classmethod
-    def validate_debug_mode(cls, v: bool, values) -> bool:
-        """Ensure debug is disabled in production."""
-        env = values.get("ENV", "development")
-        if env == "production" and v:
-            # Log warning but don't fail - let the app handle this
-            import logging
-            logging.warning("DEBUG mode should be disabled in production")
-        return v
-    
-    class Config:
-        case_sensitive = True
-        env_file = ".envV2"
-        env_file_encoding = "utf-8"
-        extra = "ignore"  # Ignore extra fields from environment
+            # Default CORS origins based on environment
+            if self.ENV == "production":
+                self.CORS_ORIGINS = [
+                    "https://navimpact.onrender.com",
+                    "https://navimpact-frontend.onrender.com",
+                    "https://navimpact-api.onrender.com"
+                ]
+            else:
+                self.CORS_ORIGINS = [
+                    "http://localhost:3000",
+                    "http://localhost:8000",
+                    "http://127.0.0.1:3000",
+                    "http://127.0.0.1:8000"
+                ]
 
 # Create settings instance
 settings = Settings() 
