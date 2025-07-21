@@ -82,7 +82,7 @@ services:
       npm ci --only=production
       npm run build
     startCommand: |
-      node .next/standalone/server.js
+      npm start
     envVars:
       # Environment
       - key: NODE_ENV

@@ -3,8 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   
-  // Production build configuration
-  output: 'standalone',
+
   
   // Environment variables
   env: {
@@ -33,7 +32,7 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: isDevelopment
               ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://sge-dashboard-api.onrender.com ws: wss:;"
-              : "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://sge-dashboard-api.onrender.com;"
+              : "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://sge-dashboard-api.onrender.com;"
           }
         ],
       },
