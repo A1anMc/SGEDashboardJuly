@@ -26,7 +26,6 @@ ORG_TYPE_OPTIONS = [
 
 @router.get("/", response_model=GrantList)
 def get_grants(
-    db: Session = Depends(get_db),
     skip: int = 0,
     limit: int = 100,
     source: Optional[str] = None,
@@ -37,38 +36,26 @@ def get_grants(
 ):
     """Get list of grants with optional filtering."""
     try:
-        query = db.query(Grant)
+        # Use direct engine access instead of dependency injection
+        from app.db.session import get_engine
+        from sqlalchemy import text
         
-        if source:
-            query = query.filter(Grant.source == source)
-        
-        if industry_focus:
-            query = query.filter(Grant.industry_focus == industry_focus)
+        engine = get_engine()
+        with engine.connect() as conn:
+            # Simple query to get grants count
+            result = conn.execute(text("SELECT COUNT(*) FROM grants"))
+            total = result.scalar()
             
-        if location:
-            query = query.filter(Grant.location_eligibility == location)
+            # For now, return empty list since we're testing the connection
+            # TODO: Implement full query logic once connection is confirmed working
             
-        if org_type:
-            query = query.filter(Grant.org_type_eligible.contains([org_type]))
-            
-        if status:
-            query = query.filter(Grant.status == status)
-        
-        total = query.count()
-        grants = query.offset(skip).limit(limit).all()
-        
-        # Calculate pagination
-        page = skip // limit + 1
-        has_next = skip + limit < total
-        has_prev = page > 1
-        
         return GrantList(
-            items=grants,
+            items=[],
             total=total,
-            page=page,
+            page=skip // limit + 1,
             size=limit,
-            has_next=has_next,
-            has_prev=has_prev
+            has_next=skip + limit < total,
+            has_prev=skip > 0
         )
     except Exception as e:
         raise HTTPException(
