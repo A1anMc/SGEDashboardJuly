@@ -154,8 +154,8 @@ def create_app() -> FastAPI:
     openapi_url = "/api/openapi.json" if settings.DEBUG else None
     
     app = FastAPI(
-        title="Shadow Goose Entertainment API",
-        description="API for managing Shadow Goose Entertainment projects and resources - Production Hardened",
+        title="NavImpact API",
+        description="API for managing NavImpact projects and resources - Production Hardened",
         version="1.0.0",
         lifespan=lifespan,
         docs_url=docs_url,
@@ -253,7 +253,7 @@ def create_app() -> FastAPI:
     async def read_root():
         """Root endpoint with basic information."""
         return {
-            "message": "Shadow Goose Entertainment API",
+            "message": "NavImpact API",
             "version": "1.0.0",
             "environment": settings.ENV,
             "status": "running"

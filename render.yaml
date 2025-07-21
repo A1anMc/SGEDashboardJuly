@@ -1,7 +1,7 @@
 services:
   # Backend API Service
   - type: web
-    name: sge-dashboard-api
+    name: navimpact-api
     env: python
     buildCommand: |
       pip install -r requirements.txt
@@ -47,9 +47,9 @@ services:
       
       # CORS Configuration
       - key: FRONTEND_URL
-        value: "https://sge-dashboard-web.onrender.com"
+        value: "https://navimpact-web.onrender.com"
       - key: CORS_ORIGINS
-        value: '["https://sge-dashboard-web.onrender.com", "https://sge-dashboard-api.onrender.com", "https://*.onrender.com"]'
+        value: '["https://navimpact-web.onrender.com", "https://navimpact-api.onrender.com", "https://*.onrender.com"]'
       
       # Database Pool Settings (optimized for Render)
       - key: DATABASE_POOL_SIZE
@@ -75,7 +75,7 @@ services:
     
   # Frontend Service
   - type: web
-    name: sge-dashboard-web
+    name: navimpact-web
     env: node
     rootDir: frontend
     buildCommand: |
@@ -89,7 +89,7 @@ services:
         value: production
       # Backend API URL
       - key: NEXT_PUBLIC_API_URL
-        value: "https://sge-dashboard-api.onrender.com"
+        value: "https://navimpact-api.onrender.com"
     
     healthCheckPath: /
     autoDeploy: true
