@@ -45,4 +45,34 @@ async def database_test():
             "status": "error",
             "error": str(e),
             "timestamp": datetime.utcnow().isoformat()
+        }
+
+@router.get("/session-test")
+async def session_test():
+    """Test session-based database access."""
+    try:
+        from app.core.deps import get_db
+        from sqlalchemy.orm import Session
+        
+        # Try to get a database session
+        db_gen = get_db()
+        db = next(db_gen)
+        
+        # Test a simple query
+        result = db.execute("SELECT 1 as test")
+        row = result.fetchone()
+        
+        # Close the session
+        db.close()
+        
+        return {
+            "status": "success",
+            "session_test": row[0],
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.utcnow().isoformat()
         } 
