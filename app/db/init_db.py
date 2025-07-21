@@ -1,6 +1,6 @@
 """Database initialization module with enhanced error handling."""
 import logging
-from sqlalchemy import text
+from sqlalchemy import text, inspect
 from sqlalchemy.exc import SQLAlchemyError
 from app.core.config import settings
 from app.db.base import Base
@@ -14,9 +14,21 @@ def init_db() -> None:
     try:
         logger.info("Starting database initialization...")
         
-        # Create all tables
+        # Get engine and check if tables already exist
         engine = get_engine()
-        Base.metadata.create_all(bind=engine)
+        
+        # In production, check if tables already exist to avoid conflicts
+        if settings.ENV == "production":
+            inspector = inspect(engine)
+            existing_tables = inspector.get_table_names()
+            if existing_tables:
+                logger.info(f"Found {len(existing_tables)} existing tables in production database - skipping table creation")
+            else:
+                logger.info("No existing tables found - creating all tables")
+                Base.metadata.create_all(bind=engine)
+        else:
+            # In development, create all tables
+            Base.metadata.create_all(bind=engine)
         
         # Initialize PostgreSQL extensions and settings
         db = get_session_local()
@@ -44,7 +56,7 @@ def init_db() -> None:
             logger.info(f"Connected to PostgreSQL version: {result}")
             
             db.commit()
-            logger.info("Database tables created/verified successfully")
+            logger.info("Database initialization completed successfully")
             
         except Exception as e:
             logger.error(f"Error during database initialization: {e}")
