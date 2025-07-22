@@ -19,7 +19,7 @@ class GrantBase(BaseModel):
     org_type_eligible: Optional[List[str]] = None
     funding_purpose: Optional[List[str]] = None
     audience_tags: Optional[List[str]] = []
-    status: str = Field(default="active", pattern="^(active|inactive|expired)$")
+    status: str = Field(default="active", pattern="^(active|inactive|expired|open|closed|draft)$")
     notes: Optional[str] = None
 
     class Config:
