@@ -181,13 +181,14 @@ def create_user_profiles_table():
         db = SessionLocal()
         try:
             # Check if table already exists
-            result = db.execute("""
+            from sqlalchemy import text
+            result = db.execute(text("""
                 SELECT EXISTS (
                     SELECT FROM information_schema.tables 
                     WHERE table_schema = 'public' 
                     AND table_name = 'user_profiles'
                 )
-            """)
+            """))
             table_exists = result.scalar()
             
             if table_exists:
@@ -198,7 +199,7 @@ def create_user_profiles_table():
                 }
             
             # Create the user_profiles table
-            db.execute("""
+            db.execute(text("""
                 CREATE TABLE user_profiles (
                     id SERIAL PRIMARY KEY,
                     organization_name VARCHAR(255) NOT NULL,
@@ -221,10 +222,10 @@ def create_user_profiles_table():
                     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
                     user_id INTEGER REFERENCES users(id) ON DELETE SET NULL
                 )
-            """)
+            """))
             
             # Create index
-            db.execute("CREATE INDEX ix_user_profiles_id ON user_profiles (id)")
+            db.execute(text("CREATE INDEX ix_user_profiles_id ON user_profiles (id)"))
             
             db.commit()
             
