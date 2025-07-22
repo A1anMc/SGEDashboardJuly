@@ -167,3 +167,80 @@ def check_tables():
             "error": str(e),
             "timestamp": "2025-07-22T06:00:00.000000"
         } 
+
+@router.post("/create-user-profiles-table")
+def create_user_profiles_table():
+    """Manually create the user_profiles table using raw SQL."""
+    try:
+        from app.db.session import SessionLocal
+        
+        db = SessionLocal()
+        try:
+            # Check if table already exists
+            result = db.execute("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_schema = 'public' 
+                    AND table_name = 'user_profiles'
+                )
+            """)
+            table_exists = result.scalar()
+            
+            if table_exists:
+                return {
+                    "status": "success",
+                    "message": "user_profiles table already exists",
+                    "timestamp": "2025-07-22T06:00:00.000000"
+                }
+            
+            # Create the user_profiles table
+            db.execute("""
+                CREATE TABLE user_profiles (
+                    id SERIAL PRIMARY KEY,
+                    organization_name VARCHAR(255) NOT NULL,
+                    organization_type VARCHAR(100) NOT NULL,
+                    industry_focus VARCHAR(100),
+                    location VARCHAR(100),
+                    website VARCHAR(500),
+                    description VARCHAR(1000),
+                    preferred_funding_range_min INTEGER,
+                    preferred_funding_range_max INTEGER,
+                    preferred_industries JSON,
+                    preferred_locations JSON,
+                    preferred_org_types JSON,
+                    max_deadline_days INTEGER,
+                    min_grant_amount INTEGER,
+                    max_grant_amount INTEGER,
+                    email_notifications VARCHAR(50),
+                    deadline_alerts INTEGER,
+                    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL
+                )
+            """)
+            
+            # Create index
+            db.execute("CREATE INDEX ix_user_profiles_id ON user_profiles (id)")
+            
+            db.commit()
+            
+            return {
+                "status": "success",
+                "message": "user_profiles table created successfully",
+                "timestamp": "2025-07-22T06:00:00.000000"
+            }
+        except Exception as e:
+            db.rollback()
+            return {
+                "status": "error",
+                "error": str(e),
+                "timestamp": "2025-07-22T06:00:00.000000"
+            }
+        finally:
+            db.close()
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": "2025-07-22T06:00:00.000000"
+        } 
