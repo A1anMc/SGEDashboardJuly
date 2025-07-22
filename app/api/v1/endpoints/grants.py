@@ -227,6 +227,26 @@ def add_test_grant():
             "message": "Failed to add test grant"
         }
 
+@router.post("/clear")
+def clear_all_grants():
+    """Clear all grants from the database."""
+    db = next(get_db())
+    
+    try:
+        # Delete all grants
+        deleted_count = db.query(Grant).delete()
+        db.commit()
+        
+        return {
+            "message": f"Successfully cleared {deleted_count} grants from the database",
+            "grants_deleted": deleted_count
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error clearing grants: {str(e)}")
+    finally:
+        db.close()
+
 @router.post("/seed")
 def seed_sample_grants():
     """Seed the database with comprehensive sample grants across multiple sectors."""
@@ -235,7 +255,11 @@ def seed_sample_grants():
     # Check if grants already exist
     existing_count = db.query(Grant).count()
     if existing_count > 0:
-        return {"message": f"Database already has {existing_count} grants. Use /add-test for single grants."}
+        return {
+            "message": f"Database already has {existing_count} grants. Use /clear first to reset, or /add-test for single grants.",
+            "existing_grants": existing_count,
+            "note": "To add the full dataset, first call /clear, then call /seed again"
+        }
     
     sample_grants = [
         # MEDIA & CREATIVE SECTOR
