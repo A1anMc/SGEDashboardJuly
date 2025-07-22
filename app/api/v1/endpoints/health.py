@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core import deps
-from app.db.session import engine
+from app.db.session import get_engine
 import logging
 
 logger = logging.getLogger(__name__)
@@ -25,6 +25,7 @@ def health_check():
 def database_test():
     """Test database connection."""
     try:
+        engine = get_engine()
         with engine.connect() as conn:
             result = conn.execute("SELECT 1 as test")
             row = result.fetchone()
@@ -98,8 +99,9 @@ def test_userprofile():
     """Test if UserProfile model can be imported and accessed."""
     try:
         from app.models.user_profile import UserProfile
-        from app.db.session import SessionLocal
+        from app.db.session import get_session_local
         
+        SessionLocal = get_session_local()
         db = SessionLocal()
         try:
             # Try to query the user_profiles table
@@ -134,8 +136,9 @@ def test_userprofile():
 def check_tables():
     """Check what tables exist in the database."""
     try:
-        from app.db.session import SessionLocal
+        from app.db.session import get_session_local
         
+        SessionLocal = get_session_local()
         db = SessionLocal()
         try:
             # Query to get all table names
@@ -172,8 +175,9 @@ def check_tables():
 def create_user_profiles_table():
     """Manually create the user_profiles table using raw SQL."""
     try:
-        from app.db.session import SessionLocal
+        from app.db.session import get_session_local
         
+        SessionLocal = get_session_local()
         db = SessionLocal()
         try:
             # Check if table already exists
