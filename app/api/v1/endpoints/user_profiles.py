@@ -164,17 +164,19 @@ def test_user_profiles(
 ) -> dict:
     """Test endpoint for user profiles without authentication."""
     try:
-        # Count total profiles
-        total_profiles = db.query(UserProfileModel).count()
+        # Use raw SQL to avoid relationship issues
+        from sqlalchemy import text
+        result = db.execute(text("SELECT COUNT(*) FROM user_profiles"))
+        total_profiles = result.scalar()
         
-        # Get first profile if exists
-        first_profile = db.query(UserProfileModel).first()
+        result = db.execute(text("SELECT id FROM user_profiles LIMIT 1"))
+        first_profile = result.fetchone()
         
         return {
             "status": "success",
             "total_profiles": total_profiles,
             "has_profiles": total_profiles > 0,
-            "first_profile_id": first_profile.id if first_profile else None,
+            "first_profile_id": first_profile[0] if first_profile else None,
             "message": "User profiles endpoint working correctly"
         }
     except Exception as e:
