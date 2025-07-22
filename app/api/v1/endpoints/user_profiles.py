@@ -159,15 +159,20 @@ def delete_user_profile(
     return {"message": "User profile deleted successfully"} 
 
 @router.get("/test", response_model=dict)
-def test_user_profiles(
-    db: Session = Depends(deps.get_db),
-) -> dict:
+def test_user_profiles() -> dict:
     """Test endpoint for user profiles without authentication."""
     try:
-        # Step 1: Test basic database connection
+        # Create our own database session
+        from app.db.session import get_session_local
         from sqlalchemy import text
-        result = db.execute(text("SELECT 1 as test"))
-        basic_test = result.scalar()
+        
+        SessionLocal = get_session_local()
+        db = SessionLocal()
+        
+        try:
+            # Step 1: Test basic database connection
+            result = db.execute(text("SELECT 1 as test"))
+            basic_test = result.scalar()
         
         # Step 2: Test if user_profiles table exists
         result = db.execute(text("""
@@ -203,6 +208,8 @@ def test_user_profiles(
             "first_profile_id": first_profile_id,
             "message": "User profiles endpoint working correctly"
         }
+        finally:
+            db.close()
     except Exception as e:
         import traceback
         return {
