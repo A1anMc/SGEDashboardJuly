@@ -28,10 +28,17 @@ export default function GrantsPage() {
       setLoading(true);
       setError(null);
       console.log('🔍 Fetching grants from API...');
-      const response = await getGrants({ skip: 0, limit: 50 });
-      console.log('✅ Grants response:', response);
+      
+      // Temporary direct API call to bypass service issue
+      const response = await fetch('https://navimpact-api.onrender.com/api/v1/grants/?skip=0&limit=50');
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+      }
+      const data = await response.json();
+      
+      console.log('✅ Grants response:', data);
 
-      const grantsData = (response as any)?.items || [];
+      const grantsData = data?.items || [];
       console.log('📊 Found grants:', grantsData.length);
       setGrants(grantsData);
     } catch (err) {
