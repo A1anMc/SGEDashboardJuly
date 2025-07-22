@@ -221,6 +221,70 @@ export default function GrantsPage() {
     setExpandedGrants(newExpanded);
   };
 
+  const exportToCSV = () => {
+    if (filteredGrants.length === 0) {
+      alert('No grants to export. Please adjust your filters or add some grants.');
+      return;
+    }
+
+    // Prepare CSV data
+    const headers = [
+      'Title',
+      'Description', 
+      'Source',
+      'Min Amount',
+      'Max Amount',
+      'Deadline',
+      'Status',
+      'Industry Focus',
+      'Location Eligibility',
+      'Organization Types Eligible'
+    ];
+
+    const csvData = filteredGrants.map(grant => [
+      grant.title || '',
+      grant.description || '',
+      grant.source || '',
+      grant.min_amount || '',
+      grant.max_amount || '',
+      grant.deadline ? new Date(grant.deadline).toLocaleDateString() : '',
+      grant.status || '',
+      grant.industry_focus || '',
+      grant.location_eligibility || '',
+      grant.org_type_eligible ? grant.org_type_eligible.join('; ') : ''
+    ]);
+
+    // Create CSV content
+    const csvContent = [headers, ...csvData]
+      .map(row => row.map(cell => `"${cell}"`).join(','))
+      .join('\n');
+
+    // Create and trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    
+    // Generate filename with current date
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+    const filename = `navimpact-grants-export-${dateStr}.csv`;
+    
+    link.download = filename;
+    link.style.display = 'none';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Cleanup
+    window.URL.revokeObjectURL(url);
+    
+    // Show success message
+    alert(`✅ Exported ${filteredGrants.length} grants to ${filename}`);
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -251,12 +315,21 @@ export default function GrantsPage() {
           <h1 className="text-3xl font-bold text-gray-900">Grants</h1>
           <p className="text-gray-600">Browse available funding opportunities</p>
         </div>
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          {showFilters ? 'Hide Filters' : 'Show Filters'}
-        </button>
+        <div className="flex space-x-3">
+          <button
+            onClick={exportToCSV}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center"
+            title="Export filtered grants to CSV"
+          >
+            📊 Export CSV
+          </button>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            {showFilters ? 'Hide Filters' : 'Show Filters'}
+          </button>
+        </div>
       </div>
       
       <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
