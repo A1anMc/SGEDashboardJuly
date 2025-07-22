@@ -164,24 +164,50 @@ def test_user_profiles(
 ) -> dict:
     """Test endpoint for user profiles without authentication."""
     try:
-        # Use raw SQL to avoid relationship issues
+        # Step 1: Test basic database connection
         from sqlalchemy import text
-        result = db.execute(text("SELECT COUNT(*) FROM user_profiles"))
-        total_profiles = result.scalar()
+        result = db.execute(text("SELECT 1 as test"))
+        basic_test = result.scalar()
         
-        result = db.execute(text("SELECT id FROM user_profiles LIMIT 1"))
-        first_profile = result.fetchone()
+        # Step 2: Test if user_profiles table exists
+        result = db.execute(text("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND table_name = 'user_profiles'
+            )
+        """))
+        table_exists = result.scalar()
+        
+        # Step 3: Test count query
+        if table_exists:
+            result = db.execute(text("SELECT COUNT(*) FROM user_profiles"))
+            total_profiles = result.scalar()
+        else:
+            total_profiles = 0
+        
+        # Step 4: Test select query
+        if table_exists and total_profiles > 0:
+            result = db.execute(text("SELECT id FROM user_profiles LIMIT 1"))
+            first_profile = result.fetchone()
+            first_profile_id = first_profile[0] if first_profile else None
+        else:
+            first_profile_id = None
         
         return {
             "status": "success",
+            "basic_test": basic_test,
+            "table_exists": table_exists,
             "total_profiles": total_profiles,
             "has_profiles": total_profiles > 0,
-            "first_profile_id": first_profile[0] if first_profile else None,
+            "first_profile_id": first_profile_id,
             "message": "User profiles endpoint working correctly"
         }
     except Exception as e:
+        import traceback
         return {
             "status": "error",
             "error": str(e),
+            "traceback": traceback.format_exc(),
             "message": "User profiles endpoint error"
         } 
