@@ -16,15 +16,44 @@ interface Grant {
   org_type_eligible?: string[];
 }
 
+interface Filters {
+  search: string;
+  deadline: string;
+  minAmount: number;
+  maxAmount: number;
+  industry: string;
+  location: string;
+  orgType: string;
+  status: string;
+}
+
 export default function GrantsPage() {
   const [grants, setGrants] = useState<Grant[]>([]);
+  const [filteredGrants, setFilteredGrants] = useState<Grant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedGrants, setExpandedGrants] = useState<Set<string>>(new Set());
+  const [showFilters, setShowFilters] = useState(false);
+  
+  // Filter state
+  const [filters, setFilters] = useState<Filters>({
+    search: '',
+    deadline: '',
+    minAmount: 0,
+    maxAmount: 1000000,
+    industry: '',
+    location: '',
+    orgType: '',
+    status: ''
+  });
 
   useEffect(() => {
     fetchGrants();
   }, []);
+
+  useEffect(() => {
+    applyFilters();
+  }, [grants, filters]);
 
   const fetchGrants = async () => {
     try {
@@ -52,6 +81,90 @@ export default function GrantsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const applyFilters = () => {
+    let filtered = [...grants];
+
+    // Search filter
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(grant =>
+        grant.title.toLowerCase().includes(searchLower) ||
+        grant.description.toLowerCase().includes(searchLower) ||
+        grant.source.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Deadline filter
+    if (filters.deadline) {
+      const now = new Date();
+      filtered = filtered.filter(grant => {
+        if (!grant.deadline) return false;
+        const deadline = new Date(grant.deadline);
+        
+        switch (filters.deadline) {
+          case 'closing-soon':
+            const daysDiff = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+            return daysDiff <= 7 && daysDiff >= 0;
+          case 'this-month':
+            return deadline.getMonth() === now.getMonth() && deadline.getFullYear() === now.getFullYear();
+          case 'next-3-months':
+            const threeMonthsFromNow = new Date(now.getFullYear(), now.getMonth() + 3, now.getDate());
+            return deadline <= threeMonthsFromNow;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Amount filter
+    filtered = filtered.filter(grant => {
+      const grantMin = grant.min_amount || 0;
+      const grantMax = grant.max_amount || 0;
+      return grantMin >= filters.minAmount && (grantMax === 0 || grantMax <= filters.maxAmount);
+    });
+
+    // Industry filter
+    if (filters.industry) {
+      filtered = filtered.filter(grant => grant.industry_focus === filters.industry);
+    }
+
+    // Location filter
+    if (filters.location) {
+      filtered = filtered.filter(grant => grant.location_eligibility === filters.location);
+    }
+
+    // Organization type filter
+    if (filters.orgType) {
+      filtered = filtered.filter(grant => 
+        grant.org_type_eligible?.includes(filters.orgType)
+      );
+    }
+
+    // Status filter
+    if (filters.status) {
+      filtered = filtered.filter(grant => grant.status === filters.status);
+    }
+
+    setFilteredGrants(filtered);
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      search: '',
+      deadline: '',
+      minAmount: 0,
+      maxAmount: 1000000,
+      industry: '',
+      location: '',
+      orgType: '',
+      status: ''
+    });
+  };
+
+  const updateFilter = (key: keyof Filters, value: any) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
   };
 
   // Helper functions for enhanced grant cards
@@ -133,8 +246,18 @@ export default function GrantsPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold text-gray-900 mb-4">Grants</h1>
-      <p className="text-gray-600 mb-6">Browse available funding opportunities</p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Grants</h1>
+          <p className="text-gray-600">Browse available funding opportunities</p>
+        </div>
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          {showFilters ? 'Hide Filters' : 'Show Filters'}
+        </button>
+      </div>
       
       <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
         <p>✅ API integration working! Found {grants.length} grants.</p>
@@ -142,14 +265,124 @@ export default function GrantsPage() {
           API Status: <a href="https://navimpact-api.onrender.com/api/v1/grants/" target="_blank" className="underline">Check API</a>
         </p>
       </div>
+
+      {/* Filters Section */}
+      {showFilters && (
+        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Search */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+              <input
+                type="text"
+                placeholder="Search grants..."
+                value={filters.search}
+                onChange={(e) => updateFilter('search', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Deadline */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Deadline</label>
+              <select
+                value={filters.deadline}
+                onChange={(e) => updateFilter('deadline', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Deadlines</option>
+                <option value="closing-soon">Closing Soon (≤7 days)</option>
+                <option value="this-month">This Month</option>
+                <option value="next-3-months">Next 3 Months</option>
+              </select>
+            </div>
+
+            {/* Status */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <select
+                value={filters.status}
+                onChange={(e) => updateFilter('status', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Statuses</option>
+                <option value="open">Open</option>
+                <option value="active">Active</option>
+                <option value="closed">Closed</option>
+                <option value="draft">Draft</option>
+              </select>
+            </div>
+
+            {/* Industry */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Industry</label>
+              <select
+                value={filters.industry}
+                onChange={(e) => updateFilter('industry', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Industries</option>
+                <option value="technology">Technology</option>
+                <option value="healthcare">Healthcare</option>
+                <option value="education">Education</option>
+                <option value="environment">Environment</option>
+                <option value="agriculture">Agriculture</option>
+                <option value="manufacturing">Manufacturing</option>
+                <option value="services">Services</option>
+                <option value="research">Research</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Amount Range */}
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Funding Amount Range</label>
+            <div className="flex items-center space-x-4">
+              <input
+                type="number"
+                placeholder="Min Amount"
+                value={filters.minAmount}
+                onChange={(e) => updateFilter('minAmount', parseInt(e.target.value) || 0)}
+                className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="text-gray-500">to</span>
+              <input
+                type="number"
+                placeholder="Max Amount"
+                value={filters.maxAmount}
+                onChange={(e) => updateFilter('maxAmount', parseInt(e.target.value) || 1000000)}
+                className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          {/* Clear Filters */}
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={clearFilters}
+              className="text-gray-600 hover:text-gray-800 text-sm font-medium"
+            >
+              Clear All Filters
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Results Summary */}
+      <div className="mb-6">
+        <p className="text-gray-600">
+          Showing {filteredGrants.length} of {grants.length} grants
+          {filters.search && ` matching "${filters.search}"`}
+        </p>
+      </div>
       
-      {grants.length === 0 ? (
+      {filteredGrants.length === 0 ? (
         <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
-          <p>No grants found. Add some sample grants to get started!</p>
+          <p>No grants match your current filters. Try adjusting your search criteria.</p>
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {grants.map((grant) => {
+          {filteredGrants.map((grant) => {
             const deadlineInfo = grant.deadline ? getDeadlineCountdown(grant.deadline) : null;
             const isExpanded = expandedGrants.has(grant.id);
             
