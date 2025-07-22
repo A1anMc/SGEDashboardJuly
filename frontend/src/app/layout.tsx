@@ -8,6 +8,11 @@ import QueryProvider from '../components/QueryProvider';
 export const metadata: Metadata = {
   title: 'NavImpact Dashboard',
   description: 'NavImpact Grant Management Dashboard',
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
 };
 
 // Custom NavImpact dashboard root layout, built by Alan – not boilerplate

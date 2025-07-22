@@ -1,0 +1,25 @@
+<svg width="200" height="60" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+  <!-- Icon: Compass "N" with impact waves -->
+  <g transform="translate(10, 10)">
+    <!-- Outer circle segments -->
+    <path d="M 20 0 A 20 20 0 0 1 0 20 L 0 0 Z" fill="#0D9488"/> <!-- Top-left teal -->
+    <path d="M 0 20 A 20 20 0 0 1 20 40 L 20 20 Z" fill="#F97316"/> <!-- Bottom-right coral -->
+    <path d="M 20 40 A 20 20 0 0 1 40 20 L 20 20 Z" fill="#0D9488"/> <!-- Top-right teal -->
+    
+    <!-- Inner "N" shape -->
+    <path d="M 8 32 L 8 8 L 16 8 L 16 24 L 32 8 L 32 32 L 24 32 L 24 16 L 8 32 Z" fill="#0D9488"/> <!-- Left and diagonal teal -->
+    <path d="M 24 16 L 32 8 L 32 32 L 24 32 L 24 16 Z" fill="#F97316"/> <!-- Right stroke coral -->
+    
+    <!-- Impact waves emanating from top-right -->
+    <path d="M 35 5 Q 45 0 50 5 Q 55 10 60 5" stroke="#F97316" stroke-width="2" fill="none"/>
+    <path d="M 35 8 Q 42 3 47 8 Q 52 13 57 8" stroke="#F97316" stroke-width="2" fill="none"/>
+  </g>
+  
+  <!-- Wordmark: "NavImpact" -->
+  <g transform="translate(70, 15)">
+    <!-- "Nav" in Impact Teal -->
+    <text x="0" y="25" font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" font-size="24" font-weight="600" fill="#0D9488">Nav</text>
+    <!-- "Impact" in Energy Coral -->
+    <text x="45" y="25" font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" font-size="24" font-weight="600" fill="#F97316">Impact</text>
+  </g>
+</svg> 
