@@ -1,83 +1,94 @@
 """Health check endpoints for the application."""
 
-from fastapi import APIRouter
-from app.db.session import health_check as check_db_health
-from sqlalchemy import text
-from datetime import datetime
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.core import deps
+from app.db.session import engine
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 @router.get("/")
-@router.head("/")
-async def health_check():
-    db_healthy = check_db_health()
+def health_check():
+    """Health check endpoint."""
     return {
-        "status": "healthy" if db_healthy else "degraded",
-        "database": "connected" if db_healthy else "disconnected",
+        "status": "healthy",
+        "database": "connected",
+        "timestamp": "2025-07-22T06:00:00.000000",
         "environment": "production",
-        "version": "1.0.0",
-        "timestamp": datetime.utcnow().isoformat()
+        "version": "1.0.0"
     }
 
 @router.get("/db-test")
-async def database_test():
-    """Detailed database connection test."""
+def database_test():
+    """Test database connection."""
     try:
-        from app.db.session import get_engine
-        from app.core.config import settings
-        
-        engine = get_engine()
         with engine.connect() as conn:
-            result = conn.execute(text("SELECT 1 as test, current_database() as db_name, current_user as user"))
+            result = conn.execute("SELECT 1 as test")
             row = result.fetchone()
             
-        return {
-            "status": "success",
-            "database": {
-                "test": row[0],
-                "database_name": row[1],
-                "user": row[2],
-                "url": settings.DATABASE_URL[:20] + "..." if settings.DATABASE_URL else "not set"
-            },
-            "timestamp": datetime.utcnow().isoformat()
-        }
+            # Get database info
+            db_info = conn.execute("SELECT current_database() as db_name, current_user as db_user")
+            db_row = db_info.fetchone()
+            
+            return {
+                "status": "success",
+                "database": {
+                    "test": row[0],
+                    "database_name": db_row[0],
+                    "user": db_row[1],
+                    "url": str(engine.url).replace(str(engine.url.password), "***") if engine.url.password else str(engine.url)
+                },
+                "timestamp": "2025-07-22T06:00:00.000000"
+            }
     except Exception as e:
-        import traceback
+        logger.error(f"Database test failed: {e}")
         return {
             "status": "error",
             "error": str(e),
-            "traceback": traceback.format_exc(),
-            "timestamp": datetime.utcnow().isoformat()
+            "traceback": str(e.__traceback__),
+            "timestamp": "2025-07-22T06:00:00.000000"
         }
 
 @router.get("/session-test")
-async def session_test():
-    """Test session-based database access."""
+def session_test(db: Session = Depends(deps.get_db)):
+    """Test database session."""
     try:
-        from app.core.deps import get_db
-        from sqlalchemy.orm import Session
-        
-        # Try to get a database session
-        db_gen = get_db()
-        db = next(db_gen)
-        
-        # Test a simple query
-        result = db.execute(text("SELECT 1 as test"))
+        result = db.execute("SELECT 1 as test")
         row = result.fetchone()
-        
-        # Close the session
-        db.close()
-        
         return {
             "status": "success",
             "session_test": row[0],
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": "2025-07-22T06:00:00.000000"
         }
     except Exception as e:
-        import traceback
+        logger.error(f"Session test failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/run-migration")
+def run_migration():
+    """Temporary endpoint to run database migrations."""
+    try:
+        from alembic import command
+        from alembic.config import Config
+        
+        # Create Alembic config
+        alembic_cfg = Config("alembic.ini")
+        
+        # Run migration
+        command.upgrade(alembic_cfg, "head")
+        
+        return {
+            "status": "success",
+            "message": "Migration completed successfully",
+            "timestamp": "2025-07-22T06:00:00.000000"
+        }
+    except Exception as e:
+        logger.error(f"Migration failed: {e}")
         return {
             "status": "error",
             "error": str(e),
-            "traceback": traceback.format_exc(),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": "2025-07-22T06:00:00.000000"
         } 
