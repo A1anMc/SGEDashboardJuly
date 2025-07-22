@@ -23,7 +23,7 @@ class UserProfileBase(BaseModel):
     max_grant_amount: Optional[int] = Field(1000000, ge=0)
     
     # Notification Preferences
-    email_notifications: Optional[str] = Field("weekly", regex="^(daily|weekly|monthly|none)$")
+    email_notifications: Optional[str] = Field("weekly", pattern="^(daily|weekly|monthly|none)$")
     deadline_alerts: Optional[int] = Field(7, ge=1, le=30)
 
 class UserProfileCreate(UserProfileBase):
@@ -50,7 +50,7 @@ class UserProfileUpdate(BaseModel):
     max_grant_amount: Optional[int] = Field(None, ge=0)
     
     # Notification Preferences
-    email_notifications: Optional[str] = Field(None, regex="^(daily|weekly|monthly|none)$")
+    email_notifications: Optional[str] = Field(None, pattern="^(daily|weekly|monthly|none)$")
     deadline_alerts: Optional[int] = Field(None, ge=1, le=30)
 
 class UserProfile(UserProfileBase):
