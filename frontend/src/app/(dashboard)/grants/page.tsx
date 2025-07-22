@@ -203,6 +203,109 @@ export default function GrantsPage() {
     }
   };
 
+  // New micro-insights functions
+  const getQuickSummary = (grant: Grant) => {
+    const summaries = {
+      'Digital Media Innovation Fund': {
+        who: 'Digital media startups and creative tech companies',
+        why: 'Supports innovative digital storytelling and audience engagement',
+        key: 'Focus on technology-driven creative projects'
+      },
+      'Indigenous Film Production Grant': {
+        who: 'Indigenous filmmakers and cultural organizations',
+        why: 'Preserves cultural heritage through authentic storytelling',
+        key: 'Priority for Indigenous-owned companies'
+      },
+      'Youth Mental Health Initiative': {
+        who: 'Community health organizations and nonprofits',
+        why: 'Addresses critical youth mental health challenges',
+        key: 'Evidence-based programs preferred'
+      },
+      'Social Enterprise Accelerator': {
+        who: 'Social enterprises and impact-driven nonprofits',
+        why: 'Scales social impact through sustainable business models',
+        key: 'Must have proven social impact model'
+      },
+      'Renewable Energy Innovation Grant': {
+        who: 'Energy startups and research institutions',
+        why: 'Accelerates Australia\'s clean energy transition',
+        key: 'Must demonstrate commercial potential'
+      },
+      'Circular Economy Solutions': {
+        who: 'Manufacturers and sustainability innovators',
+        why: 'Reduces waste through circular business models',
+        key: 'Focus on scalable circular economy solutions'
+      },
+      'Sustainable Agriculture Innovation': {
+        who: 'Farmers and agricultural researchers',
+        why: 'Promotes environmentally sustainable farming practices',
+        key: 'Must demonstrate environmental benefits'
+      },
+      'Marine Conservation Initiative': {
+        who: 'Marine biologists and conservation organizations',
+        why: 'Protects Australia\'s unique marine ecosystems',
+        key: 'Priority for Great Barrier Reef projects'
+      }
+    };
+
+    return summaries[grant.title as keyof typeof summaries] || {
+      who: 'Organizations in relevant sectors',
+      why: 'Supports important initiatives in this field',
+      key: 'Check eligibility requirements carefully'
+    };
+  };
+
+  const getSectorRelevance = (grant: Grant) => {
+    const sectorGroups = {
+      'technology': ['Digital Media Innovation Fund', 'Renewable Energy Innovation Grant'],
+      'healthcare': ['Youth Mental Health Initiative'],
+      'services': ['Indigenous Film Production Grant', 'Social Enterprise Accelerator'],
+      'environment': ['Circular Economy Solutions', 'Marine Conservation Initiative'],
+      'agriculture': ['Sustainable Agriculture Innovation']
+    };
+
+    const sector = grant.industry_focus;
+    if (!sector || !sectorGroups[sector as keyof typeof sectorGroups]) {
+      return null;
+    }
+
+    const similarGrants = sectorGroups[sector as keyof typeof sectorGroups].filter(
+      title => title !== grant.title
+    );
+
+    if (similarGrants.length === 0) return null;
+
+    const count = similarGrants.length;
+    const sectorName = sector.charAt(0).toUpperCase() + sector.slice(1);
+    
+    return {
+      text: `Similar to ${count} other ${sector} grant${count > 1 ? 's' : ''}`,
+      count: count,
+      sector: sectorName
+    };
+  };
+
+  const getUrgencyBadge = (deadline?: string) => {
+    if (!deadline) return null;
+    
+    const now = new Date();
+    const deadlineDate = new Date(deadline);
+    const diffTime = deadlineDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) {
+      return { text: 'Expired', color: 'bg-red-100 text-red-800 border-red-200', icon: '⏰' };
+    } else if (diffDays <= 7) {
+      return { text: `Closing in ${diffDays} days!`, color: 'bg-red-100 text-red-800 border-red-200', icon: '🚨' };
+    } else if (diffDays <= 14) {
+      return { text: `Closing in ${diffDays} days`, color: 'bg-orange-100 text-orange-800 border-orange-200', icon: '⚠️' };
+    } else if (diffDays <= 30) {
+      return { text: `Closing in ${diffDays} days`, color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: '⏳' };
+    }
+    
+    return null;
+  };
+
   const formatAmount = (min?: number, max?: number) => {
     if (!min && !max) return 'Amount not specified';
     if (min && max) {
@@ -480,7 +583,13 @@ export default function GrantsPage() {
                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 line-clamp-2 leading-tight flex-1 mr-3">
                       {grant.title}
                     </h3>
-                    <div className="flex-shrink-0">
+                    <div className="flex-shrink-0 flex items-center space-x-2">
+                      {getUrgencyBadge(grant.deadline) && (
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getUrgencyBadge(grant.deadline)?.color}`}>
+                          <span className="mr-1">{getUrgencyBadge(grant.deadline)?.icon}</span>
+                          {getUrgencyBadge(grant.deadline)?.text}
+                        </span>
+                      )}
                       {getStatusBadge(grant.status)}
                     </div>
                   </div>
@@ -508,6 +617,40 @@ export default function GrantsPage() {
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* Micro-Insights Section */}
+                <div className="px-4 sm:px-6 py-3 bg-blue-50 border-b border-blue-100">
+                  {/* Quick Summary */}
+                  <div className="mb-3">
+                    {(() => {
+                      const summary = getQuickSummary(grant);
+                      return (
+                        <div className="space-y-1">
+                          <div className="flex items-start text-xs sm:text-sm">
+                            <span className="font-medium text-blue-900 mr-2">👥 For:</span>
+                            <span className="text-blue-800">{summary.who}</span>
+                          </div>
+                          <div className="flex items-start text-xs sm:text-sm">
+                            <span className="font-medium text-blue-900 mr-2">🎯 Why:</span>
+                            <span className="text-blue-800">{summary.why}</span>
+                          </div>
+                          <div className="flex items-start text-xs sm:text-sm">
+                            <span className="font-medium text-blue-900 mr-2">💡 Key:</span>
+                            <span className="text-blue-800">{summary.key}</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Sector Relevance */}
+                  {getSectorRelevance(grant) && (
+                    <div className="flex items-center text-xs sm:text-sm text-blue-700">
+                      <span className="mr-1">🔗</span>
+                      <span>{getSectorRelevance(grant)?.text}</span>
+                    </div>
+                  )}
                 </div>
                 
                 {/* Description - Mobile Optimized */}
