@@ -94,7 +94,7 @@ class APIClient:
     def _get_default_headers(self) -> Dict[str, str]:
         """Get default headers for all requests."""
         return {
-            "User-Agent": f"SGE-Dashboard/{settings.VERSION}",
+            "User-Agent": f"NavImpact/{settings.VERSION}",
             "Accept": "application/json, text/html, text/plain, */*",
             "Accept-Encoding": "gzip, deflate",
             "Connection": "keep-alive",

@@ -1,4 +1,4 @@
-# SGE Dashboard
+# NavImpact Dashboard
 
 Strategic Grant Evaluation Dashboard - A comprehensive platform for managing grants, tasks, and impact metrics.
 
@@ -14,8 +14,8 @@ Strategic Grant Evaluation Dashboard - A comprehensive platform for managing gra
 
 ```bash
 # Clone the repository
-git clone https://github.com/A1anMc/SGEDashboardJuly.git
-cd SGEDashboardJuly
+git clone https://github.com/A1anMc/NavImpact.git
+cd NavImpact
 
 # Backend Setup
 pip install -r requirements.txt

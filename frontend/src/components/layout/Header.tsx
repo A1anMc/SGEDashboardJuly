@@ -1,13 +1,14 @@
 import { FC } from 'react';
 import { Menu, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
-import { BellIcon, UserCircleIcon } from '@heroicons/react/24/outline';
+import { BellIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Avatar from '@/components/ui/avatar';
 
 // Custom NavImpact dashboard header, built by Alan – not boilerplate
 const userNavigation = [
-  { name: 'Your Profile', href: '/profile' },
+  { name: 'Your Profile', href: '/settings/profile' },
   { name: 'Time Logs', href: '/time-logs' },
   { name: 'Settings', href: '/settings' },
   { name: 'Sign out', href: '/auth/signout' },
@@ -69,7 +70,12 @@ const Header: FC = () => {
         <Menu as="div" className="relative">
           <Menu.Button className="flex items-center gap-x-2 rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <span className="sr-only">Open user menu</span>
-            <UserCircleIcon className="h-8 w-8 text-gray-400" aria-hidden="true" />
+            <Avatar 
+              email="alan.mccarthy@example.com" 
+              name="Alan McCarthy" 
+              size="sm" 
+              className="border-2 border-gray-200"
+            />
             <span className="hidden text-sm font-medium text-gray-700 lg:block">Alan McCarthy</span>
           </Menu.Button>
           <Transition

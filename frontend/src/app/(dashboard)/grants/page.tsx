@@ -137,7 +137,7 @@ export default function GrantsPage() {
       filtered = filtered.filter(grant => grant.location_eligibility === filters.location);
     }
 
-    // Organization type filter
+    // Organisation type filter
     if (filters.orgType) {
       filtered = filtered.filter(grant => 
         grant.org_type_eligible?.includes(filters.orgType)
@@ -212,12 +212,12 @@ export default function GrantsPage() {
         key: 'Focus on technology-driven creative projects'
       },
       'Indigenous Film Production Grant': {
-        who: 'Indigenous filmmakers and cultural organizations',
+        who: 'Indigenous filmmakers and cultural organisations',
         why: 'Preserves cultural heritage through authentic storytelling',
         key: 'Priority for Indigenous-owned companies'
       },
       'Youth Mental Health Initiative': {
-        who: 'Community health organizations and nonprofits',
+        who: 'Community health organisations and nonprofits',
         why: 'Addresses critical youth mental health challenges',
         key: 'Evidence-based programs preferred'
       },
@@ -242,14 +242,14 @@ export default function GrantsPage() {
         key: 'Must demonstrate environmental benefits'
       },
       'Marine Conservation Initiative': {
-        who: 'Marine biologists and conservation organizations',
+        who: 'Marine biologists and conservation organisations',
         why: 'Protects Australia\'s unique marine ecosystems',
         key: 'Priority for Great Barrier Reef projects'
       }
     };
 
     return summaries[grant.title as keyof typeof summaries] || {
-      who: 'Organizations in relevant sectors',
+              who: 'Organisations in relevant sectors',
       why: 'Supports important initiatives in this field',
       key: 'Check eligibility requirements carefully'
     };
@@ -343,7 +343,7 @@ export default function GrantsPage() {
       'Status',
       'Industry Focus',
       'Location Eligibility',
-      'Organization Types Eligible'
+              'Organisation Types Eligible'
     ];
 
     const csvData = filteredGrants.map(grant => [
@@ -394,7 +394,7 @@ export default function GrantsPage() {
     return (
       <div className="container mx-auto p-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-4">Grants</h1>
-        <p className="text-gray-600">Loading grants...</p>
+            <p className="text-gray-600">Loading grants...</p>
         <div className="mt-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
           <p>🔄 Testing API connection...</p>
         </div>
@@ -443,7 +443,7 @@ export default function GrantsPage() {
           </button>
         </div>
       </div>
-      
+
       <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6 text-sm sm:text-base">
         <p>✅ API integration working! Found {grants.length} grants.</p>
         <p className="mt-2 text-xs sm:text-sm">
@@ -564,7 +564,7 @@ export default function GrantsPage() {
           {filters.search && ` matching "${filters.search}"`}
         </p>
       </div>
-      
+
       {filteredGrants.length === 0 ? (
         <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded text-center sm:text-left">
           <p className="text-sm sm:text-base">No grants match your current filters. Try adjusting your search criteria.</p>
@@ -591,7 +591,7 @@ export default function GrantsPage() {
                         </span>
                       )}
                       {getStatusBadge(grant.status)}
-                    </div>
+                </div>
                   </div>
                   
                   {/* Key Info - Mobile Optimized */}
@@ -605,20 +605,20 @@ export default function GrantsPage() {
                       <span className="font-medium">Funding:</span>
                       <span className="ml-2 font-semibold text-gray-900">
                         {formatAmount(grant.min_amount, grant.max_amount)}
-                      </span>
-                    </div>
-                    
+                    </span>
+                  </div>
+                  
                     {deadlineInfo && (
                       <div className="flex items-center text-xs sm:text-sm">
                         <span className="font-medium text-gray-600">Deadline:</span>
                         <span className={`ml-2 font-semibold ${deadlineInfo.color}`}>
                           {deadlineInfo.text}
-                        </span>
+                    </span>
                       </div>
                     )}
                   </div>
                 </div>
-
+                
                 {/* Micro-Insights Section */}
                 <div className="px-4 sm:px-6 py-3 bg-blue-50 border-b border-blue-100">
                   {/* Quick Summary */}
@@ -666,14 +666,14 @@ export default function GrantsPage() {
                         <div className="flex flex-col sm:flex-row sm:items-center text-xs sm:text-sm">
                           <span className="font-medium text-gray-600 sm:w-20 mb-1 sm:mb-0">Industry:</span>
                           <span className="text-gray-900">{grant.industry_focus}</span>
-                        </div>
-                      )}
-                      
+        </div>
+      )}
+
                       {grant.location_eligibility && (
                         <div className="flex flex-col sm:flex-row sm:items-center text-xs sm:text-sm">
                           <span className="font-medium text-gray-600 sm:w-20 mb-1 sm:mb-0">Location:</span>
                           <span className="text-gray-900">{grant.location_eligibility}</span>
-                        </div>
+            </div>
                       )}
                       
                       {grant.org_type_eligible && grant.org_type_eligible.length > 0 && (
@@ -688,7 +688,7 @@ export default function GrantsPage() {
                           </div>
                         </div>
                       )}
-                    </div>
+            </div>
                   )}
                   
                   {/* Action Buttons - Mobile Optimized */}
@@ -709,11 +709,11 @@ export default function GrantsPage() {
                       </button>
                     </div>
                   </div>
-                </div>
-              </div>
+            </div>
+            </div>
             );
           })}
-        </div>
+      </div>
       )}
 
       {/* Grant Comparison Modal */}

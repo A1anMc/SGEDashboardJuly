@@ -146,6 +146,24 @@ class ApiClient {
     return this.request<any>(config.endpoints.tags);
   }
 
+  // Users
+  async getUsers(params?: { skip?: number; limit?: number }) {
+    const queryParams = params ? {
+      skip: params.skip?.toString() || '0',
+      limit: params.limit?.toString() || '10'
+    } : undefined;
+    
+    return this.request<any>(config.endpoints.users, {}, queryParams);
+  }
+
+  async getUser(id: string) {
+    return this.request<any>(`${config.endpoints.users}${id}/`);
+  }
+
+  async getCurrentUser() {
+    return this.request<any>(`${config.endpoints.users}me/`);
+  }
+
   // Generic request method for custom endpoints
   async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     return this.request<T>(endpoint, options);
@@ -170,4 +188,7 @@ export const {
   deleteTask,
   getProjects,
   getTags,
+  getUsers,
+  getUser,
+  getCurrentUser,
 } = apiClient; 

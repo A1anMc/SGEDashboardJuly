@@ -155,9 +155,9 @@ export default function GrantComparison({ grants, onClose }: GrantComparisonProp
       type: 'text'
     });
 
-    // Organization Types
+    // Organisation Types
     metrics.push({
-      label: 'Eligible Organizations',
+      label: 'Eligible Organisations',
       value1: grant1.org_type_eligible?.join(', ') || 'Not specified',
       value2: grant2.org_type_eligible?.join(', ') || 'Not specified',
       value3: grant3?.org_type_eligible?.join(', ') || 'Not specified',
@@ -301,7 +301,7 @@ export default function GrantComparison({ grants, onClose }: GrantComparisonProp
               <div className="space-y-2 text-sm text-blue-800">
                 <p>• <strong>Funding:</strong> Higher amounts are generally better for larger projects</p>
                 <p>• <strong>Deadline:</strong> Urgent deadlines require immediate action</p>
-                <p>• <strong>Eligibility:</strong> Check if your organization type matches</p>
+                <p>• <strong>Eligibility:</strong> Check if your organisation type matches</p>
                 <p>• <strong>Location:</strong> Ensure you meet geographic requirements</p>
               </div>
             </div>

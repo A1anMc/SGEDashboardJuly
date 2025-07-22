@@ -16,7 +16,7 @@ class StructuredLogger(logging.Logger):
             "level": logging.getLevelName(level),
             "message": msg % args if args else msg,
             "environment": settings.ENV,
-            "service": "sge-dashboard-api"
+            "service": "navimpact-api"
         }
         
         if exc_info:

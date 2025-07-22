@@ -3,8 +3,8 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 
 class UserProfileBase(BaseModel):
-    organization_name: str = Field(..., min_length=1, max_length=255)
-    organization_type: str = Field(..., min_length=1, max_length=100)
+    organisation_name: str = Field(..., min_length=1, max_length=255)
+    organisation_type: str = Field(..., min_length=1, max_length=100)
     industry_focus: Optional[str] = Field(None, max_length=100)
     location: Optional[str] = Field(None, max_length=100)
     website: Optional[str] = Field(None, max_length=500)
@@ -28,8 +28,8 @@ class UserProfileCreate(UserProfileBase):
     pass
 
 class UserProfileUpdate(BaseModel):
-    organization_name: Optional[str] = Field(None, min_length=1, max_length=255)
-    organization_type: Optional[str] = Field(None, min_length=1, max_length=100)
+    organisation_name: Optional[str] = Field(None, min_length=1, max_length=255)
+    organisation_type: Optional[str] = Field(None, min_length=1, max_length=100)
     industry_focus: Optional[str] = Field(None, max_length=100)
     location: Optional[str] = Field(None, max_length=100)
     website: Optional[str] = Field(None, max_length=500)

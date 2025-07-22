@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { UserProfile, UserProfileCreate, UserProfileUpdate, profileService } from '@/services/profile';
+import Avatar from '@/components/ui/avatar';
 
 interface ProfileFormProps {
   profile?: UserProfile;
@@ -10,14 +11,14 @@ interface ProfileFormProps {
   mode?: 'create' | 'edit';
 }
 
-const organizationTypes = [
+const organisationTypes = [
   'Non-profit',
   'Charity',
   'Community Group',
   'Social Enterprise',
   'Government Agency',
   'Educational Institution',
-  'Healthcare Organization',
+  'Healthcare Organisation',
   'Environmental Group',
   'Arts & Culture',
   'Sports & Recreation',
@@ -33,8 +34,8 @@ const notificationOptions = [
 
 export default function ProfileForm({ profile, onSave, onCancel, mode = 'edit' }: ProfileFormProps) {
   const [formData, setFormData] = useState<UserProfileCreate>({
-    organization_name: '',
-    organization_type: '',
+    organisation_name: '',
+    organisation_type: '',
     industry_focus: '',
     location: '',
     website: '',
@@ -58,8 +59,8 @@ export default function ProfileForm({ profile, onSave, onCancel, mode = 'edit' }
   useEffect(() => {
     if (profile) {
       setFormData({
-        organization_name: profile.organization_name,
-        organization_type: profile.organization_type,
+        organisation_name: profile.organisation_name,
+        organisation_type: profile.organisation_type,
         industry_focus: profile.industry_focus || '',
         location: profile.location || '',
         website: profile.website || '',
@@ -138,9 +139,22 @@ export default function ProfileForm({ profile, onSave, onCancel, mode = 'edit' }
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">
-        {mode === 'create' ? 'Create Profile' : 'Edit Profile'}
-      </h2>
+      <div className="flex items-center gap-4 mb-6">
+        <Avatar 
+          email="alan.mccarthy@example.com" 
+          name="Alan McCarthy" 
+          size="lg" 
+          className="border-2 border-gray-200"
+        />
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">
+            {mode === 'create' ? 'Create Profile' : 'Edit Profile'}
+          </h2>
+          <p className="text-sm text-gray-600 mt-1">
+            {mode === 'create' ? 'Set up your organisation profile' : 'Update your profile information'}
+          </p>
+        </div>
+      </div>
 
       {error && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
@@ -155,17 +169,17 @@ export default function ProfileForm({ profile, onSave, onCancel, mode = 'edit' }
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Organization Information */}
+        {/* Organisation Information */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label htmlFor="organization_name" className="block text-sm font-medium text-gray-700 mb-2">
-              Organization Name *
+            <label htmlFor="organisation_name" className="block text-sm font-medium text-gray-700 mb-2">
+              Organisation Name *
             </label>
             <input
               type="text"
-              id="organization_name"
-              name="organization_name"
-              value={formData.organization_name}
+              id="organisation_name"
+              name="organisation_name"
+              value={formData.organisation_name}
               onChange={handleInputChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -173,19 +187,19 @@ export default function ProfileForm({ profile, onSave, onCancel, mode = 'edit' }
           </div>
 
           <div>
-            <label htmlFor="organization_type" className="block text-sm font-medium text-gray-700 mb-2">
-              Organization Type *
+            <label htmlFor="organisation_type" className="block text-sm font-medium text-gray-700 mb-2">
+              Organisation Type *
             </label>
             <select
-              id="organization_type"
-              name="organization_type"
-              value={formData.organization_type}
+              id="organisation_type"
+              name="organisation_type"
+              value={formData.organisation_type}
               onChange={handleInputChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">Select organization type</option>
-              {organizationTypes.map(type => (
+              <option value="">Select organisation type</option>
+              {organisationTypes.map(type => (
                 <option key={type} value={type}>{type}</option>
               ))}
             </select>
@@ -249,7 +263,7 @@ export default function ProfileForm({ profile, onSave, onCancel, mode = 'edit' }
             value={formData.description}
             onChange={handleInputChange}
             rows={3}
-            placeholder="Brief description of your organization and its mission"
+                          placeholder="Brief description of your organisation and its mission"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>

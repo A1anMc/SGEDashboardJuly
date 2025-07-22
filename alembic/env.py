@@ -66,7 +66,7 @@ def run_migrations_online() -> None:
             max_overflow=10,
             pool_recycle=3600,
             connect_args={
-                "application_name": "sge-dashboard-migrations",
+                "application_name": "navimpact-migrations",
                 "keepalives": 1,
                 "keepalives_idle": 30,
                 "keepalives_interval": 10,

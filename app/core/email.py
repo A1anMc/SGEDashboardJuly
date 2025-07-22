@@ -56,7 +56,7 @@ async def send_test_email(email: str) -> None:
     message = MessageSchema(
         subject="Test Email",
         recipients=[email],
-        body="This is a test email from the SGE Dashboard.",
+        body="This is a test email from the NavImpact Dashboard.",
         subtype="html"
     )
     await fastmail.send_message(message)

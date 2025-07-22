@@ -50,7 +50,7 @@ def init_db() -> None:
             
             # Set session parameters
             db.execute(text("SET timezone = 'UTC'"))
-            db.execute(text("SET application_name = 'sge-dashboard-api'"))
+            db.execute(text("SET application_name = 'navimpact-api'"))
             
             # Verify database connection
             result = db.execute(text("SELECT version()")).scalar()
@@ -141,7 +141,7 @@ def validate_database_config() -> bool:
             return False
         
         # Check if it's the default localhost URL (which won't work in production)
-        if settings.DATABASE_URL == "postgresql://alanmccarthy@localhost:5432/sge_dashboard":
+        if settings.DATABASE_URL == "postgresql://alanmccarthy@localhost:5432/navimpact_db":
             logger.error("DATABASE_URL is set to default localhost - this won't work in production")
             return False
         

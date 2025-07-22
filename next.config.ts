@@ -7,12 +7,12 @@ const nextConfig: NextConfig = {
   
   // Environment variables
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://sge-dashboard-api.onrender.com',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://navimpact-api.onrender.com',
   },
   
   // Image optimization
   images: {
-    domains: ['sge-dashboard-web.onrender.com', 'sge-dashboard-api.onrender.com'],
+          domains: ['navimpact-frontend.onrender.com', 'navimpact-api.onrender.com'],
   },
   
   // Security headers

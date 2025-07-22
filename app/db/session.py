@@ -29,7 +29,7 @@ def get_engine():
         if settings.ENV == "production":
             raise RuntimeError("DATABASE_URL environment variable is required in production")
         else:
-            database_url = "postgresql://alanmccarthy@localhost:5432/sge_dashboard"
+            database_url = "postgresql://alanmccarthy@localhost:5432/navimpact_db"
     
     try:
         # Create engine with minimal configuration

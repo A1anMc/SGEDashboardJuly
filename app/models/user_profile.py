@@ -7,8 +7,8 @@ class UserProfile(Base):
     __tablename__ = "user_profiles"
 
     id = Column(Integer, primary_key=True, index=True)
-    organization_name = Column(String(255), nullable=False)
-    organization_type = Column(String(100), nullable=False)
+    organisation_name = Column(String(255), nullable=False)
+    organisation_type = Column(String(100), nullable=False)
     industry_focus = Column(String(100), nullable=True)
     location = Column(String(100), nullable=True)
     website = Column(String(500), nullable=True)
@@ -37,4 +37,4 @@ class UserProfile(Base):
     user = relationship("User", back_populates="profile")
 
     def __repr__(self):
-        return f"<UserProfile(id={self.id}, organization='{self.organization_name}')>" 
+        return f"<UserProfile(id={self.id}, organisation='{self.organisation_name}')>" 

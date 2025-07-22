@@ -2,8 +2,8 @@ import { apiClient } from './api';
 
 export interface UserProfile {
   id: number;
-  organization_name: string;
-  organization_type: string;
+  organisation_name: string;
+  organisation_type: string;
   industry_focus?: string;
   location?: string;
   website?: string;
@@ -24,8 +24,8 @@ export interface UserProfile {
 }
 
 export interface UserProfileCreate {
-  organization_name: string;
-  organization_type: string;
+  organisation_name: string;
+  organisation_type: string;
   industry_focus?: string;
   location?: string;
   website?: string;
@@ -43,8 +43,8 @@ export interface UserProfileCreate {
 }
 
 export interface UserProfileUpdate {
-  organization_name?: string;
-  organization_type?: string;
+  organisation_name?: string;
+  organisation_type?: string;
   industry_focus?: string;
   location?: string;
   website?: string;

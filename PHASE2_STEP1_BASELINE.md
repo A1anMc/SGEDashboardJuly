@@ -169,7 +169,7 @@ CREATE TABLE grants (
 ## 🛡️ **Safety & Recovery**
 
 ### **Version Control:**
-- **Git Repository:** https://github.com/A1anMc/SGEDashboardJuly
+- **Git Repository:** https://github.com/A1anMc/NavImpact
 - **Current Branch:** main
 - **Last Commit:** a3216bc (Micro-Insights implementation)
 - **Rollback Available:** All commits can be reverted

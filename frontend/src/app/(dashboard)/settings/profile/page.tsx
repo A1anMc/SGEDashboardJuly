@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { UserProfile, profileService } from '@/services/profile';
 import ProfileForm from '@/components/profile/ProfileForm';
+import Avatar from '@/components/ui/avatar';
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -90,9 +91,17 @@ export default function ProfilePage() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Profile</h1>
-            <p className="text-sm sm:text-base text-gray-600">Manage your organization profile and grant preferences</p>
+          <div className="flex items-center gap-4">
+            <Avatar 
+              email="alan.mccarthy@example.com" 
+              name="Alan McCarthy" 
+              size="xl" 
+              className="border-4 border-gray-200"
+            />
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Profile</h1>
+              <p className="text-sm sm:text-base text-gray-600">Manage your organisation profile and grant preferences</p>
+            </div>
           </div>
           <button
             onClick={() => setShowForm(true)}
@@ -105,17 +114,17 @@ export default function ProfilePage() {
         {/* Profile Display */}
         {profile && (
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            {/* Organization Information */}
+            {/* Organisation Information */}
             <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Organization Information</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Organisation Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Organization Name</label>
-                  <p className="text-gray-900 font-medium">{profile.organization_name}</p>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Organisation Name</label>
+                  <p className="text-gray-900 font-medium">{profile.organisation_name}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Organization Type</label>
-                  <p className="text-gray-900">{profile.organization_type}</p>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Organisation Type</label>
+                  <p className="text-gray-900">{profile.organisation_type}</p>
                 </div>
                 {profile.industry_focus && (
                   <div>
@@ -214,7 +223,7 @@ export default function ProfilePage() {
                   )}
                   {profile.preferred_org_types?.length && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-2">Preferred Organization Types</label>
+                      <label className="block text-sm font-medium text-gray-600 mb-2">Preferred Organisation Types</label>
                       <div className="flex flex-wrap gap-2">
                         {profile.preferred_org_types.map((type, index) => (
                           <span
