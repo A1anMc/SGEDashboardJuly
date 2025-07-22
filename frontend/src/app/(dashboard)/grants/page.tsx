@@ -27,13 +27,15 @@ export default function GrantsPage() {
     try {
       setLoading(true);
       setError(null);
+      console.log('🔍 Fetching grants from API...');
       const response = await getGrants({ skip: 0, limit: 50 });
-      console.log('Grants response:', response);
+      console.log('✅ Grants response:', response);
 
       const grantsData = (response as any)?.items || [];
+      console.log('📊 Found grants:', grantsData.length);
       setGrants(grantsData);
     } catch (err) {
-      console.error('Error fetching grants:', err);
+      console.error('❌ Error fetching grants:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch grants');
     } finally {
       setLoading(false);
