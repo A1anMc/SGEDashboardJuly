@@ -157,3 +157,29 @@ def delete_user_profile(
     db.delete(user_profile)
     db.commit()
     return {"message": "User profile deleted successfully"} 
+
+@router.get("/test", response_model=dict)
+def test_user_profiles(
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """Test endpoint for user profiles without authentication."""
+    try:
+        # Count total profiles
+        total_profiles = db.query(UserProfileModel).count()
+        
+        # Get first profile if exists
+        first_profile = db.query(UserProfileModel).first()
+        
+        return {
+            "status": "success",
+            "total_profiles": total_profiles,
+            "has_profiles": total_profiles > 0,
+            "first_profile_id": first_profile.id if first_profile else None,
+            "message": "User profiles endpoint working correctly"
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "message": "User profiles endpoint error"
+        } 
