@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import GrantComparison from '@/components/grants/GrantComparison';
 
 interface Grant {
   id: string;
@@ -34,6 +35,7 @@ export default function GrantsPage() {
   const [error, setError] = useState<string | null>(null);
   const [expandedGrants, setExpandedGrants] = useState<Set<string>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
+  const [showComparison, setShowComparison] = useState(false);
   
   // Filter state
   const [filters, setFilters] = useState<Filters>({
@@ -317,6 +319,13 @@ export default function GrantsPage() {
         </div>
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
           <button
+            onClick={() => setShowComparison(true)}
+            className="bg-purple-600 text-white px-4 py-3 sm:py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center text-sm sm:text-base"
+            title="Compare grants side-by-side"
+          >
+            ⚖️ Compare
+          </button>
+          <button
             onClick={exportToCSV}
             className="bg-green-600 text-white px-4 py-3 sm:py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center text-sm sm:text-base"
             title="Export filtered grants to CSV"
@@ -562,6 +571,14 @@ export default function GrantsPage() {
             );
           })}
         </div>
+      )}
+
+      {/* Grant Comparison Modal */}
+      {showComparison && (
+        <GrantComparison
+          grants={filteredGrants}
+          onClose={() => setShowComparison(false)}
+        />
       )}
     </div>
   );
