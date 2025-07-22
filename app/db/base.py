@@ -2,6 +2,7 @@
 from app.db.base_class import Base
 
 # Import models in dependency order
+from app.models.user import User
 from app.models.project import Project
 from app.models.team_member import TeamMember
 from app.models.task import Task

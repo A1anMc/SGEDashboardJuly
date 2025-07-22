@@ -31,4 +31,7 @@ class User(Base):
     time_entries = relationship("TimeEntry", back_populates="user", cascade="all, delete-orphan")
     
     # Grant relationships
-    # grants = relationship("Grant", back_populates="created_by", foreign_keys="[Grant.created_by_id]")  # Temporarily disabled 
+    # grants = relationship("Grant", back_populates="created_by", foreign_keys="[Grant.created_by_id]")  # Temporarily disabled
+    
+    # Profile relationship
+    profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan") 
