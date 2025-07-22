@@ -15,6 +15,7 @@ import {
   BuildingOfficeIcon,
   ChartBarIcon
 } from '@heroicons/react/24/outline';
+import { UserProfile } from '@/services/profile';
 
 interface PersonalizedGrantsDashboardProps {
   limit?: number;
@@ -35,6 +36,33 @@ export const PersonalizedGrantsDashboard: React.FC<PersonalizedGrantsDashboardPr
     retry: 1,
   });
 
+  // Temporary mock profile for testing when backend is down
+  const mockProfile: UserProfile = {
+    id: 1,
+    organisation_name: "Test Organisation",
+    organisation_type: "nonprofit",
+    industry_focus: "community",
+    location: "local",
+    website: "https://example.com",
+    description: "A test organisation for development",
+    preferred_funding_range_min: 5000,
+    preferred_funding_range_max: 50000,
+    preferred_industries: ["community", "healthcare"],
+    preferred_locations: ["local", "national"],
+    preferred_org_types: ["nonprofit", "charity"],
+    max_deadline_days: 90,
+    min_grant_amount: 1000,
+    max_grant_amount: 100000,
+    email_notifications: "daily",
+    deadline_alerts: 7,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    user_id: 1
+  };
+
+  // Use mock profile if backend profile fails
+  const effectiveProfile = profile || mockProfile;
+
   // Fetch grants
   const { data: grantsResponse, isLoading: grantsLoading } = useQuery({
     queryKey: ['grants'],
@@ -46,17 +74,17 @@ export const PersonalizedGrantsDashboard: React.FC<PersonalizedGrantsDashboardPr
   const [isCalculating, setIsCalculating] = useState(false);
 
   useEffect(() => {
-    if (profile && grantsResponse?.data) {
+    if (effectiveProfile && grantsResponse?.data) {
       setIsCalculating(true);
       const calculatedMatches = grantMatchingService.getTopMatches(
         grantsResponse.data,
-        profile,
+        effectiveProfile,
         limit * 2 // Get more to allow for filtering
       );
       setMatches(calculatedMatches);
       setIsCalculating(false);
     }
-  }, [profile, grantsResponse, limit]);
+  }, [effectiveProfile, grantsResponse, limit]);
 
   // Filter matches
   const filteredMatches = matches.filter(match => {
@@ -76,7 +104,7 @@ export const PersonalizedGrantsDashboard: React.FC<PersonalizedGrantsDashboardPr
     );
   }
 
-  if (!profile) {
+  if (!effectiveProfile) {
     return (
       <Card>
         <CardContent className="p-6">
@@ -106,8 +134,13 @@ export const PersonalizedGrantsDashboard: React.FC<PersonalizedGrantsDashboardPr
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Your Grant Matches</h2>
           <p className="text-gray-600">
-            Personalized recommendations for {profile.organisation_name}
+            Personalized recommendations for {effectiveProfile.organisation_name}
           </p>
+          {!profile && (
+            <p className="text-sm text-amber-600 mt-1">
+              ⚠️ Using demo profile data (backend unavailable)
+            </p>
+          )}
         </div>
         <div className="flex items-center space-x-2">
           <Badge variant="info" className="flex items-center gap-1">
