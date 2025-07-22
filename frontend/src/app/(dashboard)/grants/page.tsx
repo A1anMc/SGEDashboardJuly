@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getGrants } from '@/services/api';
 
 interface Grant {
   id: string;
@@ -27,22 +26,24 @@ export default function GrantsPage() {
     try {
       setLoading(true);
       setError(null);
-      console.log('🔍 Fetching grants from API...');
+      console.log('🔍 Testing direct API call...');
       
-      // Temporary direct API call to bypass service issue
-      const response = await fetch('https://navimpact-api.onrender.com/api/v1/grants/?skip=0&limit=50');
+      // Simple direct API call
+      const response = await fetch('https://navimpact-api.onrender.com/api/v1/grants/');
+      console.log('📡 Response status:', response.status);
+      
       if (!response.ok) {
         throw new Error(`API request failed: ${response.status} ${response.statusText}`);
       }
-      const data = await response.json();
       
-      console.log('✅ Grants response:', data);
+      const data = await response.json();
+      console.log('✅ API response:', data);
 
       const grantsData = data?.items || [];
       console.log('📊 Found grants:', grantsData.length);
       setGrants(grantsData);
     } catch (err) {
-      console.error('❌ Error fetching grants:', err);
+      console.error('❌ Error:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch grants');
     } finally {
       setLoading(false);
@@ -54,6 +55,9 @@ export default function GrantsPage() {
       <div className="container mx-auto p-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-4">Grants</h1>
         <p className="text-gray-600">Loading grants...</p>
+        <div className="mt-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
+          <p>🔄 Testing API connection...</p>
+        </div>
       </div>
     );
   }
