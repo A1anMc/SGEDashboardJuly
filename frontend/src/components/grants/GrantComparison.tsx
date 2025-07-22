@@ -255,7 +255,7 @@ export default function GrantComparison({ grants, onClose }: GrantComparisonProp
 
         {/* Comparison Results */}
         {showComparison && comparisonMetrics.length > 0 && (
-          <div className="flex-1 overflow-auto p-6">
+          <div className="flex-1 overflow-y-auto p-6 max-h-[60vh]">
             <div className="space-y-6">
               {comparisonMetrics.map((metric, index) => (
                 <div key={index} className="border border-gray-200 rounded-lg overflow-hidden">
