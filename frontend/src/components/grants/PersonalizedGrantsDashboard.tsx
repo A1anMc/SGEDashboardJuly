@@ -183,6 +183,16 @@ interface GrantMatchCardProps {
 const GrantMatchCard: React.FC<GrantMatchCardProps> = ({ match }) => {
   const { grant, score, reasons, priority } = match;
 
+  // Map priority to valid Badge variants
+  const getPriorityVariant = (priority: 'high' | 'medium' | 'low') => {
+    switch (priority) {
+      case 'high': return 'success';
+      case 'medium': return 'warning';
+      case 'low': return 'default';
+      default: return 'default';
+    }
+  };
+
   const priorityColors = {
     high: 'bg-mint-breeze text-green-700 border-mint-breeze/30',
     medium: 'bg-warm-amber text-amber-700 border-warm-amber/30',
@@ -204,7 +214,7 @@ const GrantMatchCard: React.FC<GrantMatchCardProps> = ({ match }) => {
               {grant.title}
             </CardTitle>
             <div className="mt-2 flex items-center space-x-2">
-              <Badge variant={priority} className={priorityColors[priority]}>
+              <Badge variant={getPriorityVariant(priority)} className={priorityColors[priority]}>
                 {priority} priority
               </Badge>
               <Badge variant="info" className="bg-energy-coral/10 text-energy-coral border-energy-coral/20">
