@@ -309,49 +309,49 @@ export default function GrantsPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="container mx-auto p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Grants</h1>
-          <p className="text-gray-600">Browse available funding opportunities</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Grants</h1>
+          <p className="text-sm sm:text-base text-gray-600">Browse available funding opportunities</p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
           <button
             onClick={exportToCSV}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center"
+            className="bg-green-600 text-white px-4 py-3 sm:py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center text-sm sm:text-base"
             title="Export filtered grants to CSV"
           >
             📊 Export CSV
           </button>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            className="bg-blue-600 text-white px-4 py-3 sm:py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
           >
             {showFilters ? 'Hide Filters' : 'Show Filters'}
           </button>
         </div>
       </div>
       
-      <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+      <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6 text-sm sm:text-base">
         <p>✅ API integration working! Found {grants.length} grants.</p>
-        <p className="mt-2 text-sm">
+        <p className="mt-2 text-xs sm:text-sm">
           API Status: <a href="https://navimpact-api.onrender.com/api/v1/grants/" target="_blank" className="underline">Check API</a>
         </p>
       </div>
 
-      {/* Filters Section */}
+      {/* Filters Section - Mobile Optimized */}
       {showFilters && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 mb-6 shadow-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Search */}
-            <div>
+            <div className="sm:col-span-2 lg:col-span-1">
               <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
               <input
                 type="text"
                 placeholder="Search grants..."
                 value={filters.search}
                 onChange={(e) => updateFilter('search', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-3 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               />
             </div>
 
@@ -361,7 +361,7 @@ export default function GrantsPage() {
               <select
                 value={filters.deadline}
                 onChange={(e) => updateFilter('deadline', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-3 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               >
                 <option value="">All Deadlines</option>
                 <option value="closing-soon">Closing Soon (≤7 days)</option>
@@ -376,7 +376,7 @@ export default function GrantsPage() {
               <select
                 value={filters.status}
                 onChange={(e) => updateFilter('status', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-3 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               >
                 <option value="">All Statuses</option>
                 <option value="open">Open</option>
@@ -392,7 +392,7 @@ export default function GrantsPage() {
               <select
                 value={filters.industry}
                 onChange={(e) => updateFilter('industry', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-3 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               >
                 <option value="">All Industries</option>
                 <option value="technology">Technology</option>
@@ -407,33 +407,37 @@ export default function GrantsPage() {
             </div>
           </div>
 
-          {/* Amount Range */}
+          {/* Amount Range - Mobile Optimized */}
           <div className="mt-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">Funding Amount Range</label>
-            <div className="flex items-center space-x-4">
-              <input
-                type="number"
-                placeholder="Min Amount"
-                value={filters.minAmount}
-                onChange={(e) => updateFilter('minAmount', parseInt(e.target.value) || 0)}
-                className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <span className="text-gray-500">to</span>
-              <input
-                type="number"
-                placeholder="Max Amount"
-                value={filters.maxAmount}
-                onChange={(e) => updateFilter('maxAmount', parseInt(e.target.value) || 1000000)}
-                className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+              <div className="flex-1 sm:flex-none">
+                <input
+                  type="number"
+                  placeholder="Min Amount"
+                  value={filters.minAmount}
+                  onChange={(e) => updateFilter('minAmount', parseInt(e.target.value) || 0)}
+                  className="w-full sm:w-32 px-3 py-3 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                />
+              </div>
+              <span className="text-gray-500 text-center sm:text-left">to</span>
+              <div className="flex-1 sm:flex-none">
+                <input
+                  type="number"
+                  placeholder="Max Amount"
+                  value={filters.maxAmount}
+                  onChange={(e) => updateFilter('maxAmount', parseInt(e.target.value) || 1000000)}
+                  className="w-full sm:w-32 px-3 py-3 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                />
+              </div>
             </div>
           </div>
 
           {/* Clear Filters */}
-          <div className="mt-4 flex justify-end">
+          <div className="mt-4 flex justify-center sm:justify-end">
             <button
               onClick={clearFilters}
-              className="text-gray-600 hover:text-gray-800 text-sm font-medium"
+              className="text-gray-600 hover:text-gray-800 text-sm font-medium px-4 py-2 rounded-md hover:bg-gray-100 transition-colors"
             >
               Clear All Filters
             </button>
@@ -441,45 +445,45 @@ export default function GrantsPage() {
         </div>
       )}
 
-      {/* Results Summary */}
+      {/* Results Summary - Mobile Optimized */}
       <div className="mb-6">
-        <p className="text-gray-600">
+        <p className="text-sm sm:text-base text-gray-600 text-center sm:text-left">
           Showing {filteredGrants.length} of {grants.length} grants
           {filters.search && ` matching "${filters.search}"`}
         </p>
       </div>
       
       {filteredGrants.length === 0 ? (
-        <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
-          <p>No grants match your current filters. Try adjusting your search criteria.</p>
+        <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded text-center sm:text-left">
+          <p className="text-sm sm:text-base">No grants match your current filters. Try adjusting your search criteria.</p>
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {filteredGrants.map((grant) => {
             const deadlineInfo = grant.deadline ? getDeadlineCountdown(grant.deadline) : null;
             const isExpanded = expandedGrants.has(grant.id);
             
             return (
               <div key={grant.id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
-                {/* Header */}
-                <div className="p-6 border-b border-gray-100">
+                {/* Header - Mobile Optimized */}
+                <div className="p-4 sm:p-6 border-b border-gray-100">
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 leading-tight">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 line-clamp-2 leading-tight flex-1 mr-3">
                       {grant.title}
                     </h3>
-                    <div className="ml-3 flex-shrink-0">
+                    <div className="flex-shrink-0">
                       {getStatusBadge(grant.status)}
                     </div>
                   </div>
                   
-                  {/* Key Info */}
+                  {/* Key Info - Mobile Optimized */}
                   <div className="space-y-2">
-                    <div className="flex items-center text-sm text-gray-600">
+                    <div className="flex items-center text-xs sm:text-sm text-gray-600">
                       <span className="font-medium">Source:</span>
-                      <span className="ml-2">{grant.source}</span>
+                      <span className="ml-2 truncate">{grant.source}</span>
                     </div>
                     
-                    <div className="flex items-center text-sm text-gray-600">
+                    <div className="flex items-center text-xs sm:text-sm text-gray-600">
                       <span className="font-medium">Funding:</span>
                       <span className="ml-2 font-semibold text-gray-900">
                         {formatAmount(grant.min_amount, grant.max_amount)}
@@ -487,7 +491,7 @@ export default function GrantsPage() {
                     </div>
                     
                     {deadlineInfo && (
-                      <div className="flex items-center text-sm">
+                      <div className="flex items-center text-xs sm:text-sm">
                         <span className="font-medium text-gray-600">Deadline:</span>
                         <span className={`ml-2 font-semibold ${deadlineInfo.color}`}>
                           {deadlineInfo.text}
@@ -497,32 +501,32 @@ export default function GrantsPage() {
                   </div>
                 </div>
                 
-                {/* Description */}
-                <div className="p-6">
-                  <p className="text-gray-600 text-sm line-clamp-3">
+                {/* Description - Mobile Optimized */}
+                <div className="p-4 sm:p-6">
+                  <p className="text-gray-600 text-xs sm:text-sm line-clamp-3 leading-relaxed">
                     {grant.description}
                   </p>
                   
-                  {/* Expandable Details */}
+                  {/* Expandable Details - Mobile Optimized */}
                   {isExpanded && (
                     <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
                       {grant.industry_focus && (
-                        <div className="flex items-center text-sm">
-                          <span className="font-medium text-gray-600 w-20">Industry:</span>
+                        <div className="flex flex-col sm:flex-row sm:items-center text-xs sm:text-sm">
+                          <span className="font-medium text-gray-600 sm:w-20 mb-1 sm:mb-0">Industry:</span>
                           <span className="text-gray-900">{grant.industry_focus}</span>
                         </div>
                       )}
                       
                       {grant.location_eligibility && (
-                        <div className="flex items-center text-sm">
-                          <span className="font-medium text-gray-600 w-20">Location:</span>
+                        <div className="flex flex-col sm:flex-row sm:items-center text-xs sm:text-sm">
+                          <span className="font-medium text-gray-600 sm:w-20 mb-1 sm:mb-0">Location:</span>
                           <span className="text-gray-900">{grant.location_eligibility}</span>
                         </div>
                       )}
                       
                       {grant.org_type_eligible && grant.org_type_eligible.length > 0 && (
-                        <div className="flex items-start text-sm">
-                          <span className="font-medium text-gray-600 w-20">Eligible:</span>
+                        <div className="flex flex-col sm:flex-row sm:items-start text-xs sm:text-sm">
+                          <span className="font-medium text-gray-600 sm:w-20 mb-1 sm:mb-0">Eligible:</span>
                           <div className="flex flex-wrap gap-1">
                             {grant.org_type_eligible.map((type, index) => (
                               <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
@@ -535,20 +539,20 @@ export default function GrantsPage() {
                     </div>
                   )}
                   
-                  {/* Action Buttons */}
-                  <div className="mt-4 flex items-center justify-between">
+                  {/* Action Buttons - Mobile Optimized */}
+                  <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                     <button
                       onClick={() => toggleExpanded(grant.id)}
-                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                      className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 font-medium text-center sm:text-left"
                     >
                       {isExpanded ? 'Show Less' : 'More Details'}
                     </button>
                     
-                    <div className="flex space-x-2">
-                      <button className="text-sm text-gray-500 hover:text-gray-700">
+                    <div className="flex justify-center sm:justify-end space-x-4">
+                      <button className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors">
                         📌 Save
                       </button>
-                      <button className="text-sm text-gray-500 hover:text-gray-700">
+                      <button className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors">
                         📧 Contact
                       </button>
                     </div>
