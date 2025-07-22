@@ -1,0 +1,75 @@
+from typing import Optional, List
+from pydantic import BaseModel, Field
+from datetime import datetime
+
+class UserProfileBase(BaseModel):
+    organization_name: str = Field(..., min_length=1, max_length=255)
+    organization_type: str = Field(..., min_length=1, max_length=100)
+    industry_focus: Optional[str] = Field(None, max_length=100)
+    location: Optional[str] = Field(None, max_length=100)
+    website: Optional[str] = Field(None, max_length=500)
+    description: Optional[str] = Field(None, max_length=1000)
+    
+    # Grant Preferences
+    preferred_funding_range_min: Optional[int] = Field(None, ge=0)
+    preferred_funding_range_max: Optional[int] = Field(None, ge=0)
+    preferred_industries: Optional[List[str]] = Field(default_factory=list)
+    preferred_locations: Optional[List[str]] = Field(default_factory=list)
+    preferred_org_types: Optional[List[str]] = Field(default_factory=list)
+    
+    # Application Preferences
+    max_deadline_days: Optional[int] = Field(90, ge=1, le=365)
+    min_grant_amount: Optional[int] = Field(0, ge=0)
+    max_grant_amount: Optional[int] = Field(1000000, ge=0)
+    
+    # Notification Preferences
+    email_notifications: Optional[str] = Field("weekly", regex="^(daily|weekly|monthly|none)$")
+    deadline_alerts: Optional[int] = Field(7, ge=1, le=30)
+
+class UserProfileCreate(UserProfileBase):
+    pass
+
+class UserProfileUpdate(BaseModel):
+    organization_name: Optional[str] = Field(None, min_length=1, max_length=255)
+    organization_type: Optional[str] = Field(None, min_length=1, max_length=100)
+    industry_focus: Optional[str] = Field(None, max_length=100)
+    location: Optional[str] = Field(None, max_length=100)
+    website: Optional[str] = Field(None, max_length=500)
+    description: Optional[str] = Field(None, max_length=1000)
+    
+    # Grant Preferences
+    preferred_funding_range_min: Optional[int] = Field(None, ge=0)
+    preferred_funding_range_max: Optional[int] = Field(None, ge=0)
+    preferred_industries: Optional[List[str]] = None
+    preferred_locations: Optional[List[str]] = None
+    preferred_org_types: Optional[List[str]] = None
+    
+    # Application Preferences
+    max_deadline_days: Optional[int] = Field(None, ge=1, le=365)
+    min_grant_amount: Optional[int] = Field(None, ge=0)
+    max_grant_amount: Optional[int] = Field(None, ge=0)
+    
+    # Notification Preferences
+    email_notifications: Optional[str] = Field(None, regex="^(daily|weekly|monthly|none)$")
+    deadline_alerts: Optional[int] = Field(None, ge=1, le=30)
+
+class UserProfile(UserProfileBase):
+    id: int
+    user_id: Optional[int] = None
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+class UserProfileResponse(BaseModel):
+    profile: UserProfile
+    message: str = "Profile retrieved successfully"
+
+class UserProfileMatch(BaseModel):
+    """Response for grant matching based on profile"""
+    grant_id: int
+    grant_title: str
+    match_score: float = Field(..., ge=0, le=100)
+    match_reasons: List[str] = Field(default_factory=list)
+    is_eligible: bool = True 
