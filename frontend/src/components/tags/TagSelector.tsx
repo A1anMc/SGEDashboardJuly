@@ -104,7 +104,7 @@ export function TagSelector({ selectedTags, onTagsChange }: TagSelectorProps) {
           return (
             <Badge
               key={tag.id}
-              variant="secondary"
+              variant="default"
               className="flex items-center gap-1"
             >
               {tag.name}
