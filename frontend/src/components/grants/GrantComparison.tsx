@@ -167,7 +167,7 @@ export default function GrantComparison({ grants, onClose }: GrantComparisonProp
     return metrics;
   };
 
-  const getComparisonClass = (isBetter?: string, index: number) => {
+  const getComparisonClass = (isBetter: string | undefined, index: number) => {
     if (!isBetter) return '';
     
     const grantIndex = index + 1;
@@ -176,7 +176,7 @@ export default function GrantComparison({ grants, onClose }: GrantComparisonProp
     return 'bg-gray-50 border-gray-200';
   };
 
-  const getComparisonIcon = (isBetter?: string, index: number) => {
+  const getComparisonIcon = (isBetter: string | undefined, index: number) => {
     if (!isBetter) return null;
     
     const grantIndex = index + 1;
