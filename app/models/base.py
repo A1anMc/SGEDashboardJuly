@@ -9,5 +9,4 @@ from app.models.tag import Tag
 from app.models.task_comment import TaskComment
 from app.models.time_entry import TimeEntry
 from app.models.team_member import TeamMember
-from app.models.reaction import Reaction
-from app.models.user_profile import UserProfile 
+from app.models.reaction import Reaction 
