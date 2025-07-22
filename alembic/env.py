@@ -90,9 +90,6 @@ def run_migrations_online() -> None:
                 target_metadata=target_metadata,
                 compare_type=True,
                 compare_server_default=True,
-                # PostgreSQL-specific settings
-                include_schemas=True,
-                include_name=True,
                 render_as_batch=False  # PostgreSQL doesn't need batch mode
             )
 
