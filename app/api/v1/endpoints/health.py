@@ -129,3 +129,41 @@ def test_userprofile():
             "error": str(e),
             "timestamp": "2025-07-22T06:00:00.000000"
         } 
+
+@router.get("/check-tables")
+def check_tables():
+    """Check what tables exist in the database."""
+    try:
+        from app.db.session import SessionLocal
+        
+        db = SessionLocal()
+        try:
+            # Query to get all table names
+            result = db.execute("""
+                SELECT table_name 
+                FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                ORDER BY table_name
+            """)
+            tables = [row[0] for row in result.fetchall()]
+            
+            return {
+                "status": "success",
+                "tables": tables,
+                "count": len(tables),
+                "timestamp": "2025-07-22T06:00:00.000000"
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e),
+                "timestamp": "2025-07-22T06:00:00.000000"
+            }
+        finally:
+            db.close()
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": "2025-07-22T06:00:00.000000"
+        } 
