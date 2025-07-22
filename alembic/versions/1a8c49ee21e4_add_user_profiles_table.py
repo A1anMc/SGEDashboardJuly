@@ -42,8 +42,7 @@ def upgrade() -> None:
     sa.Column('created_at', postgresql.TIMESTAMP(), nullable=False),
     sa.Column('updated_at', postgresql.TIMESTAMP(), nullable=False),
     sa.Column('user_id', sa.INTEGER(), nullable=True),
-    # Temporarily removed foreign key constraint to test
-    # sa.ForeignKeyConstraint(['user_id'], ['users.id'], name='user_profiles_user_id_fkey', ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name='user_profiles_user_id_fkey', ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id', name='user_profiles_pkey')
     )
     op.create_index('ix_user_profiles_id', 'user_profiles', ['id'], unique=False)
