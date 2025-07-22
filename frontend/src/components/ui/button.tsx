@@ -18,10 +18,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(
           'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background',
           {
-            'bg-energy-coral text-white hover:bg-energy-coral/90': variant === 'default',
-            'bg-soft-crimson text-white hover:bg-soft-crimson/90': variant === 'destructive',
-            'border border-cool-gray hover:bg-mist-white hover:text-gray-900': variant === 'outline',
-            'bg-impact-teal text-white hover:bg-impact-teal/80': variant === 'secondary',
+            'bg-gradient-to-r from-energy-coral to-energy-coral/90 text-white hover:from-energy-coral/90 hover:to-energy-coral shadow-lg hover:shadow-xl transition-all duration-300': variant === 'default',
+            'bg-gradient-to-r from-soft-crimson to-soft-crimson/90 text-white hover:from-soft-crimson/90 hover:to-soft-crimson shadow-lg hover:shadow-xl transition-all duration-300': variant === 'destructive',
+            'border border-cool-gray hover:bg-gradient-to-r hover:from-mist-white hover:to-gray-50 hover:text-gray-900 hover:shadow-md transition-all duration-300': variant === 'outline',
+            'bg-gradient-to-r from-impact-teal to-impact-teal/90 text-white hover:from-impact-teal/90 hover:to-impact-teal shadow-lg hover:shadow-xl transition-all duration-300': variant === 'secondary',
             'hover:bg-accent hover:text-accent-foreground': variant === 'ghost',
             'underline-offset-4 hover:underline text-primary': variant === 'link',
             'h-10 py-2 px-4': size === 'default',

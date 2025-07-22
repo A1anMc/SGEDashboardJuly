@@ -1,78 +1,100 @@
-import * as React from "react"
-import { cn } from "@/lib/utils"
+import React from 'react';
+import { cn } from '@/lib/utils';
 
-const Card = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: 'default' | 'elevated' | 'outlined';
+  hover?: boolean;
+}
+
+export const Card: React.FC<CardProps> = ({ 
+  className, 
+  variant = 'default',
+  hover = false,
+  children,
+  ...props 
+}) => {
+  const baseClasses = 'rounded-lg transition-all duration-300';
+  
+  const variantClasses = {
+    default: 'bg-white shadow-sm border border-cool-gray/50',
+    elevated: 'bg-white shadow-lg border border-cool-gray/30',
+    outlined: 'bg-white border-2 border-cool-gray/30'
+  };
+
+  const hoverClasses = hover 
+    ? 'hover:shadow-xl hover:border-impact-teal/20 hover:scale-[1.02]' 
+    : '';
+
+  return (
+    <div
+      className={cn(
+        baseClasses,
+        variantClasses[variant],
+        hoverClasses,
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};
+
+export const CardHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ 
+  className, 
+  children,
+  ...props 
+}) => (
   <div
-    ref={ref}
-    className={cn(
-      "rounded-lg border bg-card text-card-foreground shadow-sm",
-      className
-    )}
+    className={cn('flex flex-col space-y-1.5 p-6', className)}
     {...props}
-  />
-))
-Card.displayName = "Card"
+  >
+    {children}
+  </div>
+);
 
-const CardHeader = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-6", className)}
-    {...props}
-  />
-))
-CardHeader.displayName = "CardHeader"
-
-const CardTitle = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLHeadingElement>
->(({ className, ...props }, ref) => (
+export const CardTitle: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = ({ 
+  className, 
+  children,
+  ...props 
+}) => (
   <h3
-    ref={ref}
-    className={cn(
-      "text-2xl font-semibold leading-none tracking-tight",
-      className
-    )}
+    className={cn('text-lg font-semibold leading-none tracking-tight text-gray-900', className)}
     {...props}
-  />
-))
-CardTitle.displayName = "CardTitle"
+  >
+    {children}
+  </h3>
+);
 
-const CardDescription = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, ...props }, ref) => (
+export const CardDescription: React.FC<React.HTMLAttributes<HTMLParagraphElement>> = ({ 
+  className, 
+  children,
+  ...props 
+}) => (
   <p
-    ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
+    className={cn('text-sm text-gray-600', className)}
     {...props}
-  />
-))
-CardDescription.displayName = "CardDescription"
+  >
+    {children}
+  </p>
+);
 
-const CardContent = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
-))
-CardContent.displayName = "CardContent"
+export const CardContent: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ 
+  className, 
+  children,
+  ...props 
+}) => (
+  <div className={cn('p-6 pt-0', className)} {...props}>
+    {children}
+  </div>
+);
 
-const CardFooter = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("flex items-center p-6 pt-0", className)}
-    {...props}
-  />
-))
-CardFooter.displayName = "CardFooter"
-
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } 
+export const CardFooter: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ 
+  className, 
+  children,
+  ...props 
+}) => (
+  <div className={cn('flex items-center p-6 pt-0', className)} {...props}>
+    {children}
+  </div>
+); 

@@ -5,6 +5,7 @@ import { BellIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Avatar from '@/components/ui/avatar';
+import Logo from '@/components/ui/logo';
 
 // Custom NavImpact dashboard header, built by Alan – not boilerplate
 const userNavigation = [
@@ -22,13 +23,7 @@ const Header: FC = () => {
     <div className="flex flex-1 items-center justify-between">
       {/* Logo */}
       <div className="flex items-center">
-        <Link href="/" className="flex items-center space-x-3">
-          <img src="/icon.svg" alt="NavImpact" className="h-8 w-8" />
-          <span className="text-xl font-bold text-impact-teal">
-            <span className="text-impact-teal">Nav</span>
-            <span className="text-energy-coral">Impact</span>
-          </span>
-        </Link>
+        <Logo variant="full" size="md" href="/" />
       </div>
       
       {/* Breadcrumb */}
