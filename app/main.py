@@ -111,6 +111,9 @@ async def lifespan(app: FastAPI):
         init_db()
         logger.info("Database initialized successfully.")
         
+        # Note: Alembic migrations are handled separately, not during startup
+        # to avoid conflicts with existing tables in production
+        
         # Validate database configuration
         logger.info("Validating database configuration...")
         validate_database_config()
