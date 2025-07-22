@@ -105,7 +105,8 @@ def test_userprofile():
         db = SessionLocal()
         try:
             # Try to query the user_profiles table
-            result = db.execute("SELECT COUNT(*) FROM user_profiles")
+            from sqlalchemy import text
+            result = db.execute(text("SELECT COUNT(*) FROM user_profiles"))
             count = result.scalar()
             
             return {
@@ -142,12 +143,13 @@ def check_tables():
         db = SessionLocal()
         try:
             # Query to get all table names
-            result = db.execute("""
+            from sqlalchemy import text
+            result = db.execute(text("""
                 SELECT table_name 
                 FROM information_schema.tables 
                 WHERE table_schema = 'public' 
                 ORDER BY table_name
-            """)
+            """))
             tables = [row[0] for row in result.fetchall()]
             
             return {
