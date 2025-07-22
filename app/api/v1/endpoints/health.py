@@ -92,3 +92,40 @@ def run_migration():
             "error": str(e),
             "timestamp": "2025-07-22T06:00:00.000000"
         } 
+
+@router.get("/test-userprofile")
+def test_userprofile():
+    """Test if UserProfile model can be imported and accessed."""
+    try:
+        from app.models.user_profile import UserProfile
+        from app.db.session import SessionLocal
+        
+        db = SessionLocal()
+        try:
+            # Try to query the user_profiles table
+            result = db.execute("SELECT COUNT(*) FROM user_profiles")
+            count = result.scalar()
+            
+            return {
+                "status": "success",
+                "message": "UserProfile model accessible",
+                "table_exists": True,
+                "count": count,
+                "timestamp": "2025-07-22T06:00:00.000000"
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "message": "UserProfile table does not exist",
+                "error": str(e),
+                "timestamp": "2025-07-22T06:00:00.000000"
+            }
+        finally:
+            db.close()
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": "UserProfile model import failed",
+            "error": str(e),
+            "timestamp": "2025-07-22T06:00:00.000000"
+        } 
