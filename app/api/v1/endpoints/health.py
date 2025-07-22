@@ -251,3 +251,48 @@ def create_user_profiles_table():
             "error": str(e),
             "timestamp": "2025-07-22T06:00:00.000000"
         } 
+
+@router.get("/check-migration-state")
+def check_migration_state():
+    """Check the current Alembic migration state."""
+    try:
+        from alembic import command
+        from alembic.config import Config
+        from alembic.script import ScriptDirectory
+        from app.db.session import get_session_local
+        from sqlalchemy import text
+        
+        # Create Alembic config
+        alembic_cfg = Config("alembic.ini")
+        
+        # Get current revision from database
+        SessionLocal = get_session_local()
+        db = SessionLocal()
+        
+        try:
+            result = db.execute(text("SELECT version_num FROM alembic_version"))
+            current_revision = result.scalar()
+        except Exception as e:
+            current_revision = "No alembic_version table found"
+        
+        db.close()
+        
+        # Get latest revision from files
+        script_dir = ScriptDirectory.from_config(alembic_cfg)
+        head_revision = script_dir.get_current_head()
+        
+        return {
+            "status": "success",
+            "current_revision": current_revision,
+            "head_revision": head_revision,
+            "is_up_to_date": str(current_revision) == str(head_revision),
+            "timestamp": "2025-07-22T06:00:00.000000"
+        }
+    except Exception as e:
+        import traceback
+        return {
+            "status": "error",
+            "error": str(e),
+            "traceback": traceback.format_exc(),
+            "timestamp": "2025-07-22T06:00:00.000000"
+        } 
