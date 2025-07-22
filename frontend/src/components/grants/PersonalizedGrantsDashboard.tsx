@@ -87,8 +87,10 @@ export const PersonalizedGrantsDashboard: React.FC<PersonalizedGrantsDashboardPr
               Please complete your organisation profile to get personalized grant recommendations.
             </p>
             <div className="mt-6">
-              <Button href="/settings/profile">
-                Complete Profile
+              <Button asChild>
+                <a href="/settings/profile">
+                  Complete Profile
+                </a>
               </Button>
             </div>
           </div>
