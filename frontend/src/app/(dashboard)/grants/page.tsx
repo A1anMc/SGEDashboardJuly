@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import GrantComparison from '@/components/grants/GrantComparison';
+import PersonalizedGrantsDashboard from '@/components/grants/PersonalizedGrantsDashboard';
 
 interface Grant {
   id: string;
@@ -29,6 +30,7 @@ interface Filters {
 }
 
 export default function GrantsPage() {
+  const [activeTab, setActiveTab] = useState<'all' | 'personalized'>('personalized');
   const [grants, setGrants] = useState<Grant[]>([]);
   const [filteredGrants, setFilteredGrants] = useState<Grant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -415,6 +417,7 @@ export default function GrantsPage() {
 
   return (
     <div className="container mx-auto p-4 sm:p-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Grants</h1>
@@ -444,12 +447,45 @@ export default function GrantsPage() {
         </div>
       </div>
 
-      <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6 text-sm sm:text-base">
-        <p>✅ API integration working! Found {grants.length} grants.</p>
-        <p className="mt-2 text-xs sm:text-sm">
-          API Status: <a href="https://navimpact-api.onrender.com/api/v1/grants/" target="_blank" className="underline">Check API</a>
-        </p>
+      {/* Tab Navigation */}
+      <div className="mb-6">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab('personalized')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'personalized'
+                  ? 'border-energy-coral text-energy-coral'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              🎯 Personalized Matches
+            </button>
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'all'
+                  ? 'border-energy-coral text-energy-coral'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              📋 All Grants
+            </button>
+          </nav>
+        </div>
       </div>
+
+      {/* Tab Content */}
+      {activeTab === 'personalized' ? (
+        <PersonalizedGrantsDashboard limit={12} showFilters={true} />
+      ) : (
+        <>
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6 text-sm sm:text-base">
+            <p>✅ API integration working! Found {grants.length} grants.</p>
+            <p className="mt-2 text-xs sm:text-sm">
+              API Status: <a href="https://navimpact-api.onrender.com/api/v1/grants/" target="_blank" className="underline">Check API</a>
+            </p>
+          </div>
 
       {/* Filters Section - Mobile Optimized */}
       {showFilters && (
@@ -722,6 +758,8 @@ export default function GrantsPage() {
           grants={filteredGrants}
           onClose={() => setShowComparison(false)}
         />
+      )}
+        </>
       )}
     </div>
   );
